@@ -1,7 +1,7 @@
-// app.service.ts
-import { Get, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import type { ApiInfoResponse } from './app.types';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -19,8 +19,31 @@ export class AppService implements OnModuleInit {
         });
     }
 
-    @Get()
-    getHello(): string {
-        return 'Hello World!';
+    async getApiInfo(): Promise<ApiInfoResponse> {
+        const start = Date.now();
+
+        let db_status = 'disconnected';
+        try {
+            // A small query to check DB responsiveness
+            const db = this.connection.db;
+            if (!db) {
+                throw new Error('MongoDB connection is not initialized');
+            }
+            await db.admin().ping();
+            db_status = 'connected';
+        } catch (e) {
+            db_status = 'error';
+            this.logger.error('Error pinging MongoDB:', e);
+        }
+
+        const ping_ms = Date.now() - start;
+
+        return {
+            name: 'SCHL API',
+            version: 'v1',
+            documentation: process.env.BASE_URL + '/docs',
+            db_status,
+            ping_ms,
+        };
     }
 }
