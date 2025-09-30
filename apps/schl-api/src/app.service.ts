@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import type { ApiInfoResponse } from './app.types';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -19,7 +18,7 @@ export class AppService implements OnModuleInit {
         });
     }
 
-    async getApiInfo(): Promise<ApiInfoResponse> {
+    async getApiInfo() {
         const start = Date.now();
 
         let db_status = 'disconnected';
