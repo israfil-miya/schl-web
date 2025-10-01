@@ -11,9 +11,9 @@ import { AppService } from './app.service';
         MongooseModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                uri: configService.get<string>('MONGODB_URI'),
-                dbName: 'SCHL_PORTAL',
+            useFactory: (config: ConfigService) => ({
+                uri: config.get<string>('MONGODB_URI'),
+                dbName: config.get<string>('DB_NAME'),
                 maxPoolSize: 10,
             }),
         }),

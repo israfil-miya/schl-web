@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 
@@ -6,7 +7,10 @@ import { Connection } from 'mongoose';
 export class AppService implements OnModuleInit {
     private readonly logger = new Logger(AppService.name);
 
-    constructor(@InjectConnection() private readonly connection: Connection) {}
+    constructor(
+        @InjectConnection() private readonly connection: Connection,
+        private readonly config: ConfigService,
+    ) {}
 
     onModuleInit() {
         this.connection.once('open', () => {
@@ -40,7 +44,7 @@ export class AppService implements OnModuleInit {
         return {
             name: 'SCHL API',
             version: 'v1',
-            documentation: process.env.BASE_URL + '/docs',
+            documentation: this.config.get<string>('BASE_URL') + '/docs',
             db_status,
             ping_ms,
         };
