@@ -1,9 +1,14 @@
 // app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
+import { JwtStrategy } from './common/auth/jwt.strategy';
+import { UserController } from './user/user.controller';
+import { UserModule } from './user/user.module';
 
 @Module({
     imports: [
@@ -17,8 +22,16 @@ import { AppService } from './app.service';
                 maxPoolSize: 10,
             }),
         }),
+        UserModule,
     ],
-    controllers: [AppController],
-    providers: [AppService],
+    controllers: [AppController, UserController],
+    providers: [
+        AppService,
+        JwtStrategy,
+        {
+            provide: APP_GUARD,
+            useClass: JwtAuthGuard,
+        },
+    ],
 })
 export class AppModule {}

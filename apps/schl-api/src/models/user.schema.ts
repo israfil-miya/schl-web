@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, HydratedDocument } from 'mongoose';
+import mongoose, { Document, HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -24,8 +24,8 @@ export class User {
     @Prop({ required: [true, 'Password is required'] })
     password: string;
 
-    @Prop({ required: [true, 'Role is required'] })
-    role: string;
+    @Prop({ required: [true, 'Role has not been assigned'], ref: 'Role' })
+    role_id: mongoose.Types.ObjectId;
 
     @Prop({ default: '' })
     comment?: string;
