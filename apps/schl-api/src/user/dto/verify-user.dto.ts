@@ -1,4 +1,3 @@
-import { Expose } from 'class-transformer';
 import { IsNotEmpty } from 'class-validator';
 
 export class VerifyUserBodyDto {
@@ -7,9 +6,4 @@ export class VerifyUserBodyDto {
 
     @IsNotEmpty()
     password: string;
-}
-
-export class VerifyUserHeaderDto {
-    @Expose({ name: 'x-redirect-path' })
-    redirectPath?: string;
 }

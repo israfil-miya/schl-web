@@ -7,16 +7,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import jwt from 'jsonwebtoken';
 import { Model } from 'mongoose';
+import { PopulatedUser } from 'src/common/types/populated-user.type';
 import { UserSession } from 'src/common/types/user-session.type';
 import { hasPerm, toPermissions } from 'src/common/utils/permission-check';
 import { User } from 'src/models/user.schema';
-
-interface PopulatedUser extends Omit<User, 'role_id'> {
-    role_id: {
-        name: string;
-        permissions: string[];
-    };
-}
 
 @Injectable()
 export class AuthService {
@@ -25,7 +19,7 @@ export class AuthService {
         private readonly config: ConfigService,
     ) {}
 
-    async handleLogin(
+    async login(
         username: string,
         password: string,
         clientType: 'portal' | 'crm',
@@ -43,20 +37,16 @@ export class AuthService {
             const userPermissions = toPermissions(userData.role_id.permissions);
 
             if (!hasPerm(`login:${clientType}`, userPermissions)) {
-                return {
-                    code: 403,
-                    message: 'You are not authorized to login here',
-                };
+                throw new UnauthorizedException(
+                    `You do not have permission to login to ${clientType}`,
+                );
             }
-            return {
-                code: 200,
-                user: userData,
-            };
+            return userData;
         }
-        return { code: 401, message: 'Invalid username or password' };
+        throw new UnauthorizedException('Invalid username or password');
     }
 
-    async handleChangePassword(
+    async changePassword(
         username: string,
         old_password: string,
         new_password: string,
@@ -68,16 +58,16 @@ export class AuthService {
             })
             .exec();
         if (!userData) {
-            return { code: 401, message: 'Invalid username or password' };
+            throw new UnauthorizedException('Invalid username or password');
         }
 
         userData.password = new_password;
         await userData.save();
 
-        return { code: 200, message: 'Password changed successfully' };
+        return 'Password changed successfully';
     }
 
-    async handleVerifyUser(
+    async verifyUser(
         username: string,
         password: string,
         userSession: UserSession,

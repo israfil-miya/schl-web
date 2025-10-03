@@ -18,8 +18,8 @@ export class User {
     })
     real_name: string;
 
-    @Prop({ default: null })
-    provided_name: string | null;
+    @Prop({ type: String, default: null })
+    provided_name?: string | null;
 
     @Prop({ required: [true, 'Password is required'] })
     password: string;

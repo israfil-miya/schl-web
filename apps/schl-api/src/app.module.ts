@@ -7,7 +7,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { JwtStrategy } from './common/auth/jwt.strategy';
-import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -24,7 +23,7 @@ import { UserModule } from './user/user.module';
         }),
         UserModule,
     ],
-    controllers: [AppController, UserController],
+    controllers: [AppController],
     providers: [
         AppService,
         JwtStrategy,
