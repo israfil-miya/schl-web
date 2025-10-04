@@ -74,19 +74,21 @@ export class ManagementService {
             );
         }
 
-        const docCount = await this.userModel
-            .countDocuments({ name: userData.name })
-            .exec();
-        if (docCount > 0) {
-            throw new ForbiddenException('User with this name already exists');
-        }
+        try {
+            const createdUser = await new this.userModel(userData).save();
 
-        const createdUser = await new this.userModel(userData).save();
-
-        if (!createdUser) {
-            throw new InternalServerErrorException('Failed to create user');
+            if (!createdUser) {
+                throw new InternalServerErrorException('Failed to create user');
+            }
+            return createdUser;
+        } catch (err: any) {
+            if (err?.code === 11000) {
+                throw new ConflictException(
+                    'User with this name already exists',
+                );
+            }
+            throw new InternalServerErrorException('Unable to create user');
         }
-        return createdUser;
     }
 
     async deleteUser(userId: string, userSession: UserSession) {

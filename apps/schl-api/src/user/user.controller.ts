@@ -1,4 +1,14 @@
-import { Body, Controller, Param, Post, Query, Req } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { Public } from 'src/common/auth/public.decorator';
 import { UserSession } from 'src/common/types/user-session.type';
@@ -65,7 +75,7 @@ export class UserController {
         return this.managementService.createUser(body, req.user);
     }
 
-    @Post('update-user/:id')
+    @Put('update-user/:id')
     updateUser(
         @Param('id') userId: string,
         @Body() userData: Partial<CreateUserBodyDto>,
@@ -74,7 +84,7 @@ export class UserController {
         return this.managementService.updateUser(userId, userData, req.user);
     }
 
-    @Post('delete-user/:id')
+    @Delete('delete-user/:id')
     deleteUser(
         @Param('id') userId: string,
         @Req() req: Request & { user: UserSession },
@@ -98,7 +108,7 @@ export class UserController {
         return this.managementService.searchUsers(body, pagination, req.user);
     }
 
-    @Post('get-user/:id')
+    @Get('get-user/:id')
     getUser(
         @Param('id') userId: string,
         @Req() req: Request & { user: UserSession },

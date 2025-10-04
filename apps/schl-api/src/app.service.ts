@@ -22,7 +22,7 @@ export class AppService implements OnModuleInit {
         });
     }
 
-    async getApiInfo() {
+    async getHealthz() {
         const start = Date.now();
 
         let db_status = 'disconnected';
@@ -42,11 +42,12 @@ export class AppService implements OnModuleInit {
         const ping_ms = Date.now() - start;
 
         return {
+            ok: db_status === 'connected',
             name: 'SCHL API',
             version: 'v1',
-            documentation: this.config.get<string>('BASE_URL') + '/docs',
-            db_status,
-            ping_ms,
+            docs: this.config.get<string>('BASE_URL') + '/docs',
+            dbStatus: db_status,
+            pingMs: ping_ms,
         };
     }
 }

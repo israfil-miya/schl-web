@@ -84,7 +84,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid username or password');
         }
 
-        if (userData.name === userSession.cred_name) {
+        if (userData._id.toString() === userSession.db_id) {
             const token = jwt.sign(
                 {
                     userId: userData._id,
