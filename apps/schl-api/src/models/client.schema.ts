@@ -5,7 +5,11 @@ export type ClientDocument = HydratedDocument<Client>;
 
 @Schema({ timestamps: true })
 export class Client {
-    @Prop({ required: [true, 'Client code is required'] })
+    @Prop({
+        required: [true, 'Client code is required'],
+        unique: true,
+        index: true,
+    })
     client_code: string; // unique code for the client, e.g. "0001_XX"
 
     @Prop({ required: [true, 'Client name is required'] })

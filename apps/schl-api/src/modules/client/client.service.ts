@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+    InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserSession } from 'src/common/types/user-session.type';
@@ -7,6 +13,7 @@ import {
     buildOrRegex,
     createRegexQuery,
 } from 'src/common/utils/filter-helpers';
+import { hasPerm } from 'src/common/utils/permission-check';
 import { Client } from 'src/models/client.schema';
 import { CreateClientBodyDto } from './dto/create-client.dto';
 import { SearchClientsBodyDto } from './dto/search-clients.dto';
@@ -181,21 +188,9 @@ export class ClientService {
             throw new BadRequestException('Client not found');
         }
 
-        // If client_code is changing, ensure no duplicate
-        if (
-            clientData.client_code &&
-            clientData.client_code.trim() !== existing.client_code
-        ) {
-            const dup = await this.clientModel
-                .countDocuments({
-                    client_code: clientData.client_code.trim(),
-                })
-                .exec();
-            if (dup > 0) {
-                throw new BadRequestException(
-                    'Client with the same code already exists',
-                );
-            }
+        // If client_code is changing, trim it; uniqueness will be enforced by index and handled in catch (race-safe)
+        if (clientData.client_code) {
+            clientData.client_code = clientData.client_code.trim();
         }
 
         const patch = ClientFactory.fromUpdateDto(clientData, userSession);
@@ -213,11 +208,68 @@ export class ClientService {
             return updated;
         } catch (err: any) {
             if (err?.code === 11000) {
-                throw new BadRequestException(
+                throw new ConflictException(
                     'Client with the same code already exists',
                 );
             }
             throw new BadRequestException('Unable to update client');
+        }
+    }
+
+    async deleteClient(clientId: string, userSession: UserSession) {
+        if (!hasPerm('admin:manage_client', userSession.permissions)) {
+            throw new ForbiddenException(
+                'You do not have permission to delete clients',
+            );
+        }
+        try {
+            const deleted = await this.clientModel
+                .findByIdAndDelete(clientId)
+                .exec();
+            if (!deleted) {
+                throw new BadRequestException('Client not found');
+            }
+            return { message: 'Deleted the client successfully' };
+        } catch {
+            throw new InternalServerErrorException('Unable to delete client');
+        }
+    }
+
+    async getClientById(client: string, userSession: UserSession) {
+        if (!hasPerm('admin:manage_client', userSession.permissions)) {
+            throw new ForbiddenException(
+                'You do not have permission to view client details',
+            );
+        }
+
+        try {
+            const found = await this.clientModel.findById(client).exec();
+            if (!found) {
+                throw new BadRequestException('Client not found');
+            }
+            return found;
+        } catch {
+            throw new InternalServerErrorException('Unable to retrieve client');
+        }
+    }
+
+    async getClientByCode(client_code: string, userSession: UserSession) {
+        if (!hasPerm('admin:manage_client', userSession.permissions)) {
+            throw new ForbiddenException(
+                'You do not have permission to view client details',
+            );
+        }
+
+        try {
+            const found = await this.clientModel
+                .findOne({ client_code })
+                .exec();
+            if (!found) {
+                throw new BadRequestException('Client not found');
+            }
+            return found;
+        } catch {
+            throw new InternalServerErrorException('Unable to retrieve client');
         }
     }
 }

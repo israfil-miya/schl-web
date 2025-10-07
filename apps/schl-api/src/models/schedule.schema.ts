@@ -23,7 +23,7 @@ export class Schedule {
     @Prop({ default: '' })
     comment?: string;
 
-    @Prop({ default: null })
+    @Prop({ type: String, default: null })
     updated_by?: string | null;
 
     @Prop({ type: Date })

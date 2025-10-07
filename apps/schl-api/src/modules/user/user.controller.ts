@@ -11,6 +11,7 @@ import {
     Request,
 } from '@nestjs/common';
 import { Public } from 'src/common/auth/public.decorator';
+import { IdParamDto } from 'src/common/dto/id-param.dto';
 import { UserSession } from 'src/common/types/user-session.type';
 import { RequestHeader } from 'src/pipes/request-header.pipe';
 import { ChangePasswordBodyDto } from './dto/change-password.dto';
@@ -78,19 +79,19 @@ export class UserController {
 
     @Put('update-user/:id')
     updateUser(
-        @Param('id') userId: string,
+        @Param() { id }: IdParamDto,
         @Body() userData: Partial<CreateUserBodyDto>,
         @Req() req: Request & { user: UserSession },
     ) {
-        return this.managementService.updateUser(userId, userData, req.user);
+        return this.managementService.updateUser(id, userData, req.user);
     }
 
     @Delete('delete-user/:id')
     deleteUser(
-        @Param('id') userId: string,
+        @Param() { id }: IdParamDto,
         @Req() req: Request & { user: UserSession },
     ) {
-        return this.managementService.deleteUser(userId, req.user);
+        return this.managementService.deleteUser(id, req.user);
     }
 
     @Post('search-users')
@@ -111,15 +112,11 @@ export class UserController {
 
     @Get('get-user/:id')
     getUser(
-        @Param('id') userId: string,
+        @Param() { id }: IdParamDto,
         @Query() query: GetUserQueryDto,
         @Req() req: Request & { user: UserSession },
     ) {
         const wantsExpanded = query.expanded;
-        return this.managementService.getUserById(
-            userId,
-            req.user,
-            wantsExpanded,
-        );
+        return this.managementService.getUserById(id, req.user, wantsExpanded);
     }
 }

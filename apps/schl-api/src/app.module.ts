@@ -7,9 +7,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { JwtStrategy } from './common/auth/jwt.strategy';
-import { RoleModule } from './role/role.module';
-import { UserModule } from './user/user.module';
-import { ClientModule } from './client/client.module';
+import { ClientModule } from './modules/client/client.module';
+import { RoleModule } from './modules/role/role.module';
+import { UserModule } from './modules/user/user.module';
+import { ScheduleModule } from './modules/schedule/schedule.module';
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { ClientModule } from './client/client.module';
         UserModule,
         RoleModule,
         ClientModule,
+        ScheduleModule,
     ],
     controllers: [AppController],
     providers: [

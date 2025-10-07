@@ -59,7 +59,7 @@ export class Report {
     @Prop({ type: [String], default: [] })
     calling_date_history?: string[];
 
-    @Prop({ default: null })
+    @Prop({ type: String, default: null })
     updated_by?: string | null;
 
     @Prop({ default: false })

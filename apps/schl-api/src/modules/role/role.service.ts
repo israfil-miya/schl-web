@@ -11,7 +11,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import type { Permissions } from 'src/common/types/permission.type';
 import { UserSession } from 'src/common/types/user-session.type';
-import { hasPerm, toPermissions } from 'src/common/utils/permission-check';
+import {
+    hasPerm,
+    sanitizePermissions,
+} from 'src/common/utils/permission-check';
 import { Role } from 'src/models/role.schema';
 import { User } from 'src/models/user.schema';
 
@@ -22,20 +25,6 @@ export class RoleService {
         @InjectModel(Role.name) private roleModel: Model<Role>,
         private readonly config: ConfigService,
     ) {}
-
-    /**
-     * Normalize an unknown permissions collection into a strongly typed `Permissions[]`
-     * - Accepts unknown / mixed input
-     * - Filters out non-string entries
-     * - Uses shared `toPermissions` utility for canonical validation
-     */
-    private sanitizePermissions(perms: unknown): Permissions[] {
-        if (!Array.isArray(perms)) return [];
-        const stringPerms = perms.filter(
-            (p): p is string => typeof p === 'string',
-        );
-        return toPermissions(stringPerms);
-    }
 
     async searchRoles(
         filters: { name?: string },
@@ -123,7 +112,7 @@ export class RoleService {
         // Sanitize permissions output (ensure canonical typing)
         const safeItems = roles.map(r => ({
             ...r,
-            permissions: this.sanitizePermissions(r.permissions),
+            permissions: sanitizePermissions(r.permissions),
         }));
 
         if (!paginated) {
@@ -147,9 +136,7 @@ export class RoleService {
             );
         }
 
-        const requestedPermissions = this.sanitizePermissions(
-            roleData.permissions,
-        );
+        const requestedPermissions = sanitizePermissions(roleData.permissions);
 
         // Guard super admin assignment unless caller is super admin
         if (
@@ -206,9 +193,7 @@ export class RoleService {
             throw new ForbiddenException("You can't edit this role");
         }
 
-        const requestedPermissions = this.sanitizePermissions(
-            roleData.permissions,
-        );
+        const requestedPermissions = sanitizePermissions(roleData.permissions);
 
         if (!canManageAny) {
             if (requestedPermissions.length > 0) {
@@ -282,7 +267,7 @@ export class RoleService {
         if (roleIsSuper && !viewerIsSuper) {
             throw new ForbiddenException("You can't view this role");
         }
-        const sanitized = this.sanitizePermissions(role.permissions);
+        const sanitized = sanitizePermissions(role.permissions);
         const { _id, name, description, ...rest } = role;
         const extra = rest as Record<string, unknown>;
         return {

@@ -62,7 +62,7 @@ export class Order {
     @Prop({ default: 'medium', enum: ['low', 'medium', 'high'] })
     priority?: 'low' | 'medium' | 'high';
 
-    @Prop({ default: null })
+    @Prop({ type: String, default: null })
     updated_by?: string | null;
 
     @Prop({ type: Date })

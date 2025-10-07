@@ -79,6 +79,9 @@ export const buildOrRegex = (
 /**
  * Add plus-separated token matching: each token must appear as a token (split by '+').
  * Generates a single RegexQuery and assigns it to key if value valid.
+ * Uses positive lookaheads to ensure all tokens are present.
+ *
+ * Note: MongoDB does not support lookbehinds, so we only ensure the token is not preceded by a letter.
  */
 export const addPlusSeparatedContainsAllField = <T extends Record<string, any>>(
     query: T,

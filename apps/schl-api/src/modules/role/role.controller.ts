@@ -10,6 +10,7 @@ import {
     Req,
     Request,
 } from '@nestjs/common';
+import { IdParamDto } from 'src/common/dto/id-param.dto';
 import { UserSession } from 'src/common/types/user-session.type';
 import { CreateRoleBodyDto } from './dto/create-role.dto';
 import {
@@ -48,26 +49,26 @@ export class RoleController {
 
     @Delete('delete-role/:id')
     deleteRole(
-        @Param('id') roleId: string,
+        @Param() { id }: IdParamDto,
         @Req() req: Request & { user: UserSession },
     ) {
-        return this.roleService.deleteRole(roleId, req.user);
+        return this.roleService.deleteRole(id, req.user);
     }
 
     @Put('update-role/:id')
     updateRole(
-        @Param('id') roleId: string,
+        @Param() { id }: IdParamDto,
         @Body() body: Partial<CreateRoleBodyDto>,
         @Req() req: Request & { user: UserSession },
     ) {
-        return this.roleService.updateRole(roleId, body, req.user);
+        return this.roleService.updateRole(id, body, req.user);
     }
 
     @Get('get-role/:id')
     getRole(
-        @Param('id') roleId: string,
+        @Param() { id }: IdParamDto,
         @Req() req: Request & { user: UserSession },
     ) {
-        return this.roleService.getRoleById(roleId, req.user);
+        return this.roleService.getRoleById(id, req.user);
     }
 }

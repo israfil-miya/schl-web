@@ -41,3 +41,16 @@ export const toPermissions = (perms: string[]): Permissions[] => {
         VALID_PERMISSION_VALUES.has(p),
     );
 };
+
+/**
+ * Normalize an unknown permissions collection into a strongly typed `Permissions[]`
+ * - Accepts unknown / mixed input
+ * - Filters out non-string entries
+ * - Uses shared `toPermissions` utility for canonical validation
+ */
+
+export const sanitizePermissions = (perms: unknown): Permissions[] => {
+    if (!Array.isArray(perms)) return [];
+    const stringPerms = perms.filter((p): p is string => typeof p === 'string');
+    return toPermissions(stringPerms);
+};
