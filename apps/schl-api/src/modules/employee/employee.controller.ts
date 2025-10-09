@@ -1,4 +1,13 @@
-import { Body, Controller, Param, Post, Put, Query, Req } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+} from '@nestjs/common';
 import { IdParamDto } from 'src/common/dto/id-param.dto';
 import { UserSession } from 'src/common/types/user-session.type';
 import { CreateEmployeeBodyDto } from './dto/create-employee.dto';
@@ -42,5 +51,19 @@ export class EmployeeController {
             paginated: query.paginated,
         };
         return this.employeeService.searchEmployees(body, pagination, req.user);
+    }
+
+    @Get('get-employee/:param')
+    getEmployee(
+        @Param('param') param: string,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        const value = param.trim();
+        const isPotentialObjectId =
+            value.length === 24 && /^[0-9a-fA-F]{24}$/.test(value);
+        if (isPotentialObjectId) {
+            return this.employeeService.getEmployeeByDbId(value, req.user);
+        }
+        return this.employeeService.getEmployeeById(value, req.user);
     }
 }

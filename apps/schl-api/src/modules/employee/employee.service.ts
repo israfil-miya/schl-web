@@ -174,6 +174,7 @@ export class EmployeeService {
             );
         }
     }
+
     async searchEmployees(
         filters: SearchEmployeesBodyDto,
         pagination: {
@@ -340,5 +341,54 @@ export class EmployeeService {
             },
             items,
         };
+    }
+
+    async getEmployeeByDbId(employeeId: string, userSession: UserSession) {
+        const canView = hasPerm(
+            'accountancy:manage_employee',
+            userSession.permissions,
+        );
+        if (!canView) {
+            throw new ForbiddenException(
+                "You don't have permission to view employee details",
+            );
+        }
+
+        try {
+            const found = await this.employeeModel.findById(employeeId).exec();
+            if (!found) {
+                throw new BadRequestException('Employee not found');
+            }
+            return found;
+        } catch {
+            throw new InternalServerErrorException(
+                'Unable to retrieve employee',
+            );
+        }
+    }
+
+    async getEmployeeById(e_id: string, userSession: UserSession) {
+        const canView = hasPerm(
+            'accountancy:manage_employee',
+            userSession.permissions,
+        );
+        if (!canView) {
+            throw new ForbiddenException(
+                "You don't have permission to view employee details",
+            );
+        }
+
+        const id = e_id.trim();
+        try {
+            const found = await this.employeeModel.findOne({ e_id: id }).exec();
+            if (!found) {
+                throw new BadRequestException('Employee not found');
+            }
+            return found;
+        } catch {
+            throw new InternalServerErrorException(
+                'Unable to retrieve employee',
+            );
+        }
     }
 }
