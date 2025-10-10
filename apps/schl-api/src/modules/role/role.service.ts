@@ -17,6 +17,7 @@ import {
 } from 'src/common/utils/permission-check';
 import { Role } from 'src/models/role.schema';
 import { User } from 'src/models/user.schema';
+import { CreateRoleBodyDto } from './dto/create-role.dto';
 
 @Injectable()
 export class RoleService {
@@ -128,7 +129,7 @@ export class RoleService {
         };
     }
 
-    async createRole(roleData: Role, userSession: UserSession) {
+    async createRole(roleData: CreateRoleBodyDto, userSession: UserSession) {
         // Permission to create roles required
         if (!hasPerm('admin:create_role', userSession.permissions)) {
             throw new ForbiddenException(
@@ -172,7 +173,7 @@ export class RoleService {
 
     async updateRole(
         roleId: string,
-        roleData: Partial<Role>,
+        roleData: Partial<CreateRoleBodyDto>,
         userSession: UserSession,
     ) {
         const userPerms = userSession.permissions;

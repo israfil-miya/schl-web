@@ -74,10 +74,10 @@ export class UserController {
 
     @Post('create-user')
     createUser(
-        @Body() body: CreateUserBodyDto,
+        @Body() userData: CreateUserBodyDto,
         @Req() req: Request & { user: UserSession },
     ) {
-        return this.userService.createUser(body, req.user);
+        return this.userService.createUser(userData, req.user);
     }
 
     @Put('update-user/:id')

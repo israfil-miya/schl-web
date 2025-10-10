@@ -86,7 +86,7 @@ export class Report {
     @Prop({ default: '' })
     onboard_date?: string;
 
-    @Prop({ default: null })
+    @Prop({ default: null, type: String })
     lead_origin?: string | null; // null for non-lead reports, string ("generated" | <marketer name>) for lead reports
 
     @Prop({ type: Date })
@@ -97,3 +97,15 @@ export class Report {
 }
 
 export const ReportSchema = SchemaFactory.createForClass(Report);
+// Performance indexes (non-breaking):
+// Trend queries and date range lookups
+ReportSchema.index({ is_lead: 1, createdAt: 1 });
+// Clients onboarding (string date but lexicographically comparable on YYYY-MM-DD)
+ReportSchema.index({ is_lead: 1, client_status: 1, onboard_date: 1 });
+// Common filters
+ReportSchema.index({ marketer_name: 1 });
+// Array dates (multikey)
+ReportSchema.index({ calling_date_history: 1 });
+ReportSchema.index({ test_given_date_history: 1 });
+// Follow-up sorting
+ReportSchema.index({ followup_done: 1, followup_date: 1, is_lead: 1 });
