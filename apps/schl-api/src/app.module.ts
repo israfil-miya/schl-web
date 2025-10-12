@@ -13,6 +13,7 @@ import { UserModule } from './modules/user/user.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { ReportModule } from './modules/report/report.module';
+import { FtpModule } from './modules/ftp/ftp.module';
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { ReportModule } from './modules/report/report.module';
         ScheduleModule,
         EmployeeModule,
         ReportModule,
+        FtpModule,
     ],
     controllers: [AppController],
     providers: [
