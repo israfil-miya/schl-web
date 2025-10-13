@@ -1,7 +1,22 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+} from '@nestjs/common';
+import { IdParamDto } from 'src/common/dto/id-param.dto';
 import { UserSession } from 'src/common/types/user-session.type';
-import { NoticeService } from './notice.service';
 import { CreateNoticeBodyDto } from './dto/create-notice.dto';
+import {
+    SearchNoticesBodyDto,
+    SearchNoticesQueryDto,
+} from './dto/search-notices.dto';
+import { NoticeService } from './notice.service';
 
 @Controller('notice')
 export class NoticeController {
@@ -13,5 +28,46 @@ export class NoticeController {
         @Req() req: Request & { user: UserSession },
     ) {
         return this.noticeService.createNotice(noticeData, req.user);
+    }
+
+    @Get('get-notice/:id')
+    getNotice(
+        @Param() { id }: IdParamDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.noticeService.getNotice(id, req.user);
+    }
+
+    @Delete('delete-notice/:id')
+    deleteNotice(
+        @Param() { id }: IdParamDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.noticeService.deleteNotice(id, req.user);
+    }
+
+    @Post('search-notices')
+    searchNotices(
+        @Query() query: SearchNoticesQueryDto,
+        @Body() body: SearchNoticesBodyDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        const pagination = {
+            page: query.page,
+            itemsPerPage: query.itemsPerPage,
+            filtered: query.filtered,
+            paginated: query.paginated,
+        };
+
+        return this.noticeService.searchNotices(body, pagination, req.user);
+    }
+
+    @Put('update-notice/:id')
+    updateNotice(
+        @Param() { id }: IdParamDto,
+        @Body() body: Partial<CreateNoticeBodyDto>,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.noticeService.updateNotice(id, body, req.user);
     }
 }
