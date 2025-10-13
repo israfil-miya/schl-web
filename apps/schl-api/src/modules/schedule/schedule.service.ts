@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -168,13 +169,7 @@ export class ScheduleService {
                 items,
             };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve schedules',
             );
@@ -219,13 +214,7 @@ export class ScheduleService {
             }
             return created;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to create schedule');
         }
     }
@@ -246,13 +235,7 @@ export class ScheduleService {
             await existing.deleteOne();
             return { message: 'Deleted the schedule successfully' };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to delete schedule');
         }
     }
@@ -317,13 +300,7 @@ export class ScheduleService {
             }
             return updated;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to update schedule');
         }
     }

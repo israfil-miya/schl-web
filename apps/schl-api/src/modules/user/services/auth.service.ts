@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
 } from '@nestjs/common';
@@ -49,11 +50,7 @@ export class AuthService {
             }
             throw new BadRequestException('Invalid username or password');
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to login');
         }
     }
@@ -92,11 +89,7 @@ export class AuthService {
                 );
             }
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to verify user');
         }
     }

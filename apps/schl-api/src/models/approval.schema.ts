@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { Change } from 'src/common/utils/changes-generate';
 
 export type ApprovalDocument = HydratedDocument<Approval>;
 
@@ -46,24 +47,29 @@ export class Approval {
         required: function () {
             return this.action === 'update';
         },
-        default: {},
-        type: Object,
+        type: [
+            {
+                field: { type: String, required: true },
+                oldValue: { type: mongoose.Schema.Types.Mixed, default: null },
+                newValue: { type: mongoose.Schema.Types.Mixed, default: null },
+                arrayChanges: {
+                    type: {
+                        added: {
+                            type: [mongoose.Schema.Types.Mixed],
+                            default: [],
+                        },
+                        removed: {
+                            type: [mongoose.Schema.Types.Mixed],
+                            default: [],
+                        },
+                    },
+                    default: undefined,
+                },
+            },
+        ],
+        default: [],
     })
-    changes?: Record<string, any>;
-
-    /*
-        The previous data of the document before the changes were made.
-        Not applicable for create requests
-        It holds the entire document as it was before the changes were made
-    */
-    @Prop({
-        required: function () {
-            return this.action !== 'create';
-        },
-        default: null,
-        type: Object,
-    })
-    prev_data?: Record<string, any> | null;
+    changes?: Change[];
 
     /*
         The new data of a document to be created.

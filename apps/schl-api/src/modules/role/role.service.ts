@@ -2,6 +2,7 @@ import {
     BadRequestException,
     ConflictException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -80,14 +81,7 @@ export class RoleService {
                 count = await this.roleModel.countDocuments(baseFilter).exec();
             }
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve roles at this time',
             );
@@ -119,14 +113,7 @@ export class RoleService {
                 roles = await this.roleModel.find(baseFilter).lean().exec();
             }
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve roles at this time',
             );
@@ -188,14 +175,7 @@ export class RoleService {
                 permissions: requestedPermissions,
             };
         } catch (err: any) {
-            if (
-                err instanceof BadRequestException ||
-                err instanceof ForbiddenException ||
-                err instanceof ConflictException ||
-                err instanceof NotFoundException ||
-                err instanceof InternalServerErrorException
-            )
-                throw err;
+            if (err instanceof HttpException) throw err;
             if (err?.code === 11000) {
                 throw new ConflictException(
                     'Role with this name already exists',
@@ -277,14 +257,7 @@ export class RoleService {
             await existing.save();
             return existing;
         } catch (err: any) {
-            if (
-                err instanceof BadRequestException ||
-                err instanceof ForbiddenException ||
-                err instanceof ConflictException ||
-                err instanceof NotFoundException ||
-                err instanceof InternalServerErrorException
-            )
-                throw err;
+            if (err instanceof HttpException) throw err;
             if (err?.code === 11000) {
                 throw new ConflictException(
                     'Role with this name already exists',
@@ -358,14 +331,7 @@ export class RoleService {
             await existing.deleteOne();
             return 'Role deleted successfully';
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to delete role at this time',
             );

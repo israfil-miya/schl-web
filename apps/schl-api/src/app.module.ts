@@ -15,6 +15,7 @@ import { EmployeeModule } from './modules/employee/employee.module';
 import { ReportModule } from './modules/report/report.module';
 import { FtpModule } from './modules/ftp/ftp.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
+import { NoticeModule } from './modules/notice/notice.module';
 
 @Module({
     imports: [
@@ -36,6 +37,7 @@ import { InvoiceModule } from './modules/invoice/invoice.module';
         ReportModule,
         FtpModule,
         InvoiceModule,
+        NoticeModule,
     ],
     controllers: [AppController],
     providers: [
