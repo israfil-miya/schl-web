@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -20,11 +21,7 @@ export class FtpService {
             await ftpConnection.delete(`./${folderName}/${fileName}`);
             return 'File deleted successfully';
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to delete file');
         } finally {
             if (ftpConnection) {
@@ -54,12 +51,7 @@ export class FtpService {
 
             return stream;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof InternalServerErrorException ||
-                e instanceof NotFoundException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to download file');
         } finally {
             if (ftpConnection) {
@@ -124,11 +116,7 @@ export class FtpService {
             await ftpConnection.put(buffer, `${targetDir}/${sanitizedFile}`);
             return 'File uploaded successfully';
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to upload file');
         } finally {
             if (ftpConnection) {

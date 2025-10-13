@@ -2,6 +2,7 @@ import {
     BadRequestException,
     ConflictException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -84,14 +85,7 @@ export class UserService {
             }
             return createdUser;
         } catch (err: any) {
-            if (
-                err instanceof BadRequestException ||
-                err instanceof ForbiddenException ||
-                err instanceof ConflictException ||
-                err instanceof NotFoundException ||
-                err instanceof InternalServerErrorException
-            )
-                throw err;
+            if (err instanceof HttpException) throw err;
             if (err?.code === 11000) {
                 throw new ConflictException(
                     'User with this name already exists',
@@ -221,14 +215,7 @@ export class UserService {
 
             return updatedUser;
         } catch (error: any) {
-            if (
-                error instanceof BadRequestException ||
-                error instanceof ForbiddenException ||
-                error instanceof ConflictException ||
-                error instanceof NotFoundException ||
-                error instanceof InternalServerErrorException
-            )
-                throw error;
+            if (error instanceof HttpException) throw error;
             if (error?.code === 11000) {
                 throw new ConflictException(
                     'User with this name already exists',
@@ -338,14 +325,7 @@ export class UserService {
                 count = await this.userModel.countDocuments(searchQuery).exec();
             }
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to retrieve users');
         }
 
@@ -393,14 +373,7 @@ export class UserService {
                 }
             }
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to retrieve users');
         }
 

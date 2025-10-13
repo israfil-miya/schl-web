@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+    Injectable,
+    InternalServerErrorException,
+    Logger,
+    OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
@@ -30,7 +35,9 @@ export class AppService implements OnModuleInit {
             // A small query to check DB responsiveness
             const db = this.connection.db;
             if (!db) {
-                throw new Error('MongoDB connection is not initialized');
+                throw new InternalServerErrorException(
+                    'MongoDB connection is not initialized',
+                );
             }
             await db.admin().ping();
             db_status = 'connected';

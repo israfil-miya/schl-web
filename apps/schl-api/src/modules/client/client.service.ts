@@ -2,6 +2,7 @@ import {
     BadRequestException,
     ConflictException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -92,14 +93,7 @@ export class ClientService {
                 searchQuery as Record<string, unknown>,
             );
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to count clients');
         }
 
@@ -155,14 +149,7 @@ export class ClientService {
                 items,
             };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve clients',
             );
@@ -276,14 +263,7 @@ export class ClientService {
             }
             return { message: 'Deleted the client successfully' };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to delete client');
         }
     }
@@ -302,14 +282,7 @@ export class ClientService {
             }
             return found;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to retrieve client');
         }
     }
@@ -330,14 +303,7 @@ export class ClientService {
             }
             return found;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to retrieve client');
         }
     }

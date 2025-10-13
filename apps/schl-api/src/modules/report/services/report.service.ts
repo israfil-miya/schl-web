@@ -2,6 +2,7 @@ import {
     BadRequestException,
     ConflictException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -114,14 +115,7 @@ export class ReportService {
 
             return sorted;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve reports count',
             );
@@ -211,14 +205,7 @@ export class ReportService {
             for (const k of keys) out[k] = buckets[k];
             return out;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve clients onboard count',
             );
@@ -309,14 +296,7 @@ export class ReportService {
             for (const k of keys) sorted[k] = result[k];
             return sorted;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve test orders trend',
             );
@@ -509,14 +489,7 @@ export class ReportService {
 
             return data;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve report statuses',
             );
@@ -856,13 +829,7 @@ export class ReportService {
             }
             return created;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to create report');
         }
     }
@@ -890,13 +857,7 @@ export class ReportService {
             }
             return updated;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to update report');
         }
     }
@@ -972,13 +933,7 @@ export class ReportService {
                 // ignore cleanup errors
             }
             // Re-throw known http exceptions, otherwise wrap
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('An error occurred');
         }
     }
@@ -1003,13 +958,7 @@ export class ReportService {
 
             return { message: 'Rejected regular client request' };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('An error occurred');
         }
     }
@@ -1041,13 +990,7 @@ export class ReportService {
 
             return 'Marked the request as duplicate client';
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to mark the request as duplicate',
             );
@@ -1074,13 +1017,7 @@ export class ReportService {
             });
             return count;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to fetch follow-up count',
             );
@@ -1136,20 +1073,26 @@ export class ReportService {
                 const changes = appr.changes as
                     | Array<{ field: string; newValue: any }>
                     | undefined;
-                if (!changes?.length) return false;
+                if (!changes) return false;
 
-                const change = changes.find(
-                    c => c.field === 'calling_date_history',
-                );
-                if (!change || !Array.isArray(change.newValue)) return false;
-
-                const history = change.newValue as string[];
-                const len = history.length;
-                if (len < 2) return false;
-
-                const first = history[0];
-                const last = history[len - 1];
-                return first !== today && last === today;
+                for (const c of changes) {
+                    if (
+                        c.field === 'calling_date_history' &&
+                        Array.isArray(c.newValue)
+                    ) {
+                        const history = c.newValue as string[];
+                        const len = history.length;
+                        if (
+                            len >= 2 &&
+                            history[0] !== today &&
+                            history[len - 1] === today
+                        ) {
+                            return true;
+                        }
+                        break;
+                    }
+                }
+                return false;
             });
 
             const reportIds = validApprovals.reduce<string[]>((acc, a) => {
@@ -1165,14 +1108,7 @@ export class ReportService {
 
             return recallCount1 + recallCount2;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof NotFoundException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to fetch recall count',
             );
@@ -1270,13 +1206,7 @@ export class ReportService {
                 return created;
             }
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to withdraw lead');
         }
     }
@@ -1320,14 +1250,7 @@ export class ReportService {
 
             return { message: 'Follow-up marked as done' };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException ||
-                e instanceof NotFoundException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to mark follow-up as done',
             );
@@ -1359,14 +1282,7 @@ export class ReportService {
 
             return report;
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException ||
-                e instanceof NotFoundException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to retrieve the report',
             );
@@ -1409,14 +1325,7 @@ export class ReportService {
 
             return { message: 'Client removed from report' };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof ConflictException ||
-                e instanceof InternalServerErrorException ||
-                e instanceof NotFoundException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to remove client from report',
             );

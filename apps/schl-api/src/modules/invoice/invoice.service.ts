@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ForbiddenException,
+    HttpException,
     Injectable,
     InternalServerErrorException,
 } from '@nestjs/common';
@@ -53,12 +54,7 @@ export class InvoiceService {
             }
             return { message: 'Deleted the invoice successfully' };
         } catch (e) {
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('An error occurred');
         }
     }
@@ -102,12 +98,7 @@ export class InvoiceService {
             } catch {
                 // ignore cleanup errors
             }
-            if (
-                e instanceof BadRequestException ||
-                e instanceof ForbiddenException ||
-                e instanceof InternalServerErrorException
-            )
-                throw e;
+            if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException(
                 'Unable to store the invoice data',
             );
