@@ -20,8 +20,8 @@ export class Order {
     @Prop({ default: 0 })
     quantity?: number;
 
-    @Prop({ default: '' })
-    download_date?: string;
+    @Prop({ required: [true, 'Download date is required'] })
+    download_date: string;
 
     @Prop({ default: '' })
     delivery_date?: string;
@@ -29,8 +29,8 @@ export class Order {
     @Prop({ default: '' })
     delivery_bd_time?: string;
 
-    @Prop({ default: '' })
-    task?: string;
+    @Prop({ required: [true, 'Task is required'] })
+    task: string;
 
     @Prop({ default: 0 })
     et?: number;

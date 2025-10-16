@@ -17,6 +17,7 @@ import { FtpModule } from './modules/ftp/ftp.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { NoticeModule } from './modules/notice/notice.module';
 import { ApprovalModule } from './modules/approval/approval.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
     imports: [
@@ -40,6 +41,7 @@ import { ApprovalModule } from './modules/approval/approval.module';
         InvoiceModule,
         NoticeModule,
         ApprovalModule,
+        OrderModule,
     ],
     controllers: [AppController],
     providers: [
