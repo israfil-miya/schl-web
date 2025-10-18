@@ -1,4 +1,4 @@
-export const countriesList = [
+export const COUNTRY_LIST = [
     'Australia',
     'Denmark',
     'Finland',

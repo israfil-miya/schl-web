@@ -23,13 +23,13 @@ import { Approval } from 'src/models/approval.schema';
 import { Client } from 'src/models/client.schema';
 import { Report } from 'src/models/report.schema';
 import { User } from 'src/models/user.schema';
-import { ConvertToClientBodyDto } from '../dto/convert-to-client.dto';
-import { CreateReportBodyDto } from '../dto/create-report.dto';
+import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
+import { CreateReportBodyDto } from './dto/create-report.dto';
 import {
     SearchReportsBodyDto,
     SearchReportsQueryDto,
-} from '../dto/search-reports.dto';
-import { ReportFactory } from '../factories/report.factory';
+} from './dto/search-reports.dto';
+import { ReportFactory } from './factories/report.factory';
 
 @Injectable()
 export class ReportService {

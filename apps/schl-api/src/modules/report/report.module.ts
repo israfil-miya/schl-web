@@ -5,7 +5,7 @@ import { Client, ClientSchema } from 'src/models/client.schema';
 import { Report, ReportSchema } from 'src/models/report.schema';
 import { User, UserSchema } from 'src/models/user.schema';
 import { ReportController } from './report.controller';
-import { ReportService } from './services/report.service';
+import { ReportService } from './report.service';
 
 @Module({
     imports: [

@@ -9,10 +9,20 @@ import {
     Query,
     Req,
 } from '@nestjs/common';
+import {
+    ClientCodeParamDto,
+    ClientCodeRequiredParamDto,
+} from 'src/common/dto/client-code-param.dto';
 import { IdParamDto } from 'src/common/dto/id-param.dto';
 import { UserSession } from 'src/common/types/user-session.type';
-import { ClientOrdersParamDto } from './dto/client-orders.dto';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
+import {
+    OrdersByCountryParamDto,
+    OrdersByCountryQueryDto,
+} from './dto/orders-by-country.dto';
+import { OrdersByMonthQueryDto } from './dto/orders-by-month.dto';
+import { OrdersCDQueryDto } from './dto/orders-cd.dto';
+import { OrdersQPQueryDto } from './dto/orders-qp.dto';
 import {
     SearchOrdersBodyDto,
     SearchOrdersQueryDto,
@@ -41,7 +51,7 @@ export class OrderController {
 
     @Get('client-orders/:code')
     getClientOrders(
-        @Param() { code }: ClientOrdersParamDto,
+        @Param() { code }: ClientCodeRequiredParamDto,
         @Req() req: Request & { user: UserSession },
     ) {
         return this.orderService.clientOrders(code, req.user);
@@ -86,5 +96,70 @@ export class OrderController {
         @Req() req: Request & { user: UserSession },
     ) {
         return this.orderService.updateOrder(id, body, req.user);
+    }
+    @Get('orders-by-month/:code')
+    ordersByMonth(
+        @Query() query: OrdersByMonthQueryDto,
+        @Param() { code }: ClientCodeParamDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        const pagination = {
+            page: query.page,
+            itemsPerPage: query.itemsPerPage,
+        };
+
+        return this.orderService.ordersByMonth(
+            code || undefined,
+            pagination,
+            req.user,
+        );
+    }
+
+    @Get('orders-by-country/:country')
+    ordersByCountry(
+        @Query() query: OrdersByCountryQueryDto,
+        @Param() { country }: OrdersByCountryParamDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.orderService.ordersByCountry(country, query, req.user);
+    }
+
+    @Get('orders-cd')
+    ordersCD(
+        @Query() query: OrdersCDQueryDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.orderService.ordersCD(query, req.user);
+    }
+
+    @Get('orders-qp')
+    ordersQP(
+        @Query() query: OrdersQPQueryDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.orderService.ordersQP(query, req.user);
+    }
+
+    @Get('unfinished-orders')
+    unfinishedOrders(@Req() req: Request & { user: UserSession }) {
+        return this.orderService.unfinishedOrders(req.user);
+    }
+
+    @Get('qc-orders')
+    qcOrders(@Req() req: Request & { user: UserSession }) {
+        return this.orderService.qcOrders(req.user);
+    }
+
+    @Get('rework-orders')
+    reworkOrders(@Req() req: Request & { user: UserSession }) {
+        return this.orderService.reworkOrders(req.user);
+    }
+
+    @Get(':id')
+    getOrder(
+        @Param() { id }: IdParamDto,
+        @Req() req: Request & { user: UserSession },
+    ) {
+        return this.orderService.getOrder(id, req.user);
     }
 }

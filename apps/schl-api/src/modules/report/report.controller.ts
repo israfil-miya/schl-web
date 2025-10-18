@@ -20,7 +20,7 @@ import {
     SearchReportsBodyDto,
     SearchReportsQueryDto,
 } from './dto/search-reports.dto';
-import { ReportService } from './services/report.service';
+import { ReportService } from './report.service';
 
 @Controller('report')
 export class ReportController {

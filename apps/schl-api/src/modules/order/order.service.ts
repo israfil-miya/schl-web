@@ -6,18 +6,30 @@ import {
     InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import moment from 'moment-timezone';
 import { Model } from 'mongoose';
+import { COUNTRY_LIST } from 'src/common/constants/client-common-countries';
 import { UserSession } from 'src/common/types/user-session.type';
-import { applyDateRange } from 'src/common/utils/date-helpers';
+import {
+    applyDateRange,
+    calculateTimeDifference,
+    getDateRange,
+} from 'src/common/utils/date-helpers';
 import {
     addIfDefined,
     addPlusSeparatedContainsAllField,
     createRegexQuery,
 } from 'src/common/utils/filter-helpers';
 import { hasAnyPerm, hasPerm } from 'src/common/utils/permission-check';
+import { Client } from 'src/models/client.schema';
+import { Invoice } from 'src/models/invoice.schema';
 import { Order } from 'src/models/order.schema';
 import { SearchUsersQueryDto } from '../user/dto/search-users.dto';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
+import { OrdersByCountryQueryDto } from './dto/orders-by-country.dto';
+import { OrdersByMonthQueryDto } from './dto/orders-by-month.dto';
+import { OrdersCDQueryDto } from './dto/orders-cd.dto';
+import { OrdersQPQueryDto } from './dto/orders-qp.dto';
 import { SearchOrdersBodyDto } from './dto/search-orders.dto';
 import { OrderFactory } from './factories/order.factory';
 
@@ -25,6 +37,9 @@ import { OrderFactory } from './factories/order.factory';
 export class OrderService {
     constructor(
         @InjectModel(Order.name) private readonly orderModel: Model<Order>,
+        @InjectModel(Client.name) private readonly clientModel: Model<Client>,
+        @InjectModel(Invoice.name)
+        private readonly invoiceModel: Model<Invoice>,
     ) {}
 
     async searchOrders(
@@ -404,5 +419,528 @@ export class OrderService {
             if (e instanceof HttpException) throw e;
             throw new InternalServerErrorException('Unable to update order');
         }
+    }
+
+    async ordersByMonth(
+        clientCode: string | undefined,
+        pagination: OrdersByMonthQueryDto,
+        userSession: UserSession,
+    ) {
+        if (
+            !hasAnyPerm(
+                ['accountancy:create_invoice', 'browse:view_page'],
+                userSession.permissions,
+            )
+        ) {
+            throw new ForbiddenException(
+                "You don't have permission to view orders",
+            );
+        }
+
+        const { page, itemsPerPage } = pagination;
+        const skip = (page - 1) * itemsPerPage;
+
+        const clientQuery: Record<string, any> = {};
+        if (clientCode) {
+            clientQuery.client_code = createRegexQuery(clientCode, {
+                exact: true,
+            });
+        }
+
+        // Fetch clients with pagination
+        const [clients, totalClients] = await Promise.all([
+            this.clientModel
+                .find(clientQuery, { client_code: 1 })
+                .skip(skip)
+                .limit(itemsPerPage)
+                .lean(),
+            this.clientModel.countDocuments(clientQuery),
+        ]);
+
+        if (!clients || clients.length === 0) {
+            return {
+                pagination: {
+                    count: totalClients,
+                    pageCount: Math.ceil(totalClients / itemsPerPage),
+                },
+                items: [],
+            };
+        }
+
+        // Date range: last 12 full months including current month
+        const endDate = moment().endOf('month').format('YYYY-MM-DD');
+        const startDate = moment()
+            .subtract(11, 'months')
+            .startOf('month')
+            .format('YYYY-MM-DD');
+        const clientCodes = clients.map(c => c.client_code);
+
+        // Fetch relevant orders
+        const orders = await this.orderModel
+            .find({
+                client_code: { $in: clientCodes },
+                download_date: { $gte: startDate, $lte: endDate },
+            })
+            .lean()
+            .exec();
+
+        const last12Months: string[] = [];
+        for (let i = 11; i >= 0; i--) {
+            last12Months.push(moment().subtract(i, 'months').format('YYYY-MM'));
+        }
+
+        // Group orders by client and month
+        type MonthAgg = { count: number; totalFiles: number };
+        const ordersByClient: Record<string, Record<string, MonthAgg>> = {};
+        for (const order of orders as any[]) {
+            const monthYear = moment(String(order.download_date)).format(
+                'YYYY-MM',
+            );
+            const code = String(order.client_code);
+            if (!ordersByClient[code]) ordersByClient[code] = {};
+            if (!ordersByClient[code][monthYear])
+                ordersByClient[code][monthYear] = { count: 0, totalFiles: 0 };
+            ordersByClient[code][monthYear].count += 1;
+            ordersByClient[code][monthYear].totalFiles +=
+                Number(order.quantity) || 0;
+        }
+
+        // Build final response per client with invoiced flag per month
+        const items = await Promise.all(
+            clients.map(async c => {
+                const ordersArr = await Promise.all(
+                    last12Months.map(async monthYear => {
+                        const formattedMonthYear = moment(
+                            monthYear,
+                            'YYYY-MM',
+                        ).format('MMMM YYYY');
+                        const clientMonthMap =
+                            ordersByClient[c.client_code] || {};
+                        const monthData =
+                            clientMonthMap[monthYear] ||
+                            ({ count: 0, totalFiles: 0 } as MonthAgg);
+
+                        let invoiced = false;
+                        if (monthData.count > 0) {
+                            // Compute month range
+                            const start = moment(monthYear, 'YYYY-MM')
+                                .startOf('month')
+                                .format('YYYY-MM-DD');
+                            const end = moment(monthYear, 'YYYY-MM')
+                                .endOf('month')
+                                .format('YYYY-MM-DD');
+                            const invoice = await this.invoiceModel
+                                .findOne({
+                                    client_code: c.client_code,
+                                    'time_period.fromDate': { $gte: start },
+                                    'time_period.toDate': { $lte: end },
+                                })
+                                .lean()
+                                .exec();
+                            invoiced = !!invoice;
+                        }
+
+                        return {
+                            [formattedMonthYear]: {
+                                count: monthData.count,
+                                totalFiles: monthData.totalFiles,
+                                invoiced,
+                            },
+                        };
+                    }),
+                );
+
+                return {
+                    client_code: c.client_code,
+                    orders: ordersArr,
+                };
+            }),
+        );
+
+        return {
+            pagination: {
+                count: totalClients,
+                pageCount: Math.ceil(totalClients / itemsPerPage),
+            },
+            items,
+        };
+    }
+
+    async ordersByCountry(
+        country: string,
+        query: OrdersByCountryQueryDto,
+        userSession: UserSession,
+    ) {
+        if (!hasPerm('fileflow:view_page', userSession.permissions)) {
+            throw new ForbiddenException(
+                "You don't have permission to view orders",
+            );
+        }
+
+        // Build orders query
+        const orderQuery: Record<string, any> = {};
+        applyDateRange(
+            orderQuery,
+            'download_date',
+            query.fromDate,
+            query.toDate,
+        );
+
+        // Build client filter for the country
+        const countryFilter =
+            country === 'Others' ? { $nin: COUNTRY_LIST } : country;
+        const clients = await this.clientModel
+            .find({ country: countryFilter }, { client_code: 1, country: 1 })
+            .lean()
+            .exec();
+
+        const result: {
+            details: { [key: string]: any }[];
+            totalFiles: number;
+        } = {
+            details: [],
+            totalFiles: 0,
+        };
+
+        await Promise.all(
+            clients.map(async clientData => {
+                const orders = await this.orderModel
+                    .find({
+                        ...orderQuery,
+                        client_code: clientData.client_code,
+                    })
+                    .lean()
+                    .exec();
+                for (const order of orders) {
+                    result.details.push({
+                        ...order,
+                        country: clientData.country,
+                    });
+                    result.totalFiles += Number(order.quantity) || 0;
+                }
+            }),
+        );
+
+        return result;
+    }
+
+    /**
+     * Return orders count and file quantities per country per date in the given range.
+     *
+     * CD = Country & Date
+     */
+    async ordersCD(query: OrdersCDQueryDto, userSession: UserSession) {
+        if (!hasPerm('fileflow:view_page', userSession.permissions)) {
+            throw new ForbiddenException(
+                "You don't have permission to view task statistics",
+            );
+        }
+
+        // Build date range using dateRange days (default 30)
+        const days =
+            query.dateRange && query.dateRange > 0 ? query.dateRange : 30;
+        const { from, to } = getDateRange(days);
+
+        // Query orders in range
+        const orderQuery: Record<string, any> = {};
+        applyDateRange(orderQuery, 'download_date', from, to);
+
+        // Clients map: client_code -> country (default Others)
+        const clientsAll = await this.clientModel
+            .find({}, { client_code: 1, country: 1 })
+            .lean()
+            .exec();
+
+        const clientCodeCountryMap = clientsAll.reduce(
+            (map: Record<string, string>, client) => {
+                map[client.client_code] = client.country || 'Others';
+                return map;
+            },
+            {} as Record<string, string>,
+        );
+
+        // Pre-seed countries including Others
+        const ordersDetails: Record<string, any[]> = {
+            ...COUNTRY_LIST.reduce((acc: Record<string, any[]>, c: string) => {
+                acc[c] = [];
+                return acc;
+            }, {}),
+            Others: [],
+        };
+
+        // Fetch orders in range
+        const ordersAll = await this.orderModel
+            .find(orderQuery, {
+                client_code: 1,
+                download_date: 1,
+                quantity: 1,
+            })
+            .lean()
+            .exec();
+
+        // Map orders to countries
+        for (const order of ordersAll) {
+            const clientCountry =
+                clientCodeCountryMap[order.client_code] || 'Others';
+            const targetCountry = ordersDetails[clientCountry]
+                ? clientCountry
+                : 'Others';
+            ordersDetails[targetCountry] = [
+                ...(ordersDetails[targetCountry] || []),
+                order,
+            ];
+        }
+
+        // Build date range list if both provided
+        const dateRange: string[] = [];
+        if (from && to) {
+            const end = new Date(to);
+            const current = new Date(from);
+            while (current <= end) {
+                dateRange.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+        }
+
+        // Aggregate per country per date
+        type CountryOrderData = {
+            date: string;
+            orderQuantity: number;
+            fileQuantity: number;
+        };
+        const ordersCD: Record<string, CountryOrderData[]> = {};
+        for (const [country, ordersArr] of Object.entries(ordersDetails)) {
+            const merged: Record<string, CountryOrderData> = {};
+            for (const order of ordersArr) {
+                const date = String(order.download_date);
+                if (!merged[date]) {
+                    merged[date] = {
+                        date,
+                        orderQuantity: 0,
+                        fileQuantity: 0,
+                    };
+                }
+                merged[date].fileQuantity += Number(order.quantity) || 0;
+                merged[date].orderQuantity += 1;
+            }
+
+            const fullDateData: Record<string, CountryOrderData> = {};
+            for (const d of dateRange) {
+                fullDateData[d] = merged[d] || {
+                    date: d,
+                    orderQuantity: 0,
+                    fileQuantity: 0,
+                };
+            }
+
+            ordersCD[country] = Object.values(fullDateData).sort(
+                (a, b) =>
+                    new Date(a.date).getTime() - new Date(b.date).getTime(),
+            );
+        }
+
+        return ordersCD;
+    }
+
+    /**
+     * Return per-day order and file quantities and pending counts.
+     *
+     * QP = Quantity & Pending
+     */
+    async ordersQP(query: OrdersQPQueryDto, userSession: UserSession) {
+        if (!hasPerm('fileflow:view_page', userSession.permissions)) {
+            throw new ForbiddenException(
+                "You don't have permission to view task statistics",
+            );
+        }
+
+        // Build date range using dateRange days (default 30)
+        const days =
+            query.dateRange && query.dateRange > 0 ? query.dateRange : 30;
+        const { from, to } = getDateRange(days);
+
+        // Query orders in range
+        const orderQuery: Record<string, any> = {};
+        applyDateRange(orderQuery, 'download_date', from, to);
+        const orders = await this.orderModel.find(orderQuery).lean().exec();
+
+        // Build a complete date list between from and to (inclusive)
+        const dateRange: string[] = [];
+        {
+            const end = new Date(to);
+            const current = new Date(from);
+            while (current <= end) {
+                dateRange.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+        }
+
+        type OrderData = {
+            date: string;
+            orderQuantity: number;
+            orderPending: number;
+            fileQuantity: number;
+            filePending: number;
+        };
+
+        // Initialize with zeros
+        const merged: Record<string, OrderData> = {};
+        for (const d of dateRange) {
+            merged[d] = {
+                date: d,
+                orderQuantity: 0,
+                orderPending: 0,
+                fileQuantity: 0,
+                filePending: 0,
+            };
+        }
+
+        // Accumulate from orders
+        for (const order of orders) {
+            const date = String(order.download_date);
+            if (!merged[date]) continue;
+            const qty = Number((order as any).quantity) || 0;
+            merged[date].fileQuantity += qty;
+            merged[date].orderQuantity += 1;
+            if ((order as any).status !== 'finished') {
+                merged[date].filePending += qty;
+                merged[date].orderPending += 1;
+            }
+        }
+
+        return Object.values(merged);
+    }
+
+    async unfinishedOrders(userSession: UserSession) {
+        if (!hasPerm('task:running_tasks', userSession.permissions)) {
+            throw new ForbiddenException(
+                "You don't have permission to view running tasks",
+            );
+        }
+
+        const pipeline = [
+            {
+                $match: {
+                    status: { $nin: ['finished', 'correction'] },
+                    type: { $ne: 'test' },
+                    $expr: { $ne: ['$production', '$quantity'] },
+                },
+            },
+        ];
+
+        const orders = (await this.orderModel
+            .aggregate(pipeline)
+            .exec()) as Array<Partial<Order>>;
+
+        if (!orders)
+            return [] as Array<Partial<Order> & { timeDifference: number }>;
+
+        const enriched: Array<Partial<Order> & { timeDifference: number }> =
+            orders
+                .map(o => ({
+                    ...o,
+                    timeDifference: calculateTimeDifference(
+                        o.delivery_date,
+                        o.delivery_bd_time,
+                    ),
+                }))
+                .sort((a, b) => a.timeDifference - b.timeDifference);
+
+        return enriched;
+    }
+
+    async qcOrders(userSession: UserSession) {
+        if (!hasPerm('task:qc_waitlist', userSession.permissions)) {
+            throw new ForbiddenException(
+                "You don't have permission to view qc tasks",
+            );
+        }
+
+        const pipeline = [
+            {
+                $match: {
+                    status: { $nin: ['finished', 'correction'] },
+                    type: { $ne: 'test' },
+                    $expr: { $eq: ['$production', '$quantity'] },
+                },
+            },
+        ];
+
+        const orders = (await this.orderModel
+            .aggregate(pipeline)
+            .exec()) as Array<Partial<Order>>;
+        if (!orders)
+            return [] as Array<Partial<Order> & { timeDifference: number }>;
+
+        const enriched: Array<Partial<Order> & { timeDifference: number }> =
+            orders
+                .map(o => ({
+                    ...o,
+                    timeDifference: calculateTimeDifference(
+                        o.delivery_date,
+                        o.delivery_bd_time,
+                    ),
+                }))
+                .sort((a, b) => a.timeDifference - b.timeDifference);
+
+        return enriched;
+    }
+
+    async reworkOrders(userSession: UserSession) {
+        if (
+            !hasPerm('task:test_and_correction_tasks', userSession.permissions)
+        ) {
+            throw new ForbiddenException(
+                "You don't have permission to view rework tasks",
+            );
+        }
+
+        const pipeline = [
+            {
+                $match: {
+                    status: { $ne: 'finished' },
+                    $or: [{ type: 'test' }, { status: 'correction' }],
+                },
+            },
+        ];
+
+        const orders = (await this.orderModel
+            .aggregate(pipeline)
+            .exec()) as Array<Partial<Order>>;
+        if (!orders)
+            return [] as Array<Partial<Order> & { timeDifference: number }>;
+
+        const enriched: Array<Partial<Order> & { timeDifference: number }> =
+            orders
+                .map(o => ({
+                    ...o,
+                    timeDifference: calculateTimeDifference(
+                        o.delivery_date,
+                        o.delivery_bd_time,
+                    ),
+                }))
+                .sort((a, b) => a.timeDifference - b.timeDifference);
+
+        return enriched;
+    }
+
+    async getOrder(orderId: string, userSession: UserSession) {
+        if (
+            !hasAnyPerm(
+                ['browse:view_page', 'task:view_page'],
+                userSession.permissions,
+            )
+        ) {
+            throw new ForbiddenException(
+                "You don't have permission to view orders",
+            );
+        }
+
+        const order = await this.orderModel.findById(orderId).exec();
+        if (!order) {
+            throw new BadRequestException('Order not found');
+        }
+
+        return order;
     }
 }
