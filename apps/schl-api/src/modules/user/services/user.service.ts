@@ -10,7 +10,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import type { Permissions } from 'src/common/types/permission.type';
-import { PopulatedUser } from 'src/common/types/populated-user.type';
+import { PopulatedByRoleUser } from 'src/common/types/populated-user.type';
 import { UserSession } from 'src/common/types/user-session.type';
 import { buildOrRegex } from 'src/common/utils/filter-helpers';
 import { hasPerm, toPermissions } from 'src/common/utils/permission-check';
@@ -105,8 +105,8 @@ export class UserService {
         // Load target user with role perms
         const target = await this.userModel
             .findById(userId)
-            .populate('role', 'name permissions')
-            .lean<PopulatedUser>()
+            .populate('role', '_id name permissions')
+            .lean<PopulatedByRoleUser>()
             .exec();
 
         if (!target) {
@@ -149,8 +149,8 @@ export class UserService {
         // Fetch current user with role permissions
         const current = await this.userModel
             .findById(userId)
-            .populate('role', 'name permissions')
-            .lean<PopulatedUser>()
+            .populate('role', '_id name permissions')
+            .lean<PopulatedByRoleUser>()
             .exec();
 
         if (!current) {
@@ -267,7 +267,7 @@ export class UserService {
             } else {
                 // Lookup role by name once
                 const matchedRole = await this.roleModel
-                    .findOne({ name: role })
+                    .findOne({ username: role })
                     .select('_id')
                     .lean()
                     .exec();
@@ -286,10 +286,7 @@ export class UserService {
         const skip = (page - 1) * itemsPerPage;
 
         if (generalSearchString) {
-            searchQuery.$or = buildOrRegex(generalSearchString, [
-                'real_name',
-                'name',
-            ]);
+            searchQuery.$or = buildOrRegex(generalSearchString, ['username']);
         }
 
         // Build aggregate-based count if we need to filter super-admin users
@@ -422,9 +419,9 @@ export class UserService {
 
         const query = this.userModel.findById(userId);
         if (expanded) {
-            query.populate('role', 'name permissions');
+            query.populate('role', '_id name permissions');
         }
-        const user = await query.lean<PopulatedUser>().exec();
+        const user = await query.lean<PopulatedByRoleUser>().exec();
 
         if (!user) {
             throw new NotFoundException('User not found');

@@ -18,6 +18,7 @@ import { ReportModule } from './modules/report/report.module';
 import { RoleModule } from './modules/role/role.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { UserModule } from './modules/user/user.module';
+import { ValidatorModule } from './modules/validator/validator.module';
 
 @Module({
     imports: [
@@ -48,6 +49,7 @@ import { UserModule } from './modules/user/user.module';
         NoticeModule,
         ApprovalModule,
         OrderModule,
+        ValidatorModule,
     ],
     controllers: [AppController],
     providers: [

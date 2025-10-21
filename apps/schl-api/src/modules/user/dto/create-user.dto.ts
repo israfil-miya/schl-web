@@ -9,15 +9,7 @@ import {
 export class CreateUserBodyDto {
     @IsString()
     @IsNotEmpty()
-    name: string;
-
-    @IsString()
-    @IsNotEmpty()
-    real_name: string;
-
-    @IsOptional()
-    @IsString()
-    provided_name?: string | null;
+    username: string;
 
     @IsString()
     @MinLength(6)
@@ -25,6 +17,9 @@ export class CreateUserBodyDto {
 
     @IsMongoId()
     role: string; // role id
+
+    @IsMongoId()
+    employee: string; // role id
 
     @IsOptional()
     @IsString()

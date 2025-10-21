@@ -10,6 +10,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import moment from 'moment-timezone';
 import { Model } from 'mongoose';
+import { PopulatedByEmployeeUser } from 'src/common/types/populated-user.type';
 import { UserSession } from 'src/common/types/user-session.type';
 import { getTodayDate } from 'src/common/utils/date-helpers';
 import {
@@ -668,8 +669,14 @@ export class ReportService {
         if (show) {
             const userDoc = await this.userModel
                 .findById(userSession.db_id)
-                .lean();
-            const marketerNameFromSession = userDoc?.provided_name;
+                .populate(
+                    'employee',
+                    '_id e_id real_name company_provided_name',
+                )
+                .lean<PopulatedByEmployeeUser>()
+                .exec();
+            const marketerNameFromSession =
+                userDoc?.employee.company_provided_name;
             switch (show) {
                 case 'all':
                     break;
@@ -785,11 +792,16 @@ export class ReportService {
             // Resolve marketer name
             const user = await this.userModel
                 .findById(userSession.db_id)
-                .lean();
+                .populate(
+                    'employee',
+                    '_id e_id real_name company_provided_name',
+                )
+                .lean<PopulatedByEmployeeUser>()
+                .exec();
             const marketerName = (
-                user?.provided_name ||
-                user?.real_name ||
-                user?.name ||
+                user?.employee.company_provided_name ||
+                user?.employee.real_name ||
+                user?.username ||
                 ''
             ).trim();
             if (!marketerName) {

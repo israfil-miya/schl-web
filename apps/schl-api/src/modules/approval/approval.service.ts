@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
-import { PopulatedUser } from 'src/common/types/populated-user.type';
+import { PopulatedByRoleUser } from 'src/common/types/populated-user.type';
 import { UserSession } from 'src/common/types/user-session.type';
 import { applyDateRange } from 'src/common/utils/date-helpers';
 import { createRegexQuery } from 'src/common/utils/filter-helpers';
@@ -410,12 +410,12 @@ export class ApprovalService {
                         } else if (approvalData.action === 'delete') {
                             const target = await this.userModel
                                 .findById(approvalData.object_id)
-                                .populate('role', 'permissions name')
-                                .lean<PopulatedUser>();
+                                .populate('role', '_id name permissions')
+                                .lean<PopulatedByRoleUser>();
                             if (!target)
                                 throw new NotFoundException('User not found');
                             const targetPerms = sanitizePermissions(
-                                target?.role?.permissions || [],
+                                target?.role.permissions || [],
                             );
                             if (
                                 hasPerm(

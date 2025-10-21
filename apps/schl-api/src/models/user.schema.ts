@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document, HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -8,18 +8,10 @@ export type UserDocument = HydratedDocument<User>;
 })
 export class User {
     @Prop({
-        required: [true, 'Name is required'],
+        required: [true, 'Username is required'],
         unique: true,
     })
-    name: string;
-
-    @Prop({
-        required: [true, 'Real name is required'],
-    })
-    real_name: string;
-
-    @Prop({ type: String, default: null })
-    provided_name?: string | null;
+    username: string;
 
     @Prop({ required: [true, 'Password is required'] })
     password: string;
@@ -30,6 +22,13 @@ export class User {
         type: mongoose.Schema.Types.ObjectId,
     })
     role: mongoose.Types.ObjectId;
+
+    @Prop({
+        required: [true, 'Employee has not been assigned'],
+        ref: 'Employee',
+        type: mongoose.Schema.Types.ObjectId,
+    })
+    employee: mongoose.Types.ObjectId;
 
     @Prop({ default: '' })
     comment?: string;

@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import jwt from 'jsonwebtoken';
 import { Model } from 'mongoose';
-import { PopulatedUser } from 'src/common/types/populated-user.type';
+import { PopulatedByRoleUser } from 'src/common/types/populated-user.type';
 import { UserSession } from 'src/common/types/user-session.type';
 import { hasPerm, toPermissions } from 'src/common/utils/permission-check';
 import { User } from 'src/models/user.schema';
@@ -29,11 +29,11 @@ export class AuthService {
         try {
             const userData = await this.userModel
                 .findOne({
-                    name: username,
+                    username: username,
                     password: password,
                 })
-                .populate('role', 'name permissions')
-                .lean<PopulatedUser>()
+                .populate('role', '_id name permissions')
+                .lean<PopulatedByRoleUser>()
                 .exec();
 
             if (userData) {
@@ -64,7 +64,7 @@ export class AuthService {
         try {
             const userData = await this.userModel
                 .findOne({
-                    name: username,
+                    username: username,
                     password: password,
                 })
                 .exec();
