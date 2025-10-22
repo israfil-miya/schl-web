@@ -12,7 +12,7 @@ import {
     type EmployeeStatus,
     EMPLOYEE_BLOOD_GROUPS,
     EMPLOYEE_STATUSES,
-} from 'src/common/constants/employee.constant';
+} from '@repo/schemas/constants/employee.constant';
 
 export class CreateEmployeeBodyDto {
     @IsString()

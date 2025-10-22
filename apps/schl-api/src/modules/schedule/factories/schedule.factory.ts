@@ -1,5 +1,5 @@
-import { UserSession } from 'src/common/types/user-session.type';
-import { Schedule } from 'src/models/schedule.schema';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { Schedule } from '@repo/schemas/schedule.schema';
 import { CreateScheduleBodyDto } from '../dto/create-schedule.dto';
 
 export class ScheduleFactory {

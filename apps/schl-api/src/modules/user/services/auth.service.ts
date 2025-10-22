@@ -9,10 +9,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import jwt from 'jsonwebtoken';
 import { Model } from 'mongoose';
-import { PopulatedByRoleUser } from 'src/common/types/populated-user.type';
-import { UserSession } from 'src/common/types/user-session.type';
-import { hasPerm, toPermissions } from 'src/common/utils/permission-check';
-import { User } from 'src/models/user.schema';
+import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { hasPerm, toPermissions } from '@repo/schemas/utils/permission-check';
+import { User } from '@repo/schemas/user.schema';
 
 @Injectable()
 export class AuthService {

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Notice, NoticeSchema } from 'src/models/notice.schema';
+import { Notice, NoticeSchema } from '@repo/schemas/notice.schema';
 
 import { NoticeController } from './notice.controller';
 

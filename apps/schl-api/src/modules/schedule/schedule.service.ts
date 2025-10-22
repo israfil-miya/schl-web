@@ -9,15 +9,15 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserSession } from 'src/common/types/user-session.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     addIfDefined,
     addPlusSeparatedContainsAllField,
     buildOrRegex,
     createRegexQuery,
-} from 'src/common/utils/filter-helpers';
-import { hasPerm } from 'src/common/utils/permission-check';
-import { Schedule } from 'src/models/schedule.schema';
+} from '@repo/schemas/utils/filter-helpers';
+import { hasPerm } from '@repo/schemas/utils/permission-check';
+import { Schedule } from '@repo/schemas/schedule.schema';
 import { CreateScheduleBodyDto } from './dto/create-schedule.dto';
 import { SearchSchedulesBodyDto } from './dto/search-schedules.dto';
 import { ScheduleFactory } from './factories/schedule.factory';

@@ -10,20 +10,20 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import moment from 'moment-timezone';
 import { Model } from 'mongoose';
-import { PopulatedByEmployeeUser } from 'src/common/types/populated-user.type';
-import { UserSession } from 'src/common/types/user-session.type';
-import { getTodayDate } from 'src/common/utils/date-helpers';
+import { PopulatedByEmployeeUser } from '@repo/schemas/types/populated-user.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { getTodayDate } from '@repo/schemas/utils/date-helpers';
 import {
     addBooleanField,
     addIfDefined,
     buildOrRegex,
     createRegexQuery,
-} from 'src/common/utils/filter-helpers';
-import { hasPerm } from 'src/common/utils/permission-check';
-import { Approval } from 'src/models/approval.schema';
-import { Client } from 'src/models/client.schema';
-import { Report } from 'src/models/report.schema';
-import { User } from 'src/models/user.schema';
+} from '@repo/schemas/utils/filter-helpers';
+import { hasPerm } from '@repo/schemas/utils/permission-check';
+import { Approval } from '@repo/schemas/approval.schema';
+import { Client } from '@repo/schemas/client.schema';
+import { Report } from '@repo/schemas/report.schema';
+import { User } from '@repo/schemas/user.schema';
 import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
 import { CreateReportBodyDto } from './dto/create-report.dto';
 import {

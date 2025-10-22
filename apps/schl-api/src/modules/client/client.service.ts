@@ -9,14 +9,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserSession } from 'src/common/types/user-session.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     addIfDefined,
     buildOrRegex,
     createRegexQuery,
-} from 'src/common/utils/filter-helpers';
-import { hasPerm } from 'src/common/utils/permission-check';
-import { Client } from 'src/models/client.schema';
+} from '@repo/schemas/utils/filter-helpers';
+import { hasPerm } from '@repo/schemas/utils/permission-check';
+import { Client } from '@repo/schemas/client.schema';
 import { CreateClientBodyDto } from './dto/create-client.dto';
 import { SearchClientsBodyDto } from './dto/search-clients.dto';
 import { ClientFactory } from './factories/client.factory';

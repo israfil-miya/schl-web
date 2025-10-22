@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { User } from 'src/models/user.schema';
+import { User } from '@repo/schemas/user.schema';
 import { CreateUserBodyDto } from '../dto/create-user.dto';
 
 export class UserFactory {

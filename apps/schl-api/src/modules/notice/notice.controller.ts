@@ -10,7 +10,7 @@ import {
     Req,
 } from '@nestjs/common';
 import { IdParamDto } from 'src/common/dto/id-param.dto';
-import { UserSession } from 'src/common/types/user-session.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import { CreateNoticeBodyDto } from './dto/create-notice.dto';
 import {
     SearchNoticesBodyDto,

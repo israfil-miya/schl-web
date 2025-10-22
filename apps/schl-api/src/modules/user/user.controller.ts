@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { Public } from 'src/common/auth/public.decorator';
 import { IdParamDto } from 'src/common/dto/id-param.dto';
-import { UserSession } from 'src/common/types/user-session.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import { RequestHeader } from 'src/pipes/request-header.pipe';
 import { ChangePasswordBodyDto } from './dto/change-password.dto';
 import { CreateUserBodyDto } from './dto/create-user.dto';

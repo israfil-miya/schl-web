@@ -7,15 +7,15 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserSession } from 'src/common/types/user-session.type';
-import { applyDateRange } from 'src/common/utils/date-helpers';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { applyDateRange } from '@repo/schemas/utils/date-helpers';
 import {
     addIfDefined,
     createRegexQuery,
-} from 'src/common/utils/filter-helpers';
-import { hasPerm } from 'src/common/utils/permission-check';
-import { Client } from 'src/models/client.schema';
-import { Invoice } from 'src/models/invoice.schema';
+} from '@repo/schemas/utils/filter-helpers';
+import { hasPerm } from '@repo/schemas/utils/permission-check';
+import { Client } from '@repo/schemas/client.schema';
+import { Invoice } from '@repo/schemas/invoice.schema';
 import { CreateInvoiceBodyDto } from './dto/create-invoice.dto';
 import {
     SearchInvoicesBodyDto,

@@ -9,13 +9,13 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import type { Permissions } from 'src/common/types/permission.type';
-import { PopulatedByRoleUser } from 'src/common/types/populated-user.type';
-import { UserSession } from 'src/common/types/user-session.type';
-import { buildOrRegex } from 'src/common/utils/filter-helpers';
-import { hasPerm, toPermissions } from 'src/common/utils/permission-check';
-import { Role } from 'src/models/role.schema';
-import { User } from 'src/models/user.schema';
+import type { Permissions } from '@repo/schemas/types/permission.type';
+import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { buildOrRegex } from '@repo/schemas/utils/filter-helpers';
+import { hasPerm, toPermissions } from '@repo/schemas/utils/permission-check';
+import { Role } from '@repo/schemas/role.schema';
+import { User } from '@repo/schemas/user.schema';
 import { CreateUserBodyDto } from '../dto/create-user.dto';
 import { UserFactory } from '../factories/user.factory';
 

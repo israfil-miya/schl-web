@@ -14,7 +14,7 @@ import {
     ClientCodeRequiredParamDto,
 } from 'src/common/dto/client-code-param.dto';
 import { IdParamDto } from 'src/common/dto/id-param.dto';
-import { UserSession } from 'src/common/types/user-session.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
 import {
     OrdersByCountryParamDto,

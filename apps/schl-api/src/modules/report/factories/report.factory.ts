@@ -1,5 +1,5 @@
-import { UserSession } from 'src/common/types/user-session.type';
-import { Report } from 'src/models/report.schema';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { Report } from '@repo/schemas/report.schema';
 import { CreateReportBodyDto } from '../dto/create-report.dto';
 
 export class ReportFactory {

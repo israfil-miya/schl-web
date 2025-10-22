@@ -8,22 +8,22 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
-import { PopulatedByRoleUser } from 'src/common/types/populated-user.type';
-import { UserSession } from 'src/common/types/user-session.type';
-import { applyDateRange } from 'src/common/utils/date-helpers';
-import { createRegexQuery } from 'src/common/utils/filter-helpers';
+import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { applyDateRange } from '@repo/schemas/utils/date-helpers';
+import { createRegexQuery } from '@repo/schemas/utils/filter-helpers';
 import {
     hasPerm,
     sanitizePermissions,
-} from 'src/common/utils/permission-check';
-import { Approval } from 'src/models/approval.schema';
-import { Client } from 'src/models/client.schema';
-import { Employee } from 'src/models/employee.schema';
-import { Order } from 'src/models/order.schema';
-import { Report } from 'src/models/report.schema';
-import { Role } from 'src/models/role.schema';
-import { Schedule } from 'src/models/schedule.schema';
-import { User } from 'src/models/user.schema';
+} from '@repo/schemas/utils/permission-check';
+import { Approval } from '@repo/schemas/approval.schema';
+import { Client } from '@repo/schemas/client.schema';
+import { Employee } from '@repo/schemas/employee.schema';
+import { Order } from '@repo/schemas/order.schema';
+import { Report } from '@repo/schemas/report.schema';
+import { Role } from '@repo/schemas/role.schema';
+import { Schedule } from '@repo/schemas/schedule.schema';
+import { User } from '@repo/schemas/user.schema';
 import { CreateApprovalBodyDto } from './dto/create-approval.dto';
 import {
     SearchApprovalsBodyDto,

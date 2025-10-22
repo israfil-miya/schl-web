@@ -8,7 +8,7 @@ import {
     Max,
     Min,
 } from 'class-validator';
-import { toBoolean } from 'src/common/utils/transformers';
+import { toBoolean } from '@repo/schemas/utils/transformers';
 
 export class SearchReportsQueryDto {
     @IsOptional()

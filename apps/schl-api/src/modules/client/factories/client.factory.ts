@@ -1,5 +1,5 @@
-import { UserSession } from 'src/common/types/user-session.type';
-import { Client } from 'src/models/client.schema';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { Client } from '@repo/schemas/client.schema';
 import { CreateClientBodyDto } from '../dto/create-client.dto';
 
 export class ClientFactory {

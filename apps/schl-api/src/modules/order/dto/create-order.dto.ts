@@ -16,7 +16,7 @@ import {
     type OrderPriority,
     type OrderStatus,
     type OrderType,
-} from 'src/common/constants/order.constant';
+} from '@repo/schemas/constants/order.constant';
 
 const toLower = ({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.toLowerCase() : value;

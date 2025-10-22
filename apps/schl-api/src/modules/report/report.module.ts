@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Approval, ApprovalSchema } from 'src/models/approval.schema';
-import { Client, ClientSchema } from 'src/models/client.schema';
-import { Report, ReportSchema } from 'src/models/report.schema';
-import { User, UserSchema } from 'src/models/user.schema';
+import { Approval, ApprovalSchema } from '@repo/schemas/approval.schema';
+import { Client, ClientSchema } from '@repo/schemas/client.schema';
+import { Report, ReportSchema } from '@repo/schemas/report.schema';
+import { User, UserSchema } from '@repo/schemas/user.schema';
 import { ReportController } from './report.controller';
 import { ReportService } from './report.service';
 

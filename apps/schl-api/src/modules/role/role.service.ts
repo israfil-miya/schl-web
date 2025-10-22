@@ -10,14 +10,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import type { Permissions } from 'src/common/types/permission.type';
-import { UserSession } from 'src/common/types/user-session.type';
+import type { Permissions } from '@repo/schemas/types/permission.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     hasPerm,
     sanitizePermissions,
-} from 'src/common/utils/permission-check';
-import { Role } from 'src/models/role.schema';
-import { User } from 'src/models/user.schema';
+} from '@repo/schemas/utils/permission-check';
+import { Role } from '@repo/schemas/role.schema';
+import { User } from '@repo/schemas/user.schema';
 import { CreateRoleBodyDto } from './dto/create-role.dto';
 
 @Injectable()

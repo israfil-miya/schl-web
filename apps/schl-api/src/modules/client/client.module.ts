@@ -5,7 +5,7 @@ import { ClientController } from './client.controller';
 import { ClientService } from './client.service';
 
 import { MongooseModule } from '@nestjs/mongoose';
-import { Client, ClientSchema } from 'src/models/client.schema';
+import { Client, ClientSchema } from '@repo/schemas/client.schema';
 
 @Module({
     imports: [

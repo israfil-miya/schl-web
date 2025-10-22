@@ -15,8 +15,8 @@ import {
     type EmployeeBloodGroup,
     type EmployeeServiceTime,
     type EmployeeStatus,
-} from 'src/common/constants/employee.constant';
-import { toBoolean } from 'src/common/utils/transformers';
+} from '@repo/schemas/constants/employee.constant';
+import { toBoolean } from '@repo/schemas/utils/transformers';
 
 export class SearchEmployeesQueryDto {
     @IsOptional()

@@ -1,4 +1,4 @@
-import { Role } from 'src/models/role.schema';
+import { Role } from '@repo/schemas/role.schema';
 import { CreateRoleBodyDto } from '../dto/create-role.dto';
 
 export class RoleFactory {

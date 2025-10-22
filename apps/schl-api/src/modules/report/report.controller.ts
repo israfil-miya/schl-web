@@ -9,7 +9,7 @@ import {
     Req,
 } from '@nestjs/common';
 import { IdParamDto } from 'src/common/dto/id-param.dto';
-import { UserSession } from 'src/common/types/user-session.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
 import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
 import { CreateReportBodyDto } from './dto/create-report.dto';
 import {
