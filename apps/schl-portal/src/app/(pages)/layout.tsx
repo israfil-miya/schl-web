@@ -4,16 +4,16 @@ import Header from '@/components/Header';
 import { SessionProvider } from 'next-auth/react';
 
 export default async function PageLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  const session = await auth();
+    const session = await auth();
 
-  return (
-    <SessionProvider session={session} refetchOnWindowFocus={false}>
-      <Header />
-      {children}
-    </SessionProvider>
-  );
+    return (
+        <SessionProvider session={session} refetchOnWindowFocus={false}>
+            <Header />
+            {children}
+        </SessionProvider>
+    );
 }

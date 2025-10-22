@@ -76,4 +76,3 @@ const ExtendableTd: React.FC<PropsType> = ({
 };
 
 export default ExtendableTd;
-

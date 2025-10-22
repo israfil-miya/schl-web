@@ -33,4 +33,3 @@ export const validationSchema = z.object({
 });
 
 export type ClientDataType = z.infer<typeof validationSchema>;
-

@@ -738,4 +738,3 @@ const Details: React.FC<DetailsProps> = props => {
 };
 
 export default Details;
-

@@ -20,4 +20,3 @@ const CreateEmployeePage = async () => {
 };
 
 export default CreateEmployeePage;
-

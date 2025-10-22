@@ -62,4 +62,3 @@ const CreateSchedulePage = async () => {
 };
 
 export default CreateSchedulePage;
-

@@ -62,4 +62,3 @@ const CreateTaskPage = async () => {
 };
 
 export default CreateTaskPage;
-

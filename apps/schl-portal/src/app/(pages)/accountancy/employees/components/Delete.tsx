@@ -73,4 +73,3 @@ const DeleteButton: React.FC<PropsType> = props => {
 };
 
 export default DeleteButton;
-

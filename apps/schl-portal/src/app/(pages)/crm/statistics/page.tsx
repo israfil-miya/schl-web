@@ -8,17 +8,17 @@ import DailyStatusTable from './components/table/DailyStatusTable';
 import MarketersTable from './components/table/MarketersTable';
 
 const Statistics = async () => {
-  const session = await auth();
-  return (
-    <>
-      <div className="container mx-auto space-y-6 my-8">
-        <MarketersTable />
-        <DailyStatusTable />
-        <Cards />
-        <Graphs />
-      </div>
-    </>
-  );
+    const session = await auth();
+    return (
+        <>
+            <div className="container mx-auto space-y-6 my-8">
+                <MarketersTable />
+                <DailyStatusTable />
+                <Cards />
+                <Graphs />
+            </div>
+        </>
+    );
 };
 
 export default Statistics;

@@ -7,94 +7,94 @@ import React, { useEffect, useState } from 'react';
 import { FiltersContext } from '../FiltersContext';
 
 interface FlowDataGraphProps {
-  isLoading: boolean;
-  data: OrderData[];
-  className?: string;
+    isLoading: boolean;
+    data: OrderData[];
+    className?: string;
 }
 
 interface BarChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    backgroundColor: string[];
-    borderColor: string;
-    borderWidth: number;
-    type: 'bar';
-    order: number;
-  }[];
+    labels: string[];
+    datasets: {
+        label: string;
+        data: number[];
+        backgroundColor: string[];
+        borderColor: string;
+        borderWidth: number;
+        type: 'bar';
+        order: number;
+    }[];
 }
 
 const FlowDataGraph: React.FC<FlowDataGraphProps> = ({
-  isLoading,
-  data,
-  className,
+    isLoading,
+    data,
+    className,
 }) => {
-  const filtersCtx = React.useContext(FiltersContext);
+    const filtersCtx = React.useContext(FiltersContext);
 
-  const [graphData, setGraphData] = useState<BarChartData>({
-    labels: [],
-    datasets: [],
-  });
-
-  useEffect(() => {
-    if (!data || data.length === 0) return;
-
-    // Extract unique months and assign alternating colors
-    const uniqueMonths = [
-      ...new Set(data.map(d => new Date(d.date).getMonth())),
-    ];
-    const colors: Record<number, string> = {};
-
-    uniqueMonths.forEach((month, index) => {
-      colors[month] = index % 2 === 0 ? '#4169e1' : '#ffad33'; // Blue and orange
+    const [graphData, setGraphData] = useState<BarChartData>({
+        labels: [],
+        datasets: [],
     });
 
-    const dataLabels = data.map(d => moment(d.date).format('MMMM DD'));
-    const datasetData = data.map(d =>
-      filtersCtx?.filters.flowType === 'files'
-        ? d.fileQuantity
-        : filtersCtx?.filters.flowType === 'orders'
-          ? d.orderQuantity
-          : 0,
-    );
+    useEffect(() => {
+        if (!data || data.length === 0) return;
 
-    const backgroundColors = data.map(d => {
-      const month = new Date(d.date).getMonth();
-      return colors[month] || '#efa438'; // Default color if not in colors
-    });
+        // Extract unique months and assign alternating colors
+        const uniqueMonths = [
+            ...new Set(data.map(d => new Date(d.date).getMonth())),
+        ];
+        const colors: Record<number, string> = {};
 
-    setGraphData({
-      labels: dataLabels,
-      datasets: [
-        {
-          label:
+        uniqueMonths.forEach((month, index) => {
+            colors[month] = index % 2 === 0 ? '#4169e1' : '#ffad33'; // Blue and orange
+        });
+
+        const dataLabels = data.map(d => moment(d.date).format('MMMM DD'));
+        const datasetData = data.map(d =>
             filtersCtx?.filters.flowType === 'files'
-              ? 'File Quantity'
-              : 'Order Quantity',
-          data: datasetData,
-          backgroundColor: backgroundColors,
-          borderColor: 'black',
-          borderWidth: 2,
-          type: 'bar',
-          order: 0,
-        },
-      ],
-    });
-  }, [data, filtersCtx?.filters.flowType]);
+                ? d.fileQuantity
+                : filtersCtx?.filters.flowType === 'orders'
+                  ? d.orderQuantity
+                  : 0,
+        );
 
-  return (
-    <div>
-      {isLoading ? <p className="text-center">Loading...</p> : null}
-      {!isLoading && (
-        <BarChart
-          className={className || ''}
-          chartData={graphData}
-          showLegend={false}
-        />
-      )}
-    </div>
-  );
+        const backgroundColors = data.map(d => {
+            const month = new Date(d.date).getMonth();
+            return colors[month] || '#efa438'; // Default color if not in colors
+        });
+
+        setGraphData({
+            labels: dataLabels,
+            datasets: [
+                {
+                    label:
+                        filtersCtx?.filters.flowType === 'files'
+                            ? 'File Quantity'
+                            : 'Order Quantity',
+                    data: datasetData,
+                    backgroundColor: backgroundColors,
+                    borderColor: 'black',
+                    borderWidth: 2,
+                    type: 'bar',
+                    order: 0,
+                },
+            ],
+        });
+    }, [data, filtersCtx?.filters.flowType]);
+
+    return (
+        <div>
+            {isLoading ? <p className="text-center">Loading...</p> : null}
+            {!isLoading && (
+                <BarChart
+                    className={className || ''}
+                    chartData={graphData}
+                    showLegend={false}
+                />
+            )}
+        </div>
+    );
 };
 
 export default FlowDataGraph;

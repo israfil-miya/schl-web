@@ -380,4 +380,3 @@ const EditButton: React.FC<PropsType> = props => {
 };
 
 export default EditButton;
-

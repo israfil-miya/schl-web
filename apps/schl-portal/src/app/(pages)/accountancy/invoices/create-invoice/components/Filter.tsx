@@ -291,4 +291,3 @@ const FilterButton: React.FC<PropsType> = props => {
 };
 
 export default FilterButton;
-

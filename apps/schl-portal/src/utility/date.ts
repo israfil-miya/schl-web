@@ -124,4 +124,3 @@ export const getDaysSince = (date: Date | string): number => {
     const inputDate = moment(date);
     return currentDate.diff(inputDate, 'days');
 };
-

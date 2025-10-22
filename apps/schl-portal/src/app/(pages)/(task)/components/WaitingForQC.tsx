@@ -125,4 +125,3 @@ function WaitingForQC() {
 }
 
 export default WaitingForQC;
-

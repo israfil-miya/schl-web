@@ -57,4 +57,3 @@ const BrowsePage = async () => {
 };
 
 export default BrowsePage;
-
