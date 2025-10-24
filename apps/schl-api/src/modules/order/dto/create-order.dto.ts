@@ -1,14 +1,3 @@
-import { Transform, Type } from 'class-transformer';
-import {
-    IsEnum,
-    IsInt,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsString,
-    Max,
-    Min,
-} from 'class-validator';
 import {
     ORDER_PRIORITIES,
     ORDER_STATUSES,
@@ -17,6 +6,17 @@ import {
     type OrderStatus,
     type OrderType,
 } from '@repo/schemas/constants/order.constant';
+import { Transform, Type } from 'class-transformer';
+import {
+    IsIn,
+    IsInt,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    Max,
+    Min,
+} from 'class-validator';
 
 const toLower = ({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.toLowerCase() : value;
@@ -92,12 +92,12 @@ export class CreateOrderBodyDto {
 
     @IsOptional()
     @Transform(toLower)
-    @IsEnum(ORDER_TYPES)
+    @IsIn(ORDER_TYPES as readonly OrderType[])
     type?: OrderType;
 
     @IsOptional()
     @Transform(toLower)
-    @IsEnum(ORDER_STATUSES)
+    @IsIn(ORDER_STATUSES as readonly OrderStatus[])
     status?: OrderStatus;
 
     @IsOptional()
@@ -106,6 +106,6 @@ export class CreateOrderBodyDto {
 
     @IsOptional()
     @Transform(toLower)
-    @IsEnum(ORDER_PRIORITIES)
+    @IsIn(ORDER_PRIORITIES as readonly OrderPriority[])
     priority?: OrderPriority;
 }

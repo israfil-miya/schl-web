@@ -7,12 +7,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { FullyPopulatedUser } from '@repo/schemas/types/populated-user.type';
+import { UserSession } from '@repo/schemas/types/user-session.type';
+import { User } from '@repo/schemas/user.schema';
+import { hasPerm, toPermissions } from '@repo/schemas/utils/permission-check';
 import jwt from 'jsonwebtoken';
 import { Model } from 'mongoose';
-import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
-import { UserSession } from '@repo/schemas/types/user-session.type';
-import { hasPerm, toPermissions } from '@repo/schemas/utils/permission-check';
-import { User } from '@repo/schemas/user.schema';
+import { LoginQueryDto } from '../dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,7 @@ export class AuthService {
     async login(
         username: string,
         password: string,
-        clientType: 'portal' | 'crm',
+        clientType: LoginQueryDto['clientType'],
     ) {
         try {
             const userData = await this.userModel
@@ -32,8 +33,14 @@ export class AuthService {
                     username: username,
                     password: password,
                 })
-                .populate('role', '_id name permissions')
-                .lean<PopulatedByRoleUser>()
+                .populate([
+                    { path: 'role', select: '_id name permissions' },
+                    {
+                        path: 'employee',
+                        select: '_id e_id real_name company_provided_name',
+                    },
+                ])
+                .lean<FullyPopulatedUser>()
                 .exec();
 
             if (userData) {

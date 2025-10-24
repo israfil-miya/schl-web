@@ -1,4 +1,5 @@
 import type { Permissions } from '@repo/schemas/types/permission.type';
+import { FullyPopulatedUser } from '@repo/schemas/types/populated-user.type';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
@@ -18,20 +19,26 @@ async function getUser(
     password: string,
 ): Promise<UserSessionType | null> {
     try {
-        const res = await fetch(`${BASE_URL}/api/user?action=handle-login`, {
-            method: 'GET',
-            headers: { username, password },
-        });
+        const res = await fetch(
+            process.env.NEXT_PUBLIC_API_URL + '/user/login?clientType=portal',
+            {
+                method: 'POST',
+                body: JSON.stringify({ username, password }),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            },
+        );
 
         if (res.status !== 200) return null;
 
-        const data = await res.json();
+        const data = (await res.json()) as FullyPopulatedUser;
         return {
-            db_id: data._id,
-            db_role_id: data.role_id._id,
-            permissions: data.role_id.permissions || [],
-            real_name: data.employee_id.real_name,
-            e_id: data.employee_id.e_id,
+            db_id: data._id.toString(),
+            db_role_id: data.role._id,
+            permissions: data.role.permissions || [],
+            real_name: data.employee.real_name,
+            e_id: data.employee.e_id,
         };
     } catch (e) {
         console.error(e);

@@ -10,8 +10,7 @@ export class LoginBodyDto {
     password: string;
 }
 
-export class LoginHeaderDto {
+export class LoginQueryDto {
     @IsNotEmpty()
-    @Expose({ name: 'x-client-type' })
     clientType: 'portal' | 'crm';
 }

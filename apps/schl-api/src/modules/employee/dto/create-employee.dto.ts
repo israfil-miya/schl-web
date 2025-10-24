@@ -1,18 +1,18 @@
 import {
+    type EmployeeBloodGroup,
+    type EmployeeStatus,
+    EMPLOYEE_BLOOD_GROUPS,
+    EMPLOYEE_STATUSES,
+} from '@repo/schemas/constants/employee.constant';
+import {
     IsEmail,
-    IsEnum,
+    IsIn,
     IsNotEmpty,
     IsNumber,
     IsOptional,
     IsString,
     Min,
 } from 'class-validator';
-import {
-    type EmployeeBloodGroup,
-    type EmployeeStatus,
-    EMPLOYEE_BLOOD_GROUPS,
-    EMPLOYEE_STATUSES,
-} from '@repo/schemas/constants/employee.constant';
 
 export class CreateEmployeeBodyDto {
     @IsString()
@@ -44,7 +44,7 @@ export class CreateEmployeeBodyDto {
     nid?: string;
 
     @IsOptional()
-    @IsEnum(EMPLOYEE_BLOOD_GROUPS)
+    @IsIn(EMPLOYEE_BLOOD_GROUPS as readonly EmployeeBloodGroup[])
     blood_group?: EmployeeBloodGroup;
 
     @IsString()
@@ -69,7 +69,7 @@ export class CreateEmployeeBodyDto {
 
     @IsString()
     @IsNotEmpty()
-    @IsEnum(EMPLOYEE_STATUSES)
+    @IsIn(EMPLOYEE_STATUSES as readonly EmployeeStatus[])
     status: EmployeeStatus;
 
     @IsOptional()
