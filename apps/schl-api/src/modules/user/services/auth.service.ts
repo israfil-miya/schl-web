@@ -28,6 +28,10 @@ export class AuthService {
         clientType: LoginQueryDto['clientType'],
     ) {
         try {
+            console.log(
+                `Attempting login for user: ${username} on client: ${clientType}`,
+            );
+
             const userData = await this.userModel
                 .findOne({
                     username: username,
@@ -53,6 +57,7 @@ export class AuthService {
                         `You do not have permission to login to ${clientType}`,
                     );
                 }
+
                 return userData;
             }
             throw new BadRequestException('Invalid username or password');

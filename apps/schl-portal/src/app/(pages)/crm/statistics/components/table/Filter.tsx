@@ -4,7 +4,6 @@ import { cn, fetchApi } from '@/lib/utils';
 import { getTodayDate } from '@/utility/date';
 import { Filter, X } from 'lucide-react';
 import moment from 'moment-timezone';
-import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -57,28 +56,21 @@ const FilterButton: React.FC<PropsType> = ({
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const popupRef = useRef<HTMLElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
-    const { data: session } = useSession();
 
     const getReportsStatus = useCallback(
         async (data: FiltersType) => {
             try {
                 setLoading(true);
 
-                let filters = data;
+                const filters = data;
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/report?action=get-reports-status';
-                let options: {} = {
-                    method: 'POST',
-                    body: JSON.stringify(filters),
-                    headers: {
-                        name: session?.user.real_name,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi({
+                    path: '/v1/report/report-statuses',
+                    query: {
+                        fromDate: filters.fromDate || undefined,
+                        toDate: filters.toDate || undefined,
                     },
-                };
-
-                let response = await fetchApi(url, options);
+                });
 
                 if (response.ok) {
                     setReportsStatus(response.data as ReportsStatusState);
@@ -102,13 +94,7 @@ const FilterButton: React.FC<PropsType> = ({
                 setLoading(false);
             }
         },
-        [
-            session?.user.real_name,
-            setLoading,
-            setReportsStatus,
-            setCallsTarget,
-            setLeadsTarget,
-        ],
+        [setLoading, setReportsStatus, setCallsTarget, setLeadsTarget],
     );
 
     const { register, handleSubmit, reset, watch } = useForm<FiltersType>({
@@ -116,7 +102,7 @@ const FilterButton: React.FC<PropsType> = ({
     });
 
     useEffect(() => {
-        getReportsStatus({
+        void getReportsStatus({
             fromDate: watch('fromDate'),
             toDate: watch('toDate'),
         });

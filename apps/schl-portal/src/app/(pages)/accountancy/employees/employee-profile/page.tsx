@@ -7,20 +7,21 @@ import { redirect } from 'next/navigation';
 import React from 'react';
 import Profile from './components/Profile';
 
-const getEmployeeInfo = async (employee_name: string) => {
+const getEmployeeInfo = async (identifier: string) => {
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_BASE_URL +
-            '/api/employee?action=get-employee-by-name';
-        let options: {} = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ real_name: employee_name }),
-        };
+        const normalized = identifier.trim();
+        if (!normalized) {
+            return null;
+        }
 
-        const response = await fetchApi(url, options);
+        const response = await fetchApi(
+            {
+                path: `/v1/employee/get-employee/${encodeURIComponent(normalized)}`,
+            },
+            {
+                method: 'GET',
+            },
+        );
         if (response.ok) {
             return response.data as EmployeeDocument;
         } else {
@@ -37,12 +38,13 @@ const getEmployeeInfo = async (employee_name: string) => {
 async function AccountPage({
     searchParams,
 }: {
-    searchParams: { name: string };
+    searchParams: { code?: string; name?: string };
 }) {
-    const employee_name = decodeURIComponent(searchParams.name);
+    const identifier = searchParams.code ?? searchParams.name ?? '';
+    const decodedIdentifier = decodeURIComponent(identifier);
     const session = await auth();
-    const avatarURI = await generateAvatar(employee_name || '');
-    const employeeInfo = await getEmployeeInfo(employee_name);
+    const avatarURI = await generateAvatar(decodedIdentifier || '');
+    const employeeInfo = await getEmployeeInfo(decodedIdentifier);
 
     if (employeeInfo === null) {
         console.error('Employee info is null');

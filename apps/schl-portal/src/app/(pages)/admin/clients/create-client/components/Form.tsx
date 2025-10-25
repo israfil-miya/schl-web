@@ -74,19 +74,25 @@ const Form: React.FC<PropsType> = props => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/client?action=create-client';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name,
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, updated_by, ...rest } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            const payload = Object.fromEntries(
+                Object.entries(rest).filter(([, value]) => value !== undefined),
+            );
+
+            const response = await fetchApi(
+                {
+                    path: '/v1/client/create-client',
+                },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Created new client successfully');

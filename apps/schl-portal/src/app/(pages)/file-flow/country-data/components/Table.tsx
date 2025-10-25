@@ -51,21 +51,18 @@ const Table: React.FC<{ country: string; date: string }> = props => {
 
             console.log('filters --> ', filters);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/order?action=get-orders-by-country';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    Accept: '*/*',
-                    from_date: filters.fromDate,
-                    to_date: filters.toDate,
-                    country: filters.country,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: `/v1/order/orders-by-country/${encodeURIComponent(filters.country)}`,
+                    query: {
+                        fromDate: filters.fromDate,
+                        toDate: filters.toDate,
+                    },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'GET',
+                },
+            );
 
             if (response.ok) {
                 setOrderDetails(response.data as OrderDetails);

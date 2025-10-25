@@ -10,19 +10,20 @@ import Profile from './components/Profile';
 const getEmployeeInfo = async () => {
     const session = await auth();
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_BASE_URL +
-            '/api/employee?action=get-employee-by-name';
-        let options: {} = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ real_name: session?.user.real_name }),
-            cache: 'no-store',
-        };
+        if (!session?.user.e_id) {
+            console.error('Employee ID is missing from session');
+            return null;
+        }
 
-        const response = await fetchApi(url, options);
+        const response = await fetchApi(
+            {
+                path: `/v1/employee/get-employee/${encodeURIComponent(session.user.e_id)}`,
+            },
+            {
+                method: 'GET',
+                cache: 'no-store',
+            },
+        );
         if (response.ok) {
             return response.data as EmployeeDocument;
         } else {

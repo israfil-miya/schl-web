@@ -16,22 +16,21 @@ let clients: OrderDocument[];
 
 const getAllClients = async () => {
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_BASE_URL +
-            '/api/client?action=get-all-clients';
-        let options: {} = {
-            method: 'POST',
-            headers: {
-                Accept: '*/*',
-                paginated: false,
-                filtered: false,
-                'Content-Type': 'application/json',
+        const response = await fetchApi(
+            {
+                path: '/v1/client/search-clients',
+                query: { paginated: false, filtered: false },
             },
-            body: JSON.stringify({}),
-            cache: 'no-store',
-        };
-
-        const response = await fetchApi(url, options);
+            {
+                method: 'POST',
+                headers: {
+                    Accept: '*/*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+                cache: 'no-store',
+            },
+        );
         if (response.ok) {
             let data: ClientsResponseState =
                 response.data as ClientsResponseState;

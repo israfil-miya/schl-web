@@ -29,7 +29,7 @@ const Form: React.FC<PropsType> = props => {
     } = useForm<LoginDataType>({
         resolver: zodResolver(validationSchema),
         defaultValues: {
-            name: '',
+            username: '',
             password: '',
         },
     });
@@ -45,23 +45,22 @@ const Form: React.FC<PropsType> = props => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/user?action=verify-user';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    redirect_path: props.redirect_path,
+            const response = await fetchApi(
+                { path: '/v1/user/verify-user' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(parsed.data),
                 },
-                body: JSON.stringify(parsed.data),
-            };
-
-            const response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
-                let redirect_path = response.data?.redirect_path as string;
-                console.log('redirecting to:', redirect_path);
+                const redirect_path =
+                    (response.data?.redirect_path as string | undefined) ||
+                    props.redirect_path ||
+                    '/';
                 router.replace(redirect_path);
             } else {
                 console.error('verification failed:', response.data.message);
@@ -86,13 +85,13 @@ const Form: React.FC<PropsType> = props => {
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                         <span className="uppercase">Username*</span>
                         <span className="text-red-700 text-wrap block text-xs">
-                            {errors.name && errors.name.message}
+                            {errors.username && errors.username.message}
                         </span>
                     </label>
                     <input
                         placeholder="JohnDoe001"
                         type="text"
-                        {...register('name')}
+                        {...register('username')}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
                 </div>

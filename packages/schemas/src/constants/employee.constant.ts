@@ -33,3 +33,16 @@ export const EMPLOYEE_SERVICE_TIME = [
 ] as const;
 
 export type EmployeeServiceTime = (typeof EMPLOYEE_SERVICE_TIME)[number];
+
+export const EMPLOYEE_DEPARTMENTS = [
+    'Production',
+    'Marketing',
+    'Software',
+    'Accounting',
+    'Management',
+    'HR',
+    'Administration',
+    'Others',
+] as const;
+
+export type EmployeeDepartment = (typeof EMPLOYEE_DEPARTMENTS)[number];

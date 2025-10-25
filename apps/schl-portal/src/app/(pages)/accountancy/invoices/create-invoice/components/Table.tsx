@@ -93,26 +93,28 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/order?action=get-all-orders';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        for_invoice: true,
-                        filtered: true,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/order/search-orders',
+                        query: {
+                            paginated: true,
+                            filtered: true,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                    body: JSON.stringify({
-                        ...filters,
-                        type: 'general',
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...filters,
+                            type: 'general',
+                            invoice: true,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setOrders(response.data as OrdersState);

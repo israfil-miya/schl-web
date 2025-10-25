@@ -1,16 +1,10 @@
 'use client';
 
 import { fetchApi } from '@/lib/utils';
-import {
-    setClassNameAndIsDisabled,
-    setMenuPortalTarget,
-} from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import Select from 'react-select';
+import { useForm } from 'react-hook-form';
 import { ChangePasswordInputsType, validationSchema } from '../schema';
 
 import { generatePassword } from '@/lib/utils';
@@ -55,18 +49,25 @@ const Form: React.FC = props => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/user?action=change-password';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const userId = session?.user.db_id;
+            if (!userId) {
+                toast.error('Session is missing user information');
+                return;
+            }
 
-            const response = await fetchApi(url, options);
+            const response = await fetchApi(
+                { path: `/v1/user/change-password/${userId}` },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        old_password: parsed.data.current_password,
+                        new_password: parsed.data.new_password,
+                    }),
+                },
+            );
 
             if (response.ok) {
                 toast.success(response.data as string);

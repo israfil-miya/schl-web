@@ -73,50 +73,35 @@ const Table = () => {
     const getAllNotices = useCallback(
         async (page: number, itemPerPage: number) => {
             try {
-                // setIsLoading(true);
+                const baseFilters = hasPerm(
+                    'notice:send_notice_production',
+                    userPermissions,
+                )
+                    ? hasPerm('notice:send_notice_marketers', userPermissions)
+                        ? {}
+                        : { channel: 'production' }
+                    : hasPerm('notice:send_notice_marketers', userPermissions)
+                      ? { channel: 'marketers' }
+                      : { channel: 'production' };
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/notice?action=get-all-notices';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: false,
-                        paginated: true,
-                        item_per_page: itemPerPage,
-                        page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/notice/search-notices',
+                        query: {
+                            page,
+                            itemsPerPage: itemPerPage,
+                            filtered: false,
+                            paginated: true,
+                        },
                     },
-
-                    // show only production notices to users with permission to send production notices
-                    // show only marketers notices to users with permission to send marketers notices
-                    // show both if user has both permissions
-                    // show only production notices if user has none of the permissions
-                    body: JSON.stringify(
-                        hasPerm(
-                            'notice:send_notice_production',
-                            userPermissions,
-                        ) &&
-                            hasPerm(
-                                'notice:send_notice_marketers',
-                                userPermissions,
-                            )
-                            ? {}
-                            : hasPerm(
-                                    'notice:send_notice_production',
-                                    userPermissions,
-                                )
-                              ? { channel: 'production' }
-                              : hasPerm(
-                                      'notice:send_notice_marketers',
-                                      userPermissions,
-                                  )
-                                ? { channel: 'marketers' }
-                                : { channel: 'production' },
-                    ),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(baseFilters),
+                    },
+                );
 
                 if (response.ok) {
                     setNotices(response.data);
@@ -140,24 +125,24 @@ const Table = () => {
     const getAllNoticesFiltered = useCallback(
         async (page: number, itemPerPage: number) => {
             try {
-                // setIsLoading(true);
-
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/notice?action=get-all-notices';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: true,
-                        paginated: true,
-                        item_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/notice/search-notices',
+                        query: {
+                            page,
+                            itemsPerPage: itemPerPage,
+                            filtered: true,
+                            paginated: true,
+                        },
                     },
-                    body: JSON.stringify(filters),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(filters),
+                    },
+                );
 
                 if (response.ok) {
                     setNotices(response.data as NoticesState);
@@ -181,17 +166,12 @@ const Table = () => {
 
     const deleteNotice = async (noticeData: NoticeDataType) => {
         try {
-            const url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/notice?action=delete-notice';
-            const options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: `/v1/notice/delete-notice/${noticeData._id}` },
+                {
+                    method: 'DELETE',
                 },
-                body: JSON.stringify({ notice_id: noticeData._id }),
-            };
-            const response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 if (noticeData.file_name) {
@@ -209,22 +189,21 @@ const Table = () => {
                         'Delete attached file from the FTP server?',
                     );
                     if (ftpDeleteConfirmation) {
-                        let ftp_url: string =
-                            process.env.NEXT_PUBLIC_BASE_URL +
-                            '/api/ftp?action=delete-file';
-                        let ftp_options: {} = {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                folder_name: 'notice',
-                                file_name: constructFileName(
-                                    noticeData.file_name,
-                                    noticeData.notice_no,
-                                ),
+                        const ftp_response = await fetchApi(
+                            {
+                                path: '/v1/ftp/delete',
+                                query: {
+                                    folderName: 'notice',
+                                    fileName: constructFileName(
+                                        noticeData.file_name,
+                                        noticeData.notice_no,
+                                    ),
+                                },
                             },
-                        };
-
-                        let ftp_response = await fetchApi(ftp_url, ftp_options);
+                            {
+                                method: 'DELETE',
+                            },
+                        );
                         if (ftp_response.ok) {
                             toast.success(
                                 'Deleted the attached file from FTP server',
@@ -262,19 +241,24 @@ const Table = () => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/notice?action=edit-notice';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name,
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            if (!_id) {
+                toast.error('Missing notice identifier');
+                return;
+            }
+
+            const response = await fetchApi(
+                { path: `/v1/notice/update-notice/${_id}` },
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Updated the notice data');

@@ -1,10 +1,7 @@
 'use client';
 
 import { fetchApi } from '@/lib/utils';
-import { getDateRange } from '@/utility/date';
 import moment from 'moment-timezone';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { FiltersContext } from '../FiltersContext';
@@ -15,13 +12,11 @@ import FlowDataGraph from './FlowDataGraph';
 import StatusDataGraph from './StatusDataGraph';
 
 const Graphs = () => {
-    const { data: session } = useSession();
     const [isLoading, setIsLoading] = useState({
         flowData: false,
         statusData: false,
         countryData: false,
     });
-    const router = useRouter();
 
     const filtersCtx = React.useContext(FiltersContext);
 
@@ -33,19 +28,27 @@ const Graphs = () => {
         try {
             setIsLoading(prevData => ({ ...prevData, flowData: true }));
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/order?action=get-orders-qp';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    from_date: filtersCtx?.filters.fromDate,
-                    to_date: filtersCtx?.filters.toDate,
-                    'Content-Type': 'application/json',
-                },
-            };
+            const fromDate = filtersCtx?.filters.fromDate;
+            const toDate = filtersCtx?.filters.toDate;
+            const dateRange =
+                fromDate && toDate
+                    ? Math.max(
+                          1,
+                          moment(toDate).diff(moment(fromDate), 'days') + 1,
+                      )
+                    : undefined;
 
-            let response = await fetchApi(url, options);
+            const response = await fetchApi(
+                {
+                    path: '/v1/order/orders-qp',
+                    query: {
+                        dateRange,
+                    },
+                },
+                {
+                    method: 'GET',
+                },
+            );
 
             if (response.ok) {
                 setFlowData(response.data);
@@ -66,19 +69,17 @@ const Graphs = () => {
         try {
             setIsLoading(prevData => ({ ...prevData, statusData: true }));
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/order?action=get-orders-qp';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    from_date: getDateRange(daysOfData).from,
-                    to_date: getDateRange(daysOfData).to,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/order/orders-qp',
+                    query: {
+                        dateRange: daysOfData,
+                    },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'GET',
+                },
+            );
 
             if (response.ok) {
                 setStatusData(response.data);
@@ -101,19 +102,17 @@ const Graphs = () => {
                 countryData: true,
             }));
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/order?action=get-orders-cd';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    from_date: getDateRange(daysOfData).from,
-                    to_date: getDateRange(daysOfData).to,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/order/orders-cd',
+                    query: {
+                        dateRange: daysOfData,
+                    },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'GET',
+                },
+            );
 
             if (response.ok) {
                 setCountryData(response.data);

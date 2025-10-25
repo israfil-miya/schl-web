@@ -6,8 +6,8 @@ import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { fetchApi } from '@/lib/utils';
+import type { EmployeeDocument } from '@repo/schemas/employee.schema';
 import { ReportDocument } from '@repo/schemas/report.schema';
-import type { PopulatedByEmployeeUser } from '@repo/schemas/types/populated-user.type';
 import { hasAnyPerm, hasPerm } from '@repo/schemas/utils/permission-check';
 
 import { formatDate } from '@/utility/date';
@@ -75,26 +75,28 @@ const Table = () => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/report?action=get-all-reports';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: false,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/report/search-reports',
+                        query: {
+                            paginated: true,
+                            filtered: false,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                    body: JSON.stringify({
-                        staleClient: true,
-                        regularClient: false,
-                        test: false,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            staleClient: true,
+                            regularClient: false,
+                            test: false,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setReports(response.data as ReportsState);
@@ -119,27 +121,29 @@ const Table = () => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/report?action=get-all-reports';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: true,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/report/search-reports',
+                        query: {
+                            paginated: true,
+                            filtered: true,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                    body: JSON.stringify({
-                        ...filters,
-                        staleClient: true,
-                        regularClient: false,
-                        test: false,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...filters,
+                            staleClient: true,
+                            regularClient: false,
+                            test: false,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setReports(response.data as ReportsState);
@@ -163,24 +167,21 @@ const Table = () => {
 
     const deleteReport = async (reportData: ReportDocument) => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/approval?action=new-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: '/v1/approval/new-request' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        target_model: 'Report',
+                        action: 'delete',
+                        object_id: reportData._id,
+                        deleted_data: reportData,
+                    }),
                 },
-                body: JSON.stringify({
-                    target_model: 'Report',
-                    action: 'delete',
-                    object_id: reportData._id,
-                    deleted_data: reportData,
-                    req_by: session?.user.db_id,
-                }),
-            };
-
-            let response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 toast.success('Request sent for approval');
@@ -196,23 +197,27 @@ const Table = () => {
 
     const getAllMarketers = async () => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/user?action=get-all-marketers';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: true },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ department: 'Marketing' }),
+                },
+            );
 
             if (response.ok) {
-                let marketers = response.data as PopulatedByEmployeeUser[];
-                let marketerNames = marketers.map(
-                    marketer => marketer.employee.company_provided_name,
-                );
+                const marketers = Array.isArray(response.data)
+                    ? (response.data as EmployeeDocument[])
+                    : ((response.data?.items || []) as EmployeeDocument[]);
+                const marketerNames = marketers
+                    .map(marketer => marketer.company_provided_name)
+                    .filter((name): name is string => Boolean(name));
                 setMarketerNames(marketerNames);
             } else {
                 toast.error(response.data as string);

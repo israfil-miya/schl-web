@@ -23,22 +23,21 @@ type RolesResponseState = {
 
 export const getAllEmployees = async () => {
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_BASE_URL +
-            '/api/employee?action=get-all-employees';
-        let options: {} = {
-            method: 'POST',
-            headers: {
-                Accept: '*/*',
-                paginated: false,
-                filtered: false,
-                'Content-Type': 'application/json',
+        const response = await fetchApi(
+            {
+                path: '/v1/employee/search-employees',
+                query: { paginated: false, filtered: false },
             },
-            body: JSON.stringify({}),
-            cache: 'no-store',
-        };
-
-        const response = await fetchApi(url, options);
+            {
+                method: 'POST',
+                headers: {
+                    Accept: '*/*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+                cache: 'no-store',
+            },
+        );
         if (response.ok) {
             let data: EmployeesResponseState =
                 response.data as EmployeesResponseState;
@@ -54,21 +53,21 @@ export const getAllEmployees = async () => {
 
 export const getAllRoles = async () => {
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_BASE_URL + '/api/role?action=get-all-roles';
-        let options: {} = {
-            method: 'POST',
-            headers: {
-                Accept: '*/*',
-                paginated: false,
-                filtered: false,
-                'Content-Type': 'application/json',
+        const response = await fetchApi(
+            {
+                path: '/v1/role/search-roles',
+                query: { paginated: false, filtered: false },
             },
-            body: JSON.stringify({}),
-            cache: 'no-store',
-        };
-
-        const response = await fetchApi(url, options);
+            {
+                method: 'POST',
+                headers: {
+                    Accept: '*/*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+                cache: 'no-store',
+            },
+        );
         if (response.ok) {
             let data: RolesResponseState = response.data as RolesResponseState;
             return data.items;

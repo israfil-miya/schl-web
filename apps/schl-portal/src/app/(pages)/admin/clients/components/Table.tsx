@@ -8,8 +8,8 @@ import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { ClientDocument } from '@repo/schemas/client.schema';
+import type { EmployeeDocument } from '@repo/schemas/employee.schema';
 import { OrderDocument } from '@repo/schemas/order.schema';
-import type { PopulatedByEmployeeUser } from '@repo/schemas/types/populated-user.type';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
@@ -78,27 +78,29 @@ const Table: React.FC = () => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/client?action=get-all-clients';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        Accept: '*/*',
-                        filtered: false,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/client/search-clients',
+                        query: {
+                            paginated: true,
+                            filtered: false,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
-                    body: JSON.stringify({
-                        staleClient: true,
-                        regularClient: false,
-                        test: false,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            Accept: '*/*',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            staleClient: true,
+                            regularClient: false,
+                            test: false,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setClients(response.data as ClientsState);
@@ -123,25 +125,27 @@ const Table: React.FC = () => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/client?action=get-all-clients';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        Accept: '*/*',
-                        filtered: true,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/client/search-clients',
+                        query: {
+                            paginated: true,
+                            filtered: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
-                    body: JSON.stringify({
-                        ...filters,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            Accept: '*/*',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...filters,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setClients(response.data as ClientsState);
@@ -165,24 +169,21 @@ const Table: React.FC = () => {
 
     const deleteClient = async (clientData: ClientDocument) => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/approval?action=new-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: '/v1/approval/new-request' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        target_model: 'Client',
+                        action: 'delete',
+                        object_id: clientData._id,
+                        deleted_data: clientData,
+                    }),
                 },
-                body: JSON.stringify({
-                    target_model: 'Client',
-                    action: 'delete',
-                    object_id: clientData._id,
-                    deleted_data: clientData,
-                    req_by: session?.user.db_id,
-                }),
-            };
-
-            let response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 toast.success('Request sent for approval');
@@ -198,23 +199,27 @@ const Table: React.FC = () => {
 
     const getAllMarketers = async () => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/user?action=get-all-marketers';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: true },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ department: 'Marketing' }),
+                },
+            );
 
             if (response.ok) {
-                let marketers = response.data as PopulatedByEmployeeUser[];
-                let marketerNames = marketers.map(
-                    marketer => marketer.employee.company_provided_name,
-                );
+                const marketers = Array.isArray(response.data)
+                    ? (response.data as EmployeeDocument[])
+                    : ((response.data?.items || []) as EmployeeDocument[]);
+                const marketerNames = marketers
+                    .map(marketer => marketer.company_provided_name)
+                    .filter((name): name is string => Boolean(name));
                 setMarketerNames(marketerNames);
             } else {
                 toast.error(response.data as string);
@@ -239,19 +244,30 @@ const Table: React.FC = () => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/client?action=edit-client';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name,
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, updated_by, ...rest } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            if (!_id) {
+                toast.error('Missing client identifier');
+                return;
+            }
+
+            const payload = Object.fromEntries(
+                Object.entries(rest).filter(([, value]) => value !== undefined),
+            );
+
+            const response = await fetchApi(
+                {
+                    path: `/v1/client/update-client/${_id}`,
+                },
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Updated the client data');

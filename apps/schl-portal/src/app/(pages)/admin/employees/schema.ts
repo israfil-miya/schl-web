@@ -1,3 +1,8 @@
+import {
+    EMPLOYEE_BLOOD_GROUPS,
+    EMPLOYEE_DEPARTMENTS,
+    EMPLOYEE_STATUSES,
+} from '@repo/schemas/constants/employee.constant';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { z } from 'zod';
@@ -13,26 +18,13 @@ export const validationSchema = z
             .default(''),
         birth_date: z.string(),
         nid: z.string(),
-        blood_group: z
-            .optional(
-                z.enum(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', '']),
-            )
-            .default(''),
+        blood_group: z.optional(z.enum(EMPLOYEE_BLOOD_GROUPS)),
         designation: z.string(),
-        department: z.enum([
-            'Production',
-            'Marketing',
-            'Software',
-            'Accounting',
-            'Management',
-            'HR',
-            'Administration',
-            'Others',
-        ]),
+        department: z.enum(EMPLOYEE_DEPARTMENTS),
         gross_salary: z.number(),
         bonus_eid_ul_fitr: z.optional(z.number()).default(0),
         bonus_eid_ul_adha: z.optional(z.number()).default(0),
-        status: z.enum(['Active', 'Inactive', 'Resigned', 'Fired']),
+        status: z.enum(EMPLOYEE_STATUSES),
         provident_fund: z.number(),
         pf_start_date: z.string(),
         pf_history: z.optional(

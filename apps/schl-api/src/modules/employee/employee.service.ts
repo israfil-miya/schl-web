@@ -8,7 +8,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Employee } from '@repo/schemas/employee.schema';
 import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     calculateSalaryComponents,
@@ -21,7 +21,7 @@ import {
     createRegexQuery,
 } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
-import { Employee } from '@repo/schemas/employee.schema';
+import { Model } from 'mongoose';
 import { CreateEmployeeBodyDto } from './dto/create-employee.dto';
 import { SearchEmployeesBodyDto } from './dto/search-employees.dto';
 import { EmployeeFactory } from './factories/employee.factory';
@@ -269,7 +269,17 @@ export class EmployeeService {
 
         const searchQuery: QueryShape = { ...query };
 
-        if (filtered && !bloodGroup && !serviceTime && !generalSearchString) {
+        console.log('searchQuery', searchQuery);
+
+        if (
+            filtered &&
+            !bloodGroup &&
+            !designation &&
+            !department &&
+            !status &&
+            !serviceTime &&
+            !generalSearchString
+        ) {
             throw new ForbiddenException('No filter applied');
         }
 

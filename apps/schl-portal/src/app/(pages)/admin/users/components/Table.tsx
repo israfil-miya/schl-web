@@ -13,23 +13,10 @@ import { cn } from '@/lib/utils';
 import type { RoleDocument } from '@repo/schemas/role.schema';
 import type { FullyPopulatedUser } from '@repo/schemas/types/populated-user.type';
 
-import {
-    ChevronLeft,
-    ChevronRight,
-    CirclePlus,
-    ClipboardCopy,
-} from 'lucide-react';
-import mongoose from 'mongoose';
+import { CirclePlus, ClipboardCopy } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, {
-    use,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { populatedUserSchema, ZodPopulatedUserDataType } from '../schema';
 import DeleteButton from './Delete';
@@ -78,33 +65,39 @@ const Table: React.FC<{
 
     const getAllUsers = useCallback(
         async (page: number, itemPerPage: number) => {
+            setLoading(true);
             try {
-                // setLoading(true);
-
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/user?action=get-all-users';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: false,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/user/search-users',
+                        query: {
+                            page,
+                            itemsPerPage: itemPerPage,
+                            paginated: true,
+                            filtered: false,
+                        },
                     },
-                    body: JSON.stringify({}),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({}),
+                    },
+                );
 
                 if (response.ok) {
-                    setUsers(response.data as UsersState);
-                    setPageCount(
-                        (response.data as UsersState).pagination.pageCount,
-                    );
+                    const payload = response.data as UsersState;
+                    setUsers(payload);
+                    setPageCount(payload.pagination.pageCount);
+                    setIsFiltered(false);
                 } else {
-                    toast.error(response.data as string);
+                    const message =
+                        typeof response.data === 'string'
+                            ? response.data
+                            : response.data?.message ||
+                              'Unable to retrieve users';
+                    toast.error(message);
                 }
             } catch (error) {
                 console.error(error);
@@ -118,36 +111,48 @@ const Table: React.FC<{
 
     const getAllUsersFiltered = useCallback(
         async (page: number, itemPerPage: number) => {
+            setLoading(true);
             try {
-                // setLoading(true);
-
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/user?action=get-all-users';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: true,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ...filters,
-                    }),
+                const filterPayload = {
+                    ...(filters.generalSearchString.trim()
+                        ? {
+                              generalSearchString:
+                                  filters.generalSearchString.trim(),
+                          }
+                        : {}),
                 };
 
-                let response = await fetchApi(url, options);
+                const response = await fetchApi(
+                    {
+                        path: '/v1/user/search-users',
+                        query: {
+                            page,
+                            itemsPerPage: itemPerPage,
+                            paginated: true,
+                            filtered: true,
+                        },
+                    },
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(filterPayload),
+                    },
+                );
 
                 if (response.ok) {
-                    setUsers(response.data as UsersState);
+                    const payload = response.data as UsersState;
+                    setUsers(payload);
                     setIsFiltered(true);
-                    setPageCount(
-                        (response.data as UsersState).pagination.pageCount,
-                    );
+                    setPageCount(payload.pagination.pageCount);
                 } else {
-                    toast.error(response.data as string);
+                    const message =
+                        typeof response.data === 'string'
+                            ? response.data
+                            : response.data?.message ||
+                              'Unable to retrieve users';
+                    toast.error(message);
                 }
             } catch (error) {
                 console.error(error);
@@ -157,34 +162,36 @@ const Table: React.FC<{
             }
             return;
         },
-        [filters],
+        [filters.generalSearchString],
     );
 
     const deleteUser = async (userData: FullyPopulatedUser) => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/approval?action=new-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: '/v1/approval/new-request' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        target_model: 'User',
+                        action: 'delete',
+                        object_id: userData._id,
+                        deleted_data: userData,
+                    }),
                 },
-                body: JSON.stringify({
-                    target_model: 'User',
-                    action: 'delete',
-                    object_id: userData._id,
-                    deleted_data: userData,
-                    req_by: session?.user.db_id,
-                }),
-            };
-
-            let response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 toast.success('Request sent for approval');
             } else {
-                toast.error(response.data.message);
+                const message =
+                    typeof response.data === 'string'
+                        ? response.data
+                        : response.data?.message ||
+                          'Unable to submit approval request';
+                toast.error(message);
             }
         } catch (error) {
             console.error(error);
@@ -206,40 +213,48 @@ const Table: React.FC<{
                 return;
             }
 
+            const targetId = (previousUserData as unknown as FullyPopulatedUser)
+                ?._id;
+
+            if (!targetId) {
+                toast.error('Unable to determine user to update');
+                return;
+            }
+
             setLoading(true);
 
             const userData = {
                 username: parsed.data.username,
                 password: parsed.data.password,
-                employee_id: new mongoose.Types.ObjectId(
-                    parsed.data.employee._id,
-                ),
-                role_id: new mongoose.Types.ObjectId(parsed.data.role._id),
-                comment: parsed.data.comment,
+                employee: parsed.data.employee._id,
+                role: parsed.data.role._id,
+                ...(parsed.data.comment !== undefined
+                    ? { comment: parsed.data.comment }
+                    : {}),
             };
 
-            console.log('Edited user data to submit:', userData);
+            const response = await fetchApi(
+                { path: `/v1/user/update-user/${targetId}` },
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData),
+                },
+            );
 
-            // let url: string =
-            //   process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=edit-user';
-            // let options: {} = {
-            //   method: 'POST',
-            //   headers: {
-            //     'Content-Type': 'application/json',
-            //   },
-            //   body: JSON.stringify(parsed.data),
-            // };
+            if (response.ok) {
+                toast.success('Updated the user data');
 
-            // const response = await fetchApi(url, options);
-
-            // if (response.ok) {
-            //   toast.success('Updated the user data');
-
-            //   await fetchUsers();
-            // } else {
-            //   toast.error(response.data as string);
-            // }
-            await fetchUsers();
+                await fetchUsers();
+            } else {
+                const message =
+                    typeof response.data === 'string'
+                        ? response.data
+                        : response.data?.message || 'Unable to update user';
+                toast.error(message);
+            }
         } catch (error) {
             console.error(error);
             toast.error('An error occurred while updating the user');
@@ -265,17 +280,18 @@ const Table: React.FC<{
     });
 
     useEffect(() => {
-        if (searchVersion > 0 && isFiltered && page === 1) {
+        if (searchVersion > 0 && page === 1) {
             fetchUsers();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchVersion, isFiltered, page]);
+    }, [searchVersion, page]);
 
     const handleSearch = useCallback(() => {
-        setIsFiltered(true);
+        const hasFilter = filters.generalSearchString.trim().length > 0;
+        setIsFiltered(hasFilter);
         setPage(1);
         setSearchVersion(v => v + 1);
-    }, [setIsFiltered, setPage]);
+    }, [filters.generalSearchString, setPage]);
 
     return (
         <>

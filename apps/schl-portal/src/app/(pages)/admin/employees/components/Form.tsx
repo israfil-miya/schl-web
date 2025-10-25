@@ -61,13 +61,13 @@ const Form: React.FC = () => {
             email: '',
             birth_date: '',
             nid: '',
-            blood_group: '',
+            blood_group: 'a+',
             designation: '',
             department: 'Production',
             gross_salary: 0,
             bonus_eid_ul_fitr: 0,
             bonus_eid_ul_adha: 0,
-            status: 'Active',
+            status: 'active',
             provident_fund: 0,
             pf_start_date: '',
             pf_history: [],
@@ -88,18 +88,25 @@ const Form: React.FC = () => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/employee?action=create-employee';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, pf_history, ...rest } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            const payload = Object.fromEntries(
+                Object.entries(rest).filter(([, value]) => value !== undefined),
+            );
+
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/create-employee',
+                },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Created new employee successfully');

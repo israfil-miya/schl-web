@@ -93,22 +93,21 @@ const Table = () => {
         try {
             // setLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/employee?action=get-all-employees';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    Accept: '*/*',
-                    filtered: false,
-                    paginated: false,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: false },
                 },
-                body: JSON.stringify({}),
-                cache: 'no-store',
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        Accept: '*/*',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                    cache: 'no-store',
+                },
+            );
 
             if (response.ok) {
                 setIsFiltered(false);
@@ -131,24 +130,23 @@ const Table = () => {
         try {
             // setLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/employee?action=get-all-employees';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    Accept: '*/*',
-                    filtered: true,
-                    paginated: false,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: true },
                 },
-                body: JSON.stringify({
-                    ...filters,
-                }),
-                cache: 'no-store',
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        Accept: '*/*',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...filters,
+                    }),
+                    cache: 'no-store',
+                },
+            );
 
             if (response.ok) {
                 const employees = response.data as EmployeesState;
@@ -169,29 +167,26 @@ const Table = () => {
 
     async function deleteEmployee(employeeData: EmployeeDocument) {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/approval?action=new-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: '/v1/approval/new-request' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        target_model: 'Employee',
+                        action: 'delete',
+                        object_id: employeeData._id,
+                        deleted_data: employeeData,
+                    }),
                 },
-                body: JSON.stringify({
-                    target_model: 'Employee',
-                    action: 'delete',
-                    object_id: employeeData._id,
-                    deleted_data: employeeData,
-                    req_by: session?.user.db_id,
-                }),
-            };
-
-            let response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 toast.success('Request sent for approval');
             } else {
-                toast.error(response.data.message);
+                toast.error(response.data as string);
             }
         } catch (error) {
             console.error(error);
@@ -216,19 +211,30 @@ const Table = () => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/employee?action=edit-employee';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name,
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, pf_history, ...rest } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            if (!_id) {
+                toast.error('Missing employee identifier');
+                return;
+            }
+
+            const payload = Object.fromEntries(
+                Object.entries(rest).filter(([, value]) => value !== undefined),
+            );
+
+            const response = await fetchApi(
+                {
+                    path: `/v1/employee/update-employee/${_id}`,
+                },
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Updated the employee data');
@@ -335,7 +341,7 @@ const Table = () => {
                                             ) ? (
                                                 <Link
                                                     className="hover:underline underline-offset-2"
-                                                    href={`/accountancy/employees/employee-profile/?name=${encodeURIComponent(String(employee.real_name))}`}
+                                                    href={`/accountancy/employees/employee-profile/?code=${encodeURIComponent(String(employee.e_id))}`}
                                                 >
                                                     {employee.real_name}
                                                 </Link>

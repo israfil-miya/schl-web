@@ -30,9 +30,12 @@ async function getUser(
             },
         );
 
-        if (res.status !== 200) return null;
+        console.log('login response status', res.status, res);
+
+        if (res.status !== 201) return null;
 
         const data = (await res.json()) as FullyPopulatedUser;
+        console.log('login response data', data);
         return {
             db_id: data._id.toString(),
             db_role_id: data.role._id,

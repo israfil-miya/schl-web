@@ -92,30 +92,6 @@ const EditButton: React.FC<PropsType> = props => {
 
     const [employeeId, setEmployeeId] = useState<string>('');
 
-    // const getEmployeeProvidedNameOnFocus = () => {
-    //   try {
-    //     const e_id: string = employeeId;
-
-    //     if (e_id === '') return;
-
-    //     const employee = props.employeesData.find(
-    //       employee => employee.e_id === e_id,
-    //     );
-
-    //     if (employee) {
-    //       setValue('provided_name', employee.company_provided_name || '');
-    //     } else {
-    //       toast.info('No employee found with the code provided');
-    //     }
-    //   } catch (e) {
-    //     console.error(
-    //       'An error occurred while retrieving employee provided name on input focus',
-    //     );
-    //   } finally {
-    //     return;
-    //   }
-    // };
-
     const {
         watch,
         register,

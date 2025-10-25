@@ -204,31 +204,48 @@ const Details: React.FC<DetailsProps> = props => {
 
             toast.loading('Saving invoice in database...', { id: toastId });
 
-            const database_url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/invoice?action=store-invoice';
+            if (!clientDetails?._id || !clientDetails?.client_code) {
+                toast.error('Client details are required to save the invoice', {
+                    id: toastId,
+                });
+                return;
+            }
 
-            const database_options: {} = {
-                method: 'POST',
-                body: JSON.stringify({
-                    client_id: clientDetails?._id,
-                    client_code: clientDetails?.client_code,
-                    created_by: session?.user?.real_name,
-                    time_period: {
-                        fromDate: props.filters.fromDate,
-                        toDate: props.filters.toDate || getTodayDate(),
-                    },
-                    total_orders: orders.length,
-                    invoice_number: customer.invoiceNumber,
-                }),
-                headers: {
-                    'Content-Type': 'application/json',
+            if (!session?.user?.real_name) {
+                toast.error('Missing creator information for invoice', {
+                    id: toastId,
+                });
+                return;
+            }
+
+            if (!props.filters.fromDate) {
+                toast.error('From date is required to create invoice', {
+                    id: toastId,
+                });
+                return;
+            }
+
+            const invoicePayload = {
+                clientId: clientDetails?._id,
+                clientCode: clientDetails?.client_code,
+                createdBy: session?.user?.real_name,
+                timePeriod: {
+                    fromDate: props.filters.fromDate,
+                    toDate: props.filters.toDate || getTodayDate(),
                 },
+                totalOrders: orders.length,
+                invoiceNumber: customer.invoiceNumber,
             };
 
             let database_response = await fetchApi(
-                database_url,
-                database_options,
+                { path: '/v1/invoice/create-invoice' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(invoicePayload),
+                },
             );
 
             if (!database_response.ok) {
@@ -251,18 +268,13 @@ const Details: React.FC<DetailsProps> = props => {
                 new File([invoice], fileName, { type: invoice.type }),
             );
 
-            const ftp_url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/ftp?action=insert-file';
-            const ftp_options: {} = {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    folder_name: 'invoice',
+            let ftp_response = await fetchApi(
+                { path: '/v1/ftp/upload', query: { folderName: 'invoice' } },
+                {
+                    method: 'POST',
+                    body: formData,
                 },
-            };
-
-            let ftp_response = await fetchApi(ftp_url, ftp_options);
+            );
 
             if (!ftp_response.ok) {
                 toast.error(ftp_response.data as string, { id: toastId });
@@ -296,29 +308,33 @@ const Details: React.FC<DetailsProps> = props => {
         try {
             setLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/order?action=get-all-orders';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    Accept: '*/*',
-                    for_invoice: true,
-                    filtered: true,
-                    paginated: false,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/order/search-orders',
+                    query: {
+                        paginated: false,
+                        filtered: true,
+                    },
                 },
-                body: JSON.stringify({
-                    ...props.filters,
-                    type: 'general',
-                }),
-                cache: 'no-store',
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...props.filters,
+                        type: 'general',
+                        invoice: true,
+                    }),
+                    cache: 'no-store',
+                },
+            );
 
             if (response.ok) {
-                setOrders(response.data.items as OrderDocument[]);
+                const data = Array.isArray(response.data)
+                    ? (response.data as OrderDocument[])
+                    : ((response.data?.items || []) as OrderDocument[]);
+                setOrders(data);
             } else {
                 toast.error(response.data as string);
             }
@@ -335,18 +351,19 @@ const Details: React.FC<DetailsProps> = props => {
         try {
             setLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/client?action=get-client-by-code';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    client_code: props.clientCode,
-                },
-            };
+            if (!props.clientCode) {
+                toast.error('Client code is required');
+                return;
+            }
 
-            let response = await fetchApi(url, options);
+            const response = await fetchApi(
+                {
+                    path: `/v1/client/get-client/${encodeURIComponent(props.clientCode)}`,
+                },
+                {
+                    method: 'GET',
+                },
+            );
 
             if (response.ok) {
                 setClientDetails(response.data as ClientDocument);

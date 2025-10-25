@@ -1,6 +1,6 @@
 import { fetchApi } from '@/lib/utils';
+import { EmployeeDocument } from '@repo/schemas/employee.schema';
 import { OrderDocument } from '@repo/schemas/order.schema';
-import { PopulatedByEmployeeUser } from '@repo/schemas/types/populated-user.type';
 import { UserDocument } from '@repo/schemas/user.schema';
 import moment from 'moment-timezone';
 import React, { Suspense } from 'react';
@@ -10,23 +10,27 @@ let marketerNames: string[] = [];
 
 async function getAllMarketers() {
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_BASE_URL +
-            '/api/user?action=get-all-marketers';
-        let options: {} = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+        const response = await fetchApi(
+            {
+                path: '/v1/employee/search-employees',
+                query: { paginated: false, filtered: true },
             },
-        };
-
-        let response = await fetchApi(url, options);
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ department: 'Marketing' }),
+            },
+        );
 
         if (response.ok) {
-            let marketers = response.data as PopulatedByEmployeeUser[];
-            marketerNames = marketers.map(
-                marketer => marketer.employee.company_provided_name,
-            );
+            const marketers = Array.isArray(response.data)
+                ? (response.data as EmployeeDocument[])
+                : ((response.data?.items || []) as EmployeeDocument[]);
+            marketerNames = marketers
+                .map(marketer => marketer.company_provided_name)
+                .filter((name): name is string => Boolean(name));
         } else {
             console.error('Unable to fetch marketers');
         }

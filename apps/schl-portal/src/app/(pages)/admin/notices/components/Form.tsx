@@ -92,40 +92,40 @@ const Form: React.FC = () => {
                 return;
             }
 
-            const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/notice?action=create-notice`;
-            const options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name || '',
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            const response = await fetchApi(
+                { path: '/v1/notice/create-notice' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Created new notice successfully');
                 if (file) {
-                    let formData = new FormData();
+                    const formData = new FormData();
                     formData.append(
                         'file',
                         file,
                         constructFileName(file, response.data.notice_no),
                     );
 
-                    const ftp_url: string =
-                        process.env.NEXT_PUBLIC_BASE_URL +
-                        '/api/ftp?action=insert-file';
-                    const ftp_options: {} = {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            folder_name: 'notice',
+                    const ftp_response = await fetchApi(
+                        {
+                            path: '/v1/ftp/upload',
+                            query: { folderName: 'notice' },
                         },
-                    };
-
-                    let ftp_response = await fetchApi(ftp_url, ftp_options);
+                        {
+                            method: 'POST',
+                            body: formData,
+                        },
+                    );
 
                     if (!ftp_response.ok) {
                         toast.error(ftp_response.data as string);

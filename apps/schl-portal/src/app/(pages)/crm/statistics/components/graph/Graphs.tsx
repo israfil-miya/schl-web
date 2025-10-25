@@ -1,7 +1,6 @@
 'use client';
 
 import { fetchApi } from '@/lib/utils';
-import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import ClientsOnboardGraph from './ClientsOnboardGraph';
@@ -9,35 +8,32 @@ import ReportsCountGraph from './ReportsCountGraph';
 import TestOrdersTrendGraph from './TestOrdersTrendGraph';
 
 const Graphs = () => {
-    const { data: session } = useSession();
     const [isLoading, setIsLoading] = useState({
         reportsCount: false,
         clientsOnboard: false,
         testOrdersTrend: false,
     });
 
-    const [reportsCount, setReportsCount] = useState({});
-    const [clientsOnboard, setClientsOnboard] = useState({});
-    const [testOrdersTrend, setTestOrdersTrend] = useState({});
+    const [reportsCount, setReportsCount] = useState<Record<string, number>>(
+        {},
+    );
+    const [clientsOnboard, setClientsOnboard] = useState<
+        Record<string, number>
+    >({});
+    const [testOrdersTrend, setTestOrdersTrend] = useState<
+        Record<string, number>
+    >({});
 
     async function getReportsCount() {
         try {
             setIsLoading(prevData => ({ ...prevData, reportsCount: true }));
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=get-reports-count';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            };
-
-            let response = await fetchApi(url, options);
+            const response = await fetchApi({
+                path: '/v1/report/call-reports-trend',
+            });
 
             if (response.ok) {
-                setReportsCount(response.data as number);
+                setReportsCount(response.data as Record<string, number>);
             } else {
                 toast.error(response.data as string);
             }
@@ -58,20 +54,12 @@ const Graphs = () => {
                 clientsOnboard: true,
             }));
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=get-clients-onboard';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            };
-
-            let response = await fetchApi(url, options);
+            const response = await fetchApi({
+                path: '/v1/report/clients-onboard-trend',
+            });
 
             if (response.ok) {
-                setClientsOnboard(response.data as number);
+                setClientsOnboard(response.data as Record<string, number>);
             } else {
                 toast.error(response.data as string);
             }
@@ -95,20 +83,12 @@ const Graphs = () => {
                 testOrdersTrend: true,
             }));
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=get-test-orders-trend';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            };
-
-            let response = await fetchApi(url, options);
+            const response = await fetchApi({
+                path: '/v1/report/test-orders-trend',
+            });
 
             if (response.ok) {
-                setTestOrdersTrend(response.data as number);
+                setTestOrdersTrend(response.data as Record<string, number>);
             } else {
                 toast.error(response.data as string);
             }

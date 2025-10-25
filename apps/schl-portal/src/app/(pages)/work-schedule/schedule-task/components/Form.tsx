@@ -1,10 +1,5 @@
 'use client';
-import {
-    priorityOptions,
-    statusOptions,
-    taskOptions,
-    typeOptions,
-} from '@/app/(pages)/browse/components/Edit';
+import { taskOptions } from '@/app/(pages)/browse/components/Edit';
 import {
     ScheduleDataType,
     validationSchema,
@@ -13,7 +8,6 @@ import { fetchApi } from '@/lib/utils';
 import { setMenuPortalTarget } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { OrderDocument } from '@repo/schemas/order.schema';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -59,7 +53,6 @@ const Form: React.FC<PropsType> = props => {
             client_name: '',
             task: '',
             comment: '',
-            updated_by: session?.user.real_name || '',
         },
     });
 
@@ -74,19 +67,19 @@ const Form: React.FC<PropsType> = props => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/schedule?action=create-schedule';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name,
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            const response = await fetchApi(
+                { path: '/v1/schedule/create-schedule' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Created new schedule successfully');

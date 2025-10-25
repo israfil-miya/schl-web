@@ -9,8 +9,8 @@ import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
+import type { EmployeeDocument } from '@repo/schemas/employee.schema';
 import { ReportDocument } from '@repo/schemas/report.schema';
-import { PopulatedByEmployeeUser } from '@repo/schemas/types/populated-user.type';
 import { hasAnyPerm, hasPerm } from '@repo/schemas/utils/permission-check';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -76,26 +76,27 @@ const Table = () => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/report?action=get-all-reports';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: false,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/report/search-reports',
+                        query: {
+                            paginated: true,
+                            filtered: false,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                    body: JSON.stringify({
-                        show: 'all',
-                        // it's actually fetching reports in pending state to be converted to regular client
-                        regularClient: true,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            show: 'all',
+                            regularClient: true,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setReports(response.data as ReportsState);
@@ -120,26 +121,27 @@ const Table = () => {
             try {
                 // setLoading(true);
 
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/report?action=get-all-reports';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: true,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/report/search-reports',
+                        query: {
+                            paginated: true,
+                            filtered: true,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                    body: JSON.stringify({
-                        ...filters,
-                        // it's actually fetching reports in pending state to be converted to regular client
-                        regularClient: true,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...filters,
+                            regularClient: true,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setReports(response.data as ReportsState);
@@ -164,18 +166,15 @@ const Table = () => {
     // reject the approval of the report to be converted to regular client
     const rejectClient = async (reportId: string) => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=reject-regular-client-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: `/v1/report/reject-client-request/${reportId}` },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                 },
-                body: JSON.stringify({ id: reportId }),
-            };
-
-            let response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 toast.success(
@@ -196,18 +195,17 @@ const Table = () => {
     // mark the request as duplicate as the client already exists
     const markDuplicate = async (reportId: string) => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=mark-duplicate-client';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: `/v1/report/mark-duplicate-client-request/${reportId}`,
                 },
-                body: JSON.stringify({ id: reportId }),
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
 
             if (response.ok) {
                 toast.success('Marked the request as duplicate client');
@@ -238,18 +236,21 @@ const Table = () => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=convert-to-permanent';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(editedClientData),
-            };
+            const { _id, createdAt, updatedAt, __v, ...rest } = parsed.data;
+            const payload = Object.fromEntries(
+                Object.entries(rest).filter(([, value]) => value !== undefined),
+            );
 
-            let response = await fetchApi(url, options);
+            const response = await fetchApi(
+                { path: '/v1/report/convert-to-client' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Successfully created new client');
@@ -266,23 +267,27 @@ const Table = () => {
 
     const getAllMarketers = async () => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/user?action=get-all-marketers';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: true },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ department: 'Marketing' }),
+                },
+            );
 
             if (response.ok) {
-                let marketers = response.data as PopulatedByEmployeeUser[];
-                let marketerNames = marketers.map(
-                    marketer => marketer.employee.company_provided_name,
-                );
+                const marketers = Array.isArray(response.data)
+                    ? (response.data as EmployeeDocument[])
+                    : ((response.data?.items || []) as EmployeeDocument[]);
+                const marketerNames = marketers
+                    .map(marketer => marketer.company_provided_name)
+                    .filter((name): name is string => Boolean(name));
                 setMarketerNames(marketerNames);
             } else {
                 toast.error(response.data as string);

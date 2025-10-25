@@ -3,7 +3,6 @@
 import { constructFileName, fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
 import { hasAnyPerm } from '@repo/schemas/utils/permission-check';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -109,21 +108,40 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
         try {
             setIsLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/notice?action=get-notice';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    notice_no: notice_no,
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/notice/search-notices',
+                    query: {
+                        paginated: false,
+                        filtered: true,
+                    },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ noticeNo: notice_no }),
+                },
+            );
 
             if (response.ok) {
-                if (response.data?.channel != 'production') {
+                const result = Array.isArray(response.data)
+                    ? response.data
+                    : response.data?.items;
+                const [matchedNotice] = (result || []) as Notice[];
+
+                if (!matchedNotice) {
+                    toast.error('Notice not found', {
+                        id: 'notice-error',
+                    });
+                    router.push(
+                        process.env.NEXT_PUBLIC_BASE_URL + '/admin/notices',
+                    );
+                    return;
+                }
+
+                if (matchedNotice.channel !== 'production') {
                     // currently acknowledging only "marketing" channel exists besides production
                     if (
                         !hasAnyPerm(
@@ -140,14 +158,14 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
                         router.push('/');
                     } else {
                         toast.info(
-                            `The notice belongs to ${response.data?.channel} channel`,
+                            `The notice belongs to ${matchedNotice.channel} channel`,
                             {
                                 id: 'notice-channel',
                             },
                         );
                     }
                 }
-                setNotice(response.data);
+                setNotice(matchedNotice);
             } else {
                 toast.error(response.data as string, { id: 'notice-error' });
                 router.push(
@@ -165,38 +183,39 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
 
     const handleFileDownload = async () => {
         try {
-            const url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/ftp?action=download-file';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+            if (!baseUrl) {
+                throw new Error('API base URL is not configured');
+            }
 
-            const options = {
+            const url = new URL('/v1/ftp/download', baseUrl);
+            url.searchParams.set('folderName', 'notice');
+            url.searchParams.set(
+                'fileName',
+                constructFileName(notice.file_name, notice.notice_no),
+            );
+
+            const res = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    folder_name: 'notice',
-                    file_name: constructFileName(
-                        notice.file_name,
-                        notice.notice_no,
-                    ),
+                    Authorization: `Bearer ${session?.accessToken ?? ''}`,
                 },
-            };
+            });
 
-            const response = await fetchApi(url, options);
-
-            if (response.ok) {
-                // Create a blob from the response and download it
-                const blob = await response.data.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = notice.file_name;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-            } else {
-                console.error(response.data);
+            if (!res.ok) {
                 toast.error('Error downloading the file');
+                return;
             }
+
+            const blob = await res.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = downloadUrl;
+            anchor.download = notice.file_name;
+            document.body.appendChild(anchor);
+            anchor.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            anchor.remove();
         } catch (error) {
             console.error(error);
             toast.error('An error occurred while downloading the file');

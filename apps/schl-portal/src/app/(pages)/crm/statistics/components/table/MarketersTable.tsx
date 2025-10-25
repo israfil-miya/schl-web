@@ -17,17 +17,19 @@ const DailyStatusTable = () => {
         try {
             setLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/employee?action=get-all-marketers';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: true },
                 },
-            };
-
-            let response = await fetchApi(url, options);
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ department: 'Marketing' }),
+                },
+            );
 
             if (response.ok) {
                 setMarketers(response.data as EmployeeDocument[]);

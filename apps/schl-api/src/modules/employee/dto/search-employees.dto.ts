@@ -1,3 +1,14 @@
+import {
+    EMPLOYEE_BLOOD_GROUPS,
+    EMPLOYEE_DEPARTMENTS,
+    EMPLOYEE_SERVICE_TIME,
+    EMPLOYEE_STATUSES,
+    EmployeeDepartment,
+    type EmployeeBloodGroup,
+    type EmployeeServiceTime,
+    type EmployeeStatus,
+} from '@repo/schemas/constants/employee.constant';
+import { toBoolean } from '@repo/schemas/utils/transformers';
 import { Transform, Type } from 'class-transformer';
 import {
     IsBoolean,
@@ -8,15 +19,6 @@ import {
     Max,
     Min,
 } from 'class-validator';
-import {
-    EMPLOYEE_BLOOD_GROUPS,
-    EMPLOYEE_SERVICE_TIME,
-    EMPLOYEE_STATUSES,
-    type EmployeeBloodGroup,
-    type EmployeeServiceTime,
-    type EmployeeStatus,
-} from '@repo/schemas/constants/employee.constant';
-import { toBoolean } from '@repo/schemas/utils/transformers';
 
 export class SearchEmployeesQueryDto {
     @IsOptional()
@@ -52,7 +54,7 @@ export class SearchEmployeesBodyDto {
     bloodGroup?: EmployeeBloodGroup;
 
     @IsOptional()
-    @IsIn(['Junior', 'Mid', 'Senior'])
+    @IsString()
     designation?: string;
 
     @IsOptional()
@@ -60,7 +62,7 @@ export class SearchEmployeesBodyDto {
     status?: EmployeeStatus;
 
     @IsOptional()
-    @IsIn(['HR', 'Engineering', 'Sales'])
+    @IsIn(EMPLOYEE_DEPARTMENTS as readonly EmployeeDepartment[])
     department?: string;
 
     @IsOptional()

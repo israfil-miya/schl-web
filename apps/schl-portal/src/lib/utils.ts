@@ -8,22 +8,109 @@ import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
 
+type Primitive = string | number | boolean | null | undefined;
+
+type FetchApiTarget =
+    | string
+    | URL
+    | {
+          path: string;
+          query?: Record<string, Primitive | Primitive[]>;
+          baseUrl?: string;
+      };
+
+const buildUrl = (target: FetchApiTarget): URL => {
+    const fallbackBase = process.env.NEXT_PUBLIC_API_URL;
+
+    const ensureBase = (base?: string): string => {
+        const resolved = base ?? fallbackBase;
+        if (!resolved) {
+            throw new Error('NEXT_PUBLIC_API_URL is not configured');
+        }
+        return resolved.endsWith('/') ? resolved : `${resolved}/`;
+    };
+
+    if (target instanceof URL) {
+        return target;
+    }
+
+    if (typeof target === 'string') {
+        if (/^https?:\/\//i.test(target)) {
+            return new URL(target);
+        }
+
+        const base = ensureBase();
+        return new URL(target, base);
+    }
+
+    const base = ensureBase(target.baseUrl);
+    const path = target.path;
+    const url = new URL(path, base);
+
+    if (target.query) {
+        Object.entries(target.query).forEach(([key, value]) => {
+            if (value === undefined || value === null) return;
+
+            if (Array.isArray(value)) {
+                value.forEach(item => {
+                    if (item !== undefined && item !== null) {
+                        url.searchParams.append(key, String(item));
+                    }
+                });
+                return;
+            }
+
+            url.searchParams.set(key, String(value));
+        });
+    }
+
+    return url;
+};
+
 export const fetchApi = async (
-    url: string | URL,
-    options: RequestInit,
-): Promise<{ data: any; ok: boolean }> => {
+    target: FetchApiTarget,
+    options: RequestInit = {},
+): Promise<{ data: any; ok: boolean; status: number; headers: Headers }> => {
     try {
+        const url = buildUrl(target);
         const authSession = await import('next-auth/react').then(m =>
             m.getSession(),
         );
-        const headers = {
-            Authorization: `Bearer ${authSession?.accessToken ?? ''}`,
-            ...(options.headers || {}),
-        };
 
-        const response = await fetch(url, { ...options, headers });
-        const data = await response.json();
-        return { data: data, ok: response.ok };
+        const mergedHeaders = new Headers(options.headers);
+
+        if (!mergedHeaders.has('Authorization')) {
+            mergedHeaders.set(
+                'Authorization',
+                `Bearer ${authSession?.accessToken ?? ''}`,
+            );
+        }
+
+        const response = await fetch(url, {
+            ...options,
+            headers: mergedHeaders,
+        });
+
+        let data: any = null;
+        const contentType = response.headers.get('content-type');
+
+        if (contentType?.includes('application/json')) {
+            data = await response.json().catch(() => null);
+        } else {
+            const text = await response.text();
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch {
+                data = text;
+            }
+        }
+
+        return {
+            data,
+            ok: response.ok,
+            status: response.status,
+            headers: response.headers,
+        };
     } catch (error) {
         console.error('Error fetching data:', error);
         throw error;

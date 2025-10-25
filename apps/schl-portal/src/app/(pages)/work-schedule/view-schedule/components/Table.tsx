@@ -72,24 +72,24 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
     const getAllSchedules = useCallback(
         async (page: number, itemPerPage: number) => {
             try {
-                // setLoading(true);
-
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/schedule?action=get-all-schedules';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: false,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/schedule/search-schedules',
+                        query: {
+                            page,
+                            itemsPerPage: itemPerPage,
+                            filtered: false,
+                            paginated: true,
+                        },
                     },
-                    body: JSON.stringify({}),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({}),
+                    },
+                );
 
                 if (response.ok) {
                     setSchedules(response.data as SchedulesState);
@@ -114,26 +114,26 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
     const getAllSchedulesFiltered = useCallback(
         async (page: number, itemPerPage: number) => {
             try {
-                // setLoading(true);
-
-                let url: string =
-                    process.env.NEXT_PUBLIC_BASE_URL +
-                    '/api/schedule?action=get-all-schedules';
-                let options: {} = {
-                    method: 'POST',
-                    headers: {
-                        filtered: true,
-                        paginated: true,
-                        items_per_page: itemPerPage,
-                        page: page,
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: '/v1/schedule/search-schedules',
+                        query: {
+                            page,
+                            itemsPerPage: itemPerPage,
+                            filtered: true,
+                            paginated: true,
+                        },
                     },
-                    body: JSON.stringify({
-                        ...filters,
-                    }),
-                };
-
-                let response = await fetchApi(url, options);
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...filters,
+                        }),
+                    },
+                );
 
                 if (response.ok) {
                     setSchedules(response.data as SchedulesState);
@@ -159,24 +159,21 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
 
     const deleteSchedule = async (scheduleData: ScheduleDocument) => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/approval?action=new-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetchApi(
+                { path: '/v1/approval/new-request' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        target_model: 'Schedule',
+                        action: 'delete',
+                        object_id: scheduleData._id,
+                        deleted_data: scheduleData,
+                    }),
                 },
-                body: JSON.stringify({
-                    target_model: 'Schedule',
-                    action: 'delete',
-                    object_id: scheduleData._id,
-                    deleted_data: scheduleData,
-                    req_by: session?.user.db_id,
-                }),
-            };
-
-            let response = await fetchApi(url, options);
+            );
 
             if (response.ok) {
                 toast.success('Request sent for approval');
@@ -204,19 +201,24 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
                 return;
             }
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/schedule?action=edit-schedule';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    updated_by: session?.user.real_name,
-                },
-                body: JSON.stringify(parsed.data),
-            };
+            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
+                parsed.data;
 
-            const response = await fetchApi(url, options);
+            if (!_id) {
+                toast.error('Missing schedule identifier');
+                return;
+            }
+
+            const response = await fetchApi(
+                { path: `/v1/schedule/update-schedule/${_id}` },
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
 
             if (response.ok) {
                 toast.success('Updated the schedule data');
