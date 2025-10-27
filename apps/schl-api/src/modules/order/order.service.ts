@@ -141,6 +141,8 @@ export class OrderService {
             throw new BadRequestException('No filter applied');
         }
 
+        console.log('Search Query:', searchQuery);
+
         const skip = (page - 1) * itemsPerPage;
 
         // General search across selected fields

@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsString } from 'class-validator';
+import { IsArray, IsIn, IsMongoId, IsString } from 'class-validator';
 
 export class BulkApprovalBodyDto {
     @IsArray()
@@ -8,6 +8,7 @@ export class BulkApprovalBodyDto {
     @IsIn(['approve', 'reject'])
     response: 'approve' | 'reject';
 
+    @IsMongoId()
     @IsString()
     reviewedBy: string;
 }

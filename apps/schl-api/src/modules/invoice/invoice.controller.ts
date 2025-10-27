@@ -50,7 +50,6 @@ export class InvoiceController {
             filtered: query.filtered,
             paginated: query.paginated,
         };
-
         return this.invoiceService.searchInvoices(body, pagination, req.user);
     }
 }

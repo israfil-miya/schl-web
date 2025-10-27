@@ -175,6 +175,7 @@ const Table: React.FC = props => {
                     body: JSON.stringify({
                         response: res,
                         objectId: req_id,
+                        reviewedBy: session?.user?.db_id,
                     }),
                 },
             );
@@ -208,6 +209,7 @@ const Table: React.FC = props => {
                     body: JSON.stringify({
                         response: res,
                         objectIds: approvalIds,
+                        reviewedBy: session?.user?.db_id,
                     }),
                 },
             );
@@ -324,15 +326,11 @@ const Table: React.FC = props => {
                         className="w-full justify-between sm:w-auto"
                     />
                 </div>
-                <div
-                    className="float-start"
-                    style={{ display: 'flex', alignItems: 'center' }}
-                >
+                <div className="float-start flex items-center">
                     {approvalIds.length !== 0 && (
-                        <div className="align-middle text-center flex gap-1 ms-4">
-                            <span className="text-sm">
-                                {approvalIds.length} request
-                                {approvalIds.length > 1 ? 's' : ''} selected
+                        <div className="flex items-center gap-1 ms-4">
+                            <span className="inline-flex items-center text-xs sm:text-sm font-medium bg-gray-200 px-2 py-2 rounded-md min-w-[24px] text-center">
+                                {approvalIds.length}
                             </span>
                             <button
                                 onClick={() => {
@@ -343,9 +341,12 @@ const Table: React.FC = props => {
                                         multipleApproval('approve');
                                     }
                                 }}
-                                className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-1 sm:p-2"
                             >
-                                <CircleCheckBig size={18} />
+                                <CircleCheckBig
+                                    size={16}
+                                    className="sm:w-[18px] sm:h-[18px]"
+                                />
                             </button>
                             <button
                                 onClick={() => {
@@ -356,9 +357,12 @@ const Table: React.FC = props => {
                                         multipleApproval('reject');
                                     }
                                 }}
-                                className="rounded-md bg-red-600 hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                className="rounded-md bg-red-600 hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-1 sm:p-2"
                             >
-                                <CircleX size={18} />
+                                <CircleX
+                                    size={16}
+                                    className="sm:w-[18px] sm:h-[18px]"
+                                />
                             </button>
                         </div>
                     )}

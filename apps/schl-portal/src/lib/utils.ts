@@ -102,6 +102,16 @@ export const fetchApi = async (
 
         if (contentType?.includes('application/json')) {
             data = await response.json().catch(() => null);
+        } else if (
+            contentType?.includes('application/octet-stream') ||
+            contentType?.includes('application/zip') ||
+            contentType?.includes('application/pdf') ||
+            contentType?.includes('image/') ||
+            contentType?.includes('video/') ||
+            contentType?.includes('audio/')
+        ) {
+            // Handle binary data as blob
+            data = await response.blob();
         } else {
             const text = await response.text();
             try {
