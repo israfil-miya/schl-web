@@ -23,7 +23,7 @@ import {
 } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 import moment from 'moment-timezone';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
 import { CreateReportBodyDto } from './dto/create-report.dto';
 import {
@@ -31,6 +31,8 @@ import {
     SearchReportsQueryDto,
 } from './dto/search-reports.dto';
 import { ReportFactory } from './factories/report.factory';
+
+type QueryShape = FilterQuery<Report>;
 
 @Injectable()
 export class ReportService {
@@ -530,25 +532,25 @@ export class ReportService {
             freshLead,
         } = filters;
 
-        interface QueryShape {
-            country?: ReturnType<typeof createRegexQuery>;
-            company_name?: ReturnType<typeof createRegexQuery>;
-            category?: ReturnType<typeof createRegexQuery>;
-            marketer_name?:
-                | ReturnType<typeof createRegexQuery>
-                | { [k: string]: string | ReturnType<typeof createRegexQuery> };
-            is_prospected?: boolean;
-            is_lead?: boolean;
-            followup_done?: boolean;
-            client_status?: string | { $in: string[] };
-            calling_date_history?: Record<string, any>;
-            test_given_date_history?: Record<string, any>;
-            prospect_status?: ReturnType<typeof createRegexQuery>;
-            lead_origin?: string | { $ne: string };
-            lead_withdrawn?: boolean;
-            onboard_date?: Record<string, any>;
-            $or?: Record<string, ReturnType<typeof createRegexQuery>>[];
-        }
+        // interface QueryShape {
+        //     country?: ReturnType<typeof createRegexQuery>;
+        //     company_name?: ReturnType<typeof createRegexQuery>;
+        //     category?: ReturnType<typeof createRegexQuery>;
+        //     marketer_name?:
+        //         | ReturnType<typeof createRegexQuery>
+        //         | { [k: string]: string | ReturnType<typeof createRegexQuery> };
+        //     is_prospected?: boolean;
+        //     is_lead?: boolean;
+        //     followup_done?: boolean;
+        //     client_status?: string | { $in: string[] };
+        //     calling_date_history?: Record<string, any>;
+        //     test_given_date_history?: Record<string, any>;
+        //     prospect_status?: ReturnType<typeof createRegexQuery>;
+        //     lead_origin?: string | { $ne: string };
+        //     lead_withdrawn?: boolean;
+        //     onboard_date?: Record<string, any>;
+        //     $or?: Record<string, ReturnType<typeof createRegexQuery>>[];
+        // }
 
         const query: QueryShape = {};
 

@@ -1,3 +1,4 @@
+import type { Permissions } from '@repo/schemas/types/permission.type';
 import jwt from 'jsonwebtoken';
 import type { NextAuthConfig } from 'next-auth';
 import { UserSessionType } from './auth';
@@ -8,11 +9,9 @@ const ACCESS_TOKEN_TTL_SECONDS = 5 * 60; // 5 minutes
 function signAccessToken(
     payload: Pick<UserSessionType, 'db_id' | 'db_role_id' | 'permissions'>,
 ) {
-    const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+    const secret = process.env.AUTH_SECRET;
     if (!secret)
-        throw new Error(
-            'Missing NEXTAUTH_SECRET / AUTH_SECRET for signing access token',
-        );
+        throw new Error('Missing AUTH_SECRET for signing access token');
     return jwt.sign(
         {
             sub: payload.db_id,
@@ -61,13 +60,13 @@ export const authConfig: NextAuthConfig = {
             // Subsequent calls: rotate if expired (silent refresh on usage)
             if (
                 token.accessTokenExpires &&
-                Date.now() > token.accessTokenExpires
+                Date.now() > (token.accessTokenExpires as number)
             ) {
                 try {
                     token.accessToken = signAccessToken({
-                        db_id: token.db_id,
-                        db_role_id: token.db_role_id,
-                        permissions: token.permissions || [],
+                        db_id: token.db_id as string,
+                        db_role_id: token.db_role_id as string,
+                        permissions: (token.permissions as Permissions[]) || [],
                     });
                     token.accessTokenExpires =
                         Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;

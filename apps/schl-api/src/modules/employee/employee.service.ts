@@ -21,10 +21,12 @@ import {
     createRegexQuery,
 } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { CreateEmployeeBodyDto } from './dto/create-employee.dto';
 import { SearchEmployeesBodyDto } from './dto/search-employees.dto';
 import { EmployeeFactory } from './factories/employee.factory';
+
+type QueryShape = FilterQuery<Employee>;
 
 @Injectable()
 export class EmployeeService {
@@ -209,19 +211,19 @@ export class EmployeeService {
             generalSearchString,
         } = filters;
 
-        interface QueryShape {
-            joining_date?: {
-                $gte?: string;
-                $lte?: string;
-                $lt?: string;
-                $gt?: string;
-            };
-            blood_group?: string | { $regex: string; $options: string };
-            designation?: string | { $regex: string; $options: string };
-            status?: string | { $regex: string; $options: string };
-            department?: string | { $regex: string; $options: string };
-            $or?: Record<string, any>[];
-        }
+        // interface QueryShape {
+        //     joining_date?: {
+        //         $gte?: string;
+        //         $lte?: string;
+        //         $lt?: string;
+        //         $gt?: string;
+        //     };
+        //     blood_group?: string | { $regex: string; $options: string };
+        //     designation?: string | { $regex: string; $options: string };
+        //     status?: string | { $regex: string; $options: string };
+        //     department?: string | { $regex: string; $options: string };
+        //     $or?: Record<string, any>[];
+        // }
 
         const query: QueryShape = {};
         addIfDefined(

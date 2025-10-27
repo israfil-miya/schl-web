@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Schedule } from '@repo/schemas/schedule.schema';
 import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     addIfDefined,
@@ -17,10 +17,12 @@ import {
     createRegexQuery,
 } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
-import { Schedule } from '@repo/schemas/schedule.schema';
+import { FilterQuery, Model } from 'mongoose';
 import { CreateScheduleBodyDto } from './dto/create-schedule.dto';
 import { SearchSchedulesBodyDto } from './dto/search-schedules.dto';
 import { ScheduleFactory } from './factories/schedule.factory';
+
+type QueryShape = FilterQuery<Schedule>;
 
 @Injectable()
 export class ScheduleService {
@@ -59,22 +61,22 @@ export class ScheduleService {
             generalSearchString,
         } = filters;
 
-        // Build base query (string date ranges + regex fields)
-        interface RangeQuery {
-            $gte?: string;
-            $lte?: string;
-        }
-        interface RegexQuery {
-            $regex: string;
-            $options: string;
-        }
-        interface QueryShape {
-            receive_date?: RangeQuery;
-            delivery_date?: RangeQuery;
-            client_code?: RegexQuery;
-            task?: RegexQuery;
-            $or?: Record<string, RegexQuery>[];
-        }
+        // // Build base query (string date ranges + regex fields)
+        // interface RangeQuery {
+        //     $gte?: string;
+        //     $lte?: string;
+        // }
+        // interface RegexQuery {
+        //     $regex: string;
+        //     $options: string;
+        // }
+        // interface QueryShape {
+        //     receive_date?: RangeQuery;
+        //     delivery_date?: RangeQuery;
+        //     client_code?: RegexQuery;
+        //     task?: RegexQuery;
+        //     $or?: Record<string, RegexQuery>[];
+        // }
 
         const query: QueryShape = {};
 

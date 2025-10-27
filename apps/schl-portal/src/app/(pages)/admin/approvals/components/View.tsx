@@ -47,7 +47,7 @@ function isArray(value: any): boolean {
 }
 
 // Helper function to format field values for display
-function formatValue(value: any): string | React.ReactNode {
+function formatValue(value: unknown): string | React.ReactNode {
     if (value === null || value === undefined) return '-';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (typeof value === 'number') return value.toString();
@@ -56,22 +56,24 @@ function formatValue(value: any): string | React.ReactNode {
         if (value.length === 0) return '[]';
         return value.join(', ');
     }
-    return value;
+    return typeof value === 'object'
+        ? JSON.stringify(value)
+        : (value as React.ReactNode);
 }
 
 // Helper function to render array values
-function renderArrayValue(array: any[]): React.ReactNode {
+function renderArrayValue(array: unknown[]): React.ReactNode {
     if (!array || array.length === 0)
         return <span className="text-gray-500 italic">empty array</span>;
 
     return (
         <div className="flex flex-wrap gap-1.5">
-            {array.map((item, index) => (
+            {array.map((item: unknown, index) => (
                 <span
                     key={index}
                     className="bg-gray-100 text-gray-700 border border-gray-200 px-2 py-1 rounded-md text-xs"
                 >
-                    {item}
+                    {formatValue(item)}
                 </span>
             ))}
         </div>
@@ -294,7 +296,7 @@ const ViewButton: React.FC<PropsType> = props => {
                                                             ) ? (
                                                                 <div className="space-y-2">
                                                                     {renderArrayValue(
-                                                                        change.oldValue,
+                                                                        change.oldValue as unknown[],
                                                                     )}
                                                                     {'arrayChanges' in
                                                                         change &&

@@ -8,7 +8,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Client } from '@repo/schemas/client.schema';
 import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     addIfDefined,
@@ -16,23 +16,25 @@ import {
     createRegexQuery,
 } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
-import { Client } from '@repo/schemas/client.schema';
+import { FilterQuery, Model } from 'mongoose';
 import { CreateClientBodyDto } from './dto/create-client.dto';
 import { SearchClientsBodyDto } from './dto/search-clients.dto';
 import { ClientFactory } from './factories/client.factory';
 
-interface RegexQuery {
-    $regex: string;
-    $options: string;
-}
-interface QueryShape {
-    client_code?: RegexQuery;
-    country?: RegexQuery;
-    contact_person?: RegexQuery;
-    marketer?: RegexQuery;
-    category?: RegexQuery;
-    $or?: Record<string, RegexQuery>[];
-}
+type QueryShape = FilterQuery<Client>;
+
+// interface RegexQuery {
+//     $regex: string;
+//     $options: string;
+// }
+// interface QueryShape {
+//     client_code?: RegexQuery;
+//     country?: RegexQuery;
+//     contact_person?: RegexQuery;
+//     marketer?: RegexQuery;
+//     category?: RegexQuery;
+//     $or?: Record<string, RegexQuery>[];
+// }
 
 @Injectable()
 export class ClientService {
