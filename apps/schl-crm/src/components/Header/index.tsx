@@ -1,24 +1,21 @@
+// import { SessionProvider } from 'next-auth/react';
 import React from 'react';
-import Topbar from './Topbar';
 import Nav from './Nav';
-import { SessionProvider } from 'next-auth/react';
-import { auth } from '@/auth';
+import Topbar from './Topbar';
 
 interface PropsType {
-  msg?: string | undefined;
+    msg?: string | undefined;
 }
 
-const Header: React.FC<PropsType> = async (props) => {
-  let session = await auth();
-
-  return (
-    <>
-      <Topbar />
-      <SessionProvider session={session}>
-        <Nav className="max-lg:hidden" msg={props.msg} />
-      </SessionProvider>
-    </>
-  );
+const Header: React.FC<PropsType> = async props => {
+    return (
+        <>
+            <Topbar />
+            {/* <SessionProvider session={session}> */}
+            <Nav className="max-lg:hidden" msg={props.msg} />
+            {/* </SessionProvider> */}
+        </>
+    );
 };
 
 export default Header;
