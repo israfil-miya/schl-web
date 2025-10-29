@@ -1,9 +1,6 @@
-import { auth } from '@/auth';
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
-import { isRedirectError } from 'next/dist/client/components/redirect';
-import { NextRequest } from 'next/server';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
@@ -20,12 +17,13 @@ type FetchApiTarget =
       };
 
 const buildUrl = (target: FetchApiTarget): URL => {
-    const fallbackBase = process.env.NEXT_PUBLIC_API_URL;
+    const fallbackBase =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     const ensureBase = (base?: string): string => {
         const resolved = base ?? fallbackBase;
         if (!resolved) {
-            throw new Error('NEXT_PUBLIC_API_URL is not configured');
+            throw new Error('API base URL is not configured');
         }
         return resolved.endsWith('/') ? resolved : `${resolved}/`;
     };
@@ -70,26 +68,15 @@ const buildUrl = (target: FetchApiTarget): URL => {
 export const fetchApi = async (
     target: FetchApiTarget,
     options: RequestInit = {},
+    authToken?: string,
 ): Promise<{ data: any; ok: boolean; status: number; headers: Headers }> => {
     try {
         const url = buildUrl(target);
-        const isClient = typeof window !== 'undefined';
-        let authSession = null;
-        if (isClient) {
-            authSession = await import('next-auth/react').then(m =>
-                m.getSession(),
-            );
-        } else {
-            authSession = await auth();
-        }
 
         const mergedHeaders = new Headers(options.headers);
 
-        if (!mergedHeaders.has('Authorization')) {
-            mergedHeaders.set(
-                'Authorization',
-                `Bearer ${authSession?.accessToken ?? ''}`,
-            );
+        if (authToken && !mergedHeaders.has('Authorization')) {
+            mergedHeaders.set('Authorization', `Bearer ${authToken}`);
         }
 
         const response = await fetch(url, {
@@ -133,12 +120,6 @@ export const fetchApi = async (
     }
 };
 
-export const getQuery = (req: NextRequest): { [key: string]: string } => {
-    const url = new URL(req.url);
-    const query = Object.fromEntries(url.searchParams.entries());
-    return query;
-};
-
 export const copy = async (text: string) => {
     // confirm user if he wants to open the folder or not via confirm alert
     const confirmOpen = confirm('Do you want to copy this text to clipboard?');
@@ -146,6 +127,10 @@ export const copy = async (text: string) => {
 
     navigator.clipboard.writeText(text);
 };
+
+export function escapeRegex(text: string) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 export function generatePassword(
     inputString: string,
@@ -227,12 +212,6 @@ export const isEmployeePermanent = (
     };
 };
 
-export function rethrowIfRedirectError(error: unknown) {
-    if (isRedirectError(error)) {
-        throw error;
-    }
-}
-
 export async function sha256(message: string): Promise<string> {
     // Encode the message as UTF-8
     const msgBuffer = new TextEncoder().encode(message);
@@ -260,6 +239,11 @@ export const generateAvatar = async (text: string): Promise<string> => {
     return avatar;
 };
 
+/**
+ * Creates a delay for a specified number of milliseconds.
+ * @param ms - The number of milliseconds to delay.
+ * @returns A Promise that resolves after the specified delay.
+ */
 export const delay = (ms: number): Promise<void> => {
     return new Promise(resolve => setTimeout(resolve, ms));
 };
@@ -295,6 +279,20 @@ export const verifyCookie = (token?: string, id?: string) => {
     }
 };
 
+export function getInlinePages(current: number, total: number): number[] {
+    if (total <= 3) {
+        // If there are 3 or fewer pages, show them all.
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 2) {
+        return [1, 2, 3];
+    }
+    if (current >= total - 1) {
+        return [total - 2, total - 1, total];
+    }
+    return [current - 1, current, current + 1];
+}
+
 export const incrementInvoiceNumber = (invoiceNumber: string): string => {
     // Match the prefix (non-numeric) and numeric parts
     const match = invoiceNumber.match(/^([A-Za-z]*)(\d+)$/);
@@ -326,57 +324,38 @@ export const constructFileName = (
     return new_file_name;
 };
 
-export function getInlinePages(current: number, total: number): number[] {
-    if (total <= 3) {
-        // If there are 3 or fewer pages, show them all.
-        return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    if (current <= 2) {
-        return [1, 2, 3];
-    }
-    if (current >= total - 1) {
-        return [total - 2, total - 1, total];
-    }
-    return [current - 1, current, current + 1];
-}
+export const isValidMails = (mail: string): boolean => {
+    const emailPattern =
+        /^(([^<>()\[\]\.,;:\s@"]+(\.[^<>()\[\]\.,;:\s@"]+)*)|(".+"))@(([^<>()\.,;\s@"]+\.{0,1})+([^<>()\.,;:\s@"]{2,}|[\d\.]+))$/;
 
-export type Change =
-    | { field: string; oldValue: any; newValue: any } // Non-array case
-    | {
-          field: string;
-          oldValue: any[];
-          newValue: any[];
-          arrayChanges: { added: any[]; removed: any[] };
-      }; // Array case
+    // Split the input string by ' / ' and trim any extra spaces
+    const emails: string[] = mail.split(' / ').map(email => email.trim());
 
-export function getObjectChanges(
-    oldObj: Record<string, any>,
-    newObj: Record<string, any>,
-): Change[] {
-    const changes: Change[] = [];
-    Object.keys(oldObj).forEach(key => {
-        const oldValue = oldObj[key];
-        const newValue = newObj[key];
-        if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-            const oldSet = new Set(oldValue.map(item => JSON.stringify(item)));
-            const newSet = new Set(newValue.map(item => JSON.stringify(item)));
-            const added = newValue.filter(
-                item => !oldSet.has(JSON.stringify(item)),
-            );
-            const removed = oldValue.filter(
-                item => !newSet.has(JSON.stringify(item)),
-            );
-            if (added.length > 0 || removed.length > 0) {
-                changes.push({
-                    field: key,
-                    oldValue,
-                    newValue,
-                    arrayChanges: { added, removed },
-                });
-            }
-        } else if (oldValue !== newValue) {
-            changes.push({ field: key, oldValue, newValue });
+    // Check if every email in the array matches the pattern
+    return emails.every(email => emailPattern.test(email));
+};
+
+export const isValidHttpUrls = (string: string): boolean => {
+    // Split the string by space (multiple links are separated by space in the input string)
+    const urls = string.split(' ');
+
+    for (const urlString of urls) {
+        let url: URL;
+        try {
+            url = new URL(urlString);
+        } catch {
+            return false;
         }
-    });
-    return changes;
-}
+        if (!(url.protocol === 'http:' || url.protocol === 'https:')) {
+            return false;
+        }
+    }
+    return true;
+};
+
+export const countPassedDaysSinceADate = (date: Date): number => {
+    const currentDate = new Date();
+    const timeDifference = currentDate.getTime() - date.getTime();
+    const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24));
+    return daysDifference;
+};

@@ -1,5 +1,5 @@
-import { type Permissions } from '@repo/schemas/types/permission.type';
-import { UserDocument } from '@repo/schemas/user.schema';
+import { UserDocument } from '../models/user.schema';
+import { type Permissions } from './permission.type';
 export interface PopulatedByEmployeeUser
     extends Omit<UserDocument, 'employee'> {
     employee: {

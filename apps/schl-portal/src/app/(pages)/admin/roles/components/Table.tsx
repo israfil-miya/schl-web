@@ -3,7 +3,7 @@
 import ExtendableTd from '@/components/ExtendableTd';
 import Pagination from '@/components/Pagination';
 import { cn, fetchApi } from '@/lib/utils';
-import { RoleDocument } from '@repo/schemas/role.schema';
+import { RoleDocument } from '@repo/schemas/models/role.schema';
 import type { Permissions } from '@repo/schemas/types/permission.type';
 import { hasAnyPerm, hasPerm } from '@repo/schemas/utils/permission-check';
 import { CirclePlus } from 'lucide-react';

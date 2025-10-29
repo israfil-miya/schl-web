@@ -1,4 +1,4 @@
-import { Employee } from '@repo/schemas/employee.schema';
+import { Employee } from '../models/employee.schema';
 
 /**
  * Structure representing the decomposed salary components.

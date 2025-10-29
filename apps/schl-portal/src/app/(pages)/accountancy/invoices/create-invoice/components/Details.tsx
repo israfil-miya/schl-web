@@ -6,8 +6,8 @@ import generateInvoice, {
 } from '@/lib/invoice';
 import { cn, fetchApi } from '@/lib/utils';
 import { getTodayDate } from '@/utility/date';
-import { ClientDocument } from '@repo/schemas/client.schema';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { ClientDocument } from '@repo/schemas/models/client.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { PlusCircleIcon, X } from 'lucide-react';

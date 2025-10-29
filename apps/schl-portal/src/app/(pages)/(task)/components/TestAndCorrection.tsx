@@ -3,7 +3,7 @@ import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { formatDate, formatTime } from '@/utility/date';
-import type { OrderDocument } from '@repo/schemas/order.schema';
+import type { OrderDocument } from '@repo/schemas/models/order.schema';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';

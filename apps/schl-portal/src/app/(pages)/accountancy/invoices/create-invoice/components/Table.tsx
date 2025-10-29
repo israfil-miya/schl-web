@@ -3,14 +3,14 @@
 import Badge from '@/components/Badge';
 import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { formatDate, formatTime } from '@/utility/date';
 
-import { ClientDocument } from '@repo/schemas/client.schema';
+import { ClientDocument } from '@repo/schemas/models/client.schema';
 import moment from 'moment-timezone';
 import { useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';

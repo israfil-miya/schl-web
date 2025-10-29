@@ -3,14 +3,14 @@
 import Badge from '@/components/Badge';
 import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
-import { EmployeeDocument } from '@repo/schemas/employee.schema';
+import { EmployeeDocument } from '@repo/schemas/models/employee.schema';
 import { hasAnyPerm, hasPerm } from '@repo/schemas/utils/permission-check';
 
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { cn } from '@/lib/utils';
-import type { RoleDocument } from '@repo/schemas/role.schema';
+import type { RoleDocument } from '@repo/schemas/models/role.schema';
 import type { FullyPopulatedUser } from '@repo/schemas/types/populated-user.type';
 
 import { CirclePlus, ClipboardCopy } from 'lucide-react';

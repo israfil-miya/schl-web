@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { Change } from './utils/changes-generate';
+import { Change } from '../utils/changes-generate';
 
 export type ApprovalDocument = HydratedDocument<Approval>;
 

@@ -1,4 +1,4 @@
-import { USER_PERMISSIONS } from '@repo/schemas/constants/permission.constant';
+import { USER_PERMISSIONS } from '../constants/permission.constant';
 export type PermissionOptions = typeof USER_PERMISSIONS;
 
 export type Permissions = PermissionOptions[number]['options'][number]['value'];

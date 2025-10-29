@@ -10,8 +10,8 @@ import Select from 'react-select';
 import { ZodPopulatedUserDataType, populatedUserSchema } from '../../schema';
 
 import { fetchApi, generatePassword } from '@/lib/utils';
-import { EmployeeDocument } from '@repo/schemas/employee.schema';
-import { RoleDocument } from '@repo/schemas/role.schema';
+import { EmployeeDocument } from '@repo/schemas/models/employee.schema';
+import { RoleDocument } from '@repo/schemas/models/role.schema';
 import { Permissions } from '@repo/schemas/types/permission.type';
 import { KeySquare } from 'lucide-react';
 import { toast } from 'sonner';

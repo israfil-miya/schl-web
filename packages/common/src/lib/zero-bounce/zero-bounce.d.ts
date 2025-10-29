@@ -48,7 +48,7 @@ declare module '@zerobounce/zero-bounce-sdk' {
          */
         validateBatch(
             emailList: { email_address: string }[],
-        ): Promise<{ email_batch: ValidateEmailResponse[]; errors: any[] }>;
+        ): Promise<{ email_batch: ValidateEmailResponse[]; errors: unknown[] }>;
 
         /**
          * Retrieves activity history for a given email.

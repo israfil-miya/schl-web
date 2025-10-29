@@ -3,15 +3,15 @@
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import Pagination from '@/components/Pagination';
-import { getObjectChanges } from '@/lib/utils';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
+import { fetchApi, getObjectChanges } from '@/lib/utils';
 import countDaysSinceLastCall from '@/utility/countDayPassed';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
-import fetchData from '@/utility/fetch';
-import { ReportDocument } from '@repo/schemas/report.schema';
+import { ReportDocument } from '@repo/schemas/models/report.schema';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
@@ -44,9 +44,7 @@ const Table = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [followupCountForToday, setFollowupCountForToday] =
         useState<number>(0);
-
-    const prevPageCount = useRef<number>(0);
-    const prevPage = useRef<number>(1);
+    const [searchVersion, setSearchVersion] = useState<number>(0);
 
     const { data: session } = useSession();
 
@@ -61,106 +59,111 @@ const Table = () => {
         generalSearchString: '',
     });
 
-    async function getAllReports() {
-        try {
-            // setIsLoading(true);
+    const getAllReports = useCallback(
+        async (page: number, itemPerPage: number) => {
+            try {
+                // setIsLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=get-all-reports';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    filtered: false,
-                    paginated: true,
-                    item_per_page: itemPerPage,
-                    page,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    followupDone: false,
-                    regularClient: false,
-                    marketerName: session?.user.provided_name,
-                }),
-            };
+                let response = await fetchApi(
+                    {
+                        path: '/v1/report/search-reports',
+                        query: { paginated: true, page, itemPerPage },
+                    },
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            followupDone: false,
+                            regularClient: false,
+                            marketerName: session?.user.provided_name,
+                        }),
+                    },
+                );
 
-            let response = await fetchData(url, options);
-
-            if (response.ok) {
-                setReports(response.data);
-                setIsFiltered(false);
-            } else {
-                toast.error(response.data);
+                if (response.ok) {
+                    setReports(response.data);
+                    setIsFiltered(false);
+                    setPageCount(response.data.pagination.pageCount);
+                } else {
+                    toast.error(response.data);
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('An error occurred while retrieving reports data');
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error(error);
-            toast.error('An error occurred while retrieving reports data');
-        } finally {
-            setIsLoading(false);
-        }
-    }
+        },
+        [session?.user.provided_name],
+    );
 
-    async function getAllReportsFiltered() {
-        try {
-            // setIsLoading(true);
+    const getAllReportsFiltered = useCallback(
+        async (page: number, itemPerPage: number) => {
+            try {
+                // setIsLoading(true);
 
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=get-all-reports';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    filtered: true,
-                    paginated: true,
-                    item_per_page: itemPerPage,
-                    page: !isFiltered ? 1 : page,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...filters,
-                    followupDone: false,
-                    regularClient: false,
-                    marketerName: session?.user.provided_name,
-                }),
-            };
+                let response = await fetchApi(
+                    {
+                        path: '/v1/report/search-reports',
+                        query: { paginated: true, page, itemPerPage },
+                    },
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            ...filters,
+                            followupDone: false,
+                            regularClient: false,
+                            marketerName: session?.user.provided_name,
+                        }),
+                    },
+                );
 
-            let response = await fetchData(url, options);
-
-            if (response.ok) {
-                setReports(response.data);
-                setIsFiltered(true);
-            } else {
-                toast.error(response.data);
+                if (response.ok) {
+                    setReports(response.data);
+                    setIsFiltered(true);
+                    setPageCount(response.data.pagination.pageCount);
+                } else {
+                    toast.error(response.data);
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('An error occurred while retrieving reports data');
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error(error);
-            toast.error('An error occurred while retrieving reports data');
-        } finally {
-            setIsLoading(false);
+            return;
+        },
+        [filters, session?.user.provided_name],
+    );
+
+    const fetchReports = useCallback(async () => {
+        if (!isFiltered) {
+            await getAllReports(page, itemPerPage);
+        } else {
+            await getAllReportsFiltered(page, itemPerPage);
         }
-        return;
-    }
+    }, [isFiltered, getAllReports, getAllReportsFiltered, page, itemPerPage]);
+
+    const handleSearch = useCallback(() => {
+        setIsFiltered(true);
+        setPage(1);
+        setSearchVersion(v => v + 1);
+    }, [setIsFiltered, setPage]);
 
     async function deleteReport(reportData: ReportDocument) {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_PORTAL_URL +
-                '/api/approval?action=new-request';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            let response = await fetchApi(
+                { path: '/v1/approval/new-request' },
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        target_model: 'Report',
+                        action: 'delete',
+                        object_id: reportData._id,
+                        deleted_data: reportData,
+                        req_by: session?.user.db_id,
+                    }),
                 },
-                body: JSON.stringify({
-                    target_model: 'Report',
-                    action: 'delete',
-                    object_id: reportData._id,
-                    deleted_data: reportData,
-                    req_by: session?.user.db_id,
-                }),
-            };
-
-            let response = await fetchData(url, options);
+            );
 
             if (response.ok) {
                 toast.success('Request sent for approval');
@@ -217,14 +220,14 @@ const Table = () => {
 
             if (isRecall) {
                 if (isRecallAllowed) {
-                    const recallCountUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/report?action=get-recall-count`;
-                    const recallCount = await fetchData(recallCountUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            name: session?.user.provided_name,
+                    const recallCount = await fetchApi(
+                        {
+                            path: `/v1/report/recall-count/${session?.user.provided_name}`,
                         },
-                    });
+                        {
+                            method: 'GET',
+                        },
+                    );
 
                     if (recallCount.ok) {
                         if (recallCount.data < recallLimit) {
@@ -237,27 +240,21 @@ const Table = () => {
                             );
 
                             if (isFollowup) {
-                                const editReportUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/report?action=edit-report`;
-
-                                const editOptions = {
-                                    method: 'POST',
-                                    body: JSON.stringify({
-                                        ...editedReportData,
-                                        updated_by: session?.user.real_name,
-                                    }),
-                                    headers: {
-                                        'Content-Type': 'application/json',
+                                const response = await fetchApi(
+                                    {
+                                        path: `/v1/report/update-report/${editedReportData._id}`,
                                     },
-                                };
-
-                                const response = await fetchData(
-                                    editReportUrl,
-                                    editOptions,
+                                    {
+                                        method: 'PUT',
+                                        body: JSON.stringify({
+                                            ...editedReportData,
+                                            updated_by: session?.user.real_name,
+                                        }),
+                                    },
                                 );
 
                                 if (response.ok) {
-                                    if (!isFiltered) await getAllReports();
-                                    else await getAllReportsFiltered();
+                                    await fetchReports();
 
                                     toast.success(
                                         'Edited the report successfully',
@@ -279,21 +276,12 @@ const Table = () => {
                                     req_by: session?.user.db_id,
                                 };
 
-                                const approvalUrl: string =
-                                    process.env.NEXT_PUBLIC_PORTAL_URL +
-                                    '/api/approval?action=new-request';
-
-                                const approvalOptions = {
-                                    method: 'POST',
-                                    body: JSON.stringify(submitData),
-                                    headers: {
-                                        'Content-Type': 'application/json',
+                                const response = await fetchApi(
+                                    { path: '/v1/approval/new-request' },
+                                    {
+                                        method: 'POST',
+                                        body: JSON.stringify(submitData),
                                     },
-                                };
-
-                                const response = await fetchData(
-                                    approvalUrl,
-                                    approvalOptions,
                                 );
 
                                 setEditedData({});
@@ -324,20 +312,18 @@ const Table = () => {
                     );
                 }
             } else {
-                const editReportUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/report?action=edit-report`;
-                const editOptions = {
-                    method: 'POST',
-                    body: JSON.stringify(editedReportData),
-                    headers: {
-                        'Content-Type': 'application/json',
+                const response = await fetchApi(
+                    {
+                        path: `/v1/report/update-report/${editedReportData._id}`,
                     },
-                };
-
-                const response = await fetchData(editReportUrl, editOptions);
+                    {
+                        method: 'PUT',
+                        body: JSON.stringify(editedReportData),
+                    },
+                );
 
                 if (response.ok) {
-                    if (!isFiltered) await getAllReports();
-                    else await getAllReportsFiltered();
+                    await fetchReports();
 
                     toast.success('Edited the report successfully');
                 } else {
@@ -358,25 +344,19 @@ const Table = () => {
 
     async function doneFollowup(reportId: string, reqBy: string) {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=done-followup';
-            let options: {} = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            let response = await fetchApi(
+                { path: '/v1/report/done-followup' },
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: reportId,
+                        req_by: reqBy,
+                    }),
                 },
-                body: JSON.stringify({
-                    id: reportId,
-                    req_by: reqBy,
-                }),
-            };
-
-            let response = await fetchData(url, options);
+            );
 
             if (response.ok) {
-                if (!isFiltered) await getAllReports();
-                else await getAllReportsFiltered();
+                await fetchReports();
 
                 toast.success(
                     'The followup status has been marked as done successfully',
@@ -392,20 +372,17 @@ const Table = () => {
         }
     }
 
-    async function getFollowupCountForToday() {
+    const getFollowupCountForToday = useCallback(async () => {
         try {
-            let url: string =
-                process.env.NEXT_PUBLIC_BASE_URL +
-                '/api/report?action=get-followup-count-for-today';
-            let options: {} = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    name: session?.user.provided_name,
+            let response = await fetchApi(
+                {
+                    path: '/v1/report/followup-count-for-today',
+                    query: { marketerName: session?.user.provided_name },
                 },
-            };
-
-            let response = await fetchData(url, options);
+                {
+                    method: 'GET',
+                },
+            );
 
             if (response.ok) {
                 setFollowupCountForToday(response.data);
@@ -418,43 +395,19 @@ const Table = () => {
                 'An error occurred while retrieving followup count data',
             );
         }
-    }
+    }, [session?.user.provided_name]);
+
+    usePaginationManager({
+        page,
+        itemPerPage,
+        pageCount,
+        setPage,
+        triggerFetch: fetchReports,
+    });
 
     useEffect(() => {
-        getAllReports();
         getFollowupCountForToday();
-    }, []);
-
-    useEffect(() => {
-        if (prevPage.current !== 1 || page > 1) {
-            if (reports?.pagination?.pageCount == 1) return;
-            if (!isFiltered) getAllReports();
-            else getAllReportsFiltered();
-        }
-        prevPage.current = page;
-    }, [page]);
-
-    useEffect(() => {
-        if (reports?.pagination?.pageCount !== undefined) {
-            setPage(1);
-            if (prevPageCount.current !== 0) {
-                if (!isFiltered) getAllReportsFiltered();
-            }
-            if (reports) setPageCount(reports?.pagination?.pageCount);
-            prevPageCount.current = reports?.pagination?.pageCount;
-            prevPage.current = 1;
-        }
-    }, [reports?.pagination?.pageCount]);
-
-    useEffect(() => {
-        // Reset to first page when itemPerPage changes
-        prevPageCount.current = 0;
-        prevPage.current = 1;
-        setPage(1);
-
-        if (!isFiltered) getAllReports();
-        else getAllReportsFiltered();
-    }, [itemPerPage]);
+    }, [getFollowupCountForToday]);
 
     return (
         <>
@@ -487,7 +440,7 @@ const Table = () => {
                     </select>
                     <FilterButton
                         isLoading={isLoading}
-                        submitHandler={getAllReportsFiltered}
+                        submitHandler={handleSearch}
                         setFilters={setFilters}
                         filters={filters}
                         className="w-full justify-between sm:w-auto"

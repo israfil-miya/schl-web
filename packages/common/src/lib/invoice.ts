@@ -1,3 +1,5 @@
+import ExcelJS from 'exceljs';
+import moment from 'moment-timezone';
 import {
     BankAustralia,
     BankBangladesh,
@@ -6,7 +8,7 @@ import {
     BankUSA,
     CustomerDataType,
     VendorDataType,
-} from '@/app/(pages)/accountancy/invoices/bank-details';
+} from '../constants/bank-details.constant';
 import {
     addHeader,
     computeBankRowSpans,
@@ -16,9 +18,7 @@ import {
     pxToExcelWidth,
     pxToPoints,
     thinBorder,
-} from '@/utility/invoiceHelpers';
-import ExcelJS from 'exceljs';
-import moment from 'moment-timezone';
+} from '../utils/invoice-helpers';
 
 export type BankAccountsType = [
     BankBangladesh,

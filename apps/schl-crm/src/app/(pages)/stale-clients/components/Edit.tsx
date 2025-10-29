@@ -6,7 +6,7 @@ import {
     YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY,
     getTodayDate,
 } from '@/utility/date';
-import { ReportDocument } from '@repo/schemas/report.schema';
+import { ReportDocument } from '@repo/schemas/models/report.schema';
 
 interface PropsType {
     reportData: ReportDocument;

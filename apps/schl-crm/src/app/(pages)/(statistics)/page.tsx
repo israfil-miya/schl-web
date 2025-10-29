@@ -8,14 +8,14 @@ import Graphs from './components/graph/Graphs';
 import DailyStatusTable from './components/table/DailyStatusTable';
 
 const Statistics = async () => {
-  const session = await auth();
-  return (
-    <div className="container mx-auto px-4">
-      <DailyStatusTable />
-      <Cards />
-      <Graphs />
-    </div>
-  );
+    const session = await auth();
+    return (
+        <div className="container mx-auto px-4">
+            <DailyStatusTable />
+            <Cards />
+            <Graphs />
+        </div>
+    );
 };
 
 export default Statistics;

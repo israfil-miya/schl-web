@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
-import { ReportDocument } from '@repo/schemas/report.schema';
+import { ReportDocument } from '@repo/schemas/models/report.schema';
 
 import { getTodayDate } from '@/utility/date';
 

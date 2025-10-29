@@ -7,7 +7,7 @@ import {
     type OrderPriority,
     type OrderStatus,
     type OrderType,
-} from './constants/order.constant';
+} from '../constants/order.constant';
 
 export type OrderDocument = HydratedDocument<Order>;
 

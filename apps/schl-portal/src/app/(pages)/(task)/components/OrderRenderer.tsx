@@ -1,7 +1,7 @@
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
 import { formatDate, formatTime } from '@/utility/date';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';

@@ -1,6 +1,6 @@
 'use client';
 
-import { ScheduleDocument } from '@repo/schemas/schedule.schema';
+import { ScheduleDocument } from '@repo/schemas/models/schedule.schema';
 import { Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 

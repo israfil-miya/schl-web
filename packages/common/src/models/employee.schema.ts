@@ -3,11 +3,11 @@ import { HydratedDocument } from 'mongoose';
 import type {
     EmployeeBloodGroup,
     EmployeeStatus,
-} from './constants/employee.constant';
+} from '../constants/employee.constant';
 import {
     EMPLOYEE_BLOOD_GROUPS,
     EMPLOYEE_STATUSES,
-} from './constants/employee.constant';
+} from '../constants/employee.constant';
 
 export type EmployeeDocument = HydratedDocument<Employee>;
 

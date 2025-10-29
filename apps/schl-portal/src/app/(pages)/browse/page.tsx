@@ -1,6 +1,6 @@
 import { fetchApi } from '@/lib/utils';
-import { ClientDocument } from '@repo/schemas/client.schema';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { ClientDocument } from '@repo/schemas/models/client.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import React from 'react';
 import Table from './components/Table';
 

@@ -6,8 +6,8 @@ import {
     setMenuPortalTarget,
 } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { EmployeeDocument } from '@repo/schemas/employee.schema';
-import { RoleDocument } from '@repo/schemas/role.schema';
+import { EmployeeDocument } from '@repo/schemas/models/employee.schema';
+import { RoleDocument } from '@repo/schemas/models/role.schema';
 import { Permissions } from '@repo/schemas/types/permission.type';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 import 'flowbite';

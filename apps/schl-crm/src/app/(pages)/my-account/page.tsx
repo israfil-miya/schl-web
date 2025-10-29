@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { fetchApi, generateAvatar, verifyCookie } from '@/lib/utils';
-import { EmployeeDocument } from '@repo/schemas/employee.schema';
+import { EmployeeDocument } from '@repo/schemas/models/employee.schema';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -10,19 +10,13 @@ import Profile from './components/Profile';
 const getEmployeeInfo = async () => {
     const session = await auth();
     try {
-        let url: string =
-            process.env.NEXT_PUBLIC_PORTAL_URL +
-            '/api/employee?action=get-employee-by-name';
-        let options: {} = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+        const response = await fetchApi(
+            `/v1/employee/get-employee/${encodeURIComponent(session?.user.real_name || '')}`,
+            {
+                method: 'GET',
+                cache: 'no-store',
             },
-            body: JSON.stringify({ real_name: session?.user.real_name }),
-            cache: 'no-store',
-        };
-
-        const response = await fetchApi(url, options);
+        );
         if (response.ok) {
             return response.data as EmployeeDocument;
         } else {

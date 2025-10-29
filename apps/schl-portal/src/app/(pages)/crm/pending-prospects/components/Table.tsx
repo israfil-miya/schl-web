@@ -6,8 +6,8 @@ import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { fetchApi } from '@/lib/utils';
-import type { EmployeeDocument } from '@repo/schemas/employee.schema';
-import { ReportDocument } from '@repo/schemas/report.schema';
+import type { EmployeeDocument } from '@repo/schemas/models/employee.schema';
+import { ReportDocument } from '@repo/schemas/models/report.schema';
 import { hasAnyPerm, hasPerm } from '@repo/schemas/utils/permission-check';
 
 import { formatDate } from '@/utility/date';

@@ -6,7 +6,7 @@ import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { cn, fetchApi } from '@/lib/utils';
 import { formatDate, formatTime } from '@/utility/date';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { hasAnyPerm, hasPerm } from '@repo/schemas/utils/permission-check';
 import { BookCheck, CirclePlus, Redo2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -22,7 +22,7 @@ import EditButton from './Edit';
 import FilterButton from './Filter';
 
 import { usePaginationManager } from '@/hooks/usePaginationManager';
-import { ClientDocument } from '@repo/schemas/client.schema';
+import { ClientDocument } from '@repo/schemas/models/client.schema';
 
 type OrdersState = {
     pagination: {

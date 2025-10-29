@@ -7,14 +7,14 @@ import {
     setMenuPortalTarget,
 } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ClientDocument } from '@repo/schemas/client.schema';
 import {
     priorityOptions,
     statusOptions,
     taskOptions,
     typeOptions,
 } from '@repo/schemas/constants/order.constant';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { ClientDocument } from '@repo/schemas/models/client.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';

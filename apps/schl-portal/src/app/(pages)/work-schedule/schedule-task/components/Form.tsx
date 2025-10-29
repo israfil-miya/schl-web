@@ -6,9 +6,9 @@ import {
 import { fetchApi } from '@/lib/utils';
 import { setMenuPortalTarget } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ClientDocument } from '@repo/schemas/client.schema';
 import { taskOptions } from '@repo/schemas/constants/order.constant';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { ClientDocument } from '@repo/schemas/models/client.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';

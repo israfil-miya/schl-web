@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { RoleDocument } from '@repo/schemas/role.schema';
+import { RoleDocument } from '@repo/schemas/models/role.schema';
 import { Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';

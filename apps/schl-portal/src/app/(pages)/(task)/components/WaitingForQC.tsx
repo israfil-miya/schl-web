@@ -1,5 +1,5 @@
 import { fetchApi } from '@/lib/utils';
-import type { OrderDocument } from '@repo/schemas/order.schema';
+import type { OrderDocument } from '@repo/schemas/models/order.schema';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import React, { useEffect, useState } from 'react';

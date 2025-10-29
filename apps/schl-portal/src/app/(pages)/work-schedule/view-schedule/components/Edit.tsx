@@ -8,7 +8,7 @@ import {
 } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { taskOptions } from '@repo/schemas/constants/order.constant';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';

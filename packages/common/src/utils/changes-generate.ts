@@ -1,4 +1,4 @@
-type ChangeValue = unknown;
+type ChangeValue = any;
 
 export type Change =
     | { field: string; oldValue: ChangeValue; newValue: ChangeValue } // Non-array case

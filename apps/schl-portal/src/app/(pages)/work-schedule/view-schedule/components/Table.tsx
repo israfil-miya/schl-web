@@ -4,10 +4,10 @@ import Badge from '@/components/Badge';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { cn, fetchApi } from '@/lib/utils';
-import { ScheduleDocument } from '@repo/schemas/schedule.schema';
+import { ScheduleDocument } from '@repo/schemas/models/schedule.schema';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
 
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';

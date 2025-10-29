@@ -1,9 +1,9 @@
 import type { Permissions } from '@repo/schemas/types/permission.type';
 import { FullyPopulatedUser } from '@repo/schemas/types/populated-user.type';
+import { fetchApi } from '@repo/schemas/utils/general-utils';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
-import { fetchApi } from './lib/utils';
 
 export interface UserSessionType {
     db_id: string;

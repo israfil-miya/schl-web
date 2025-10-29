@@ -22,7 +22,7 @@ import {
     Megaphone,
     Menu,
     ScrollText,
-    ShieldUser,
+    Shield,
     Signature,
     SquarePlus,
     SquareSigma,
@@ -233,7 +233,7 @@ const Sidebar: React.FC<PropsType> = props => {
                                                         href="/admin/roles"
                                                         className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-20 group2 hover:bg-gray-100"
                                                     >
-                                                        <ShieldUser className="w-6 h-6 mr-2" />
+                                                        <Shield className="w-6 h-6 mr-2" />
                                                         Roles
                                                     </Link>
                                                 </li>

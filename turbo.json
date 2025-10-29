@@ -5,13 +5,17 @@
         "VERCEL_ENV",
         "NODE_ENV",
         "AUTH_SECRET",
+        "AUTH_URL",
+        "ALLOWED_IPS",
         "FTP_HOST",
         "FTP_USERNAME",
         "FTP_PASSWORD",
         "ZERO_BOUNCE_API_KEY",
+        "NEXT_PUBLIC_BASE_URL",
         "PORTAL_URL",
         "CRM_URL",
-        "PORT"
+        "PORT",
+        "NEXT_PUBLIC_API_URL"
     ],
     "tasks": {
         "build": {
@@ -31,4 +35,3 @@
         }
     }
 }
-

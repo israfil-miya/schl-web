@@ -5,7 +5,7 @@ import { fetchApi } from '@/lib/utils';
 import Badge from '@/components/Badge';
 import NoData, { Type } from '@/components/NoData';
 import { formatDate, formatTime, getTodayDate } from '@/utility/date';
-import { OrderDocument } from '@repo/schemas/order.schema';
+import { OrderDocument } from '@repo/schemas/models/order.schema';
 import { Undo2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
