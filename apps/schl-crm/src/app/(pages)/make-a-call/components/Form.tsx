@@ -1,9 +1,11 @@
 'use client';
 import {
-    fetchApi as fetchData,
+    fetchApi,
     isValidHttpUrls,
     isValidMails,
 } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
+import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -15,6 +17,7 @@ interface propsType {
 
 const Form: React.FC<propsType> = props => {
     const searchParams = useSearchParams();
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
     const NewLeadQuery: { current: boolean } = useRef(
         searchParams.get('new-lead') == 'true',
@@ -110,6 +113,13 @@ const Form: React.FC<propsType> = props => {
         try {
             e.preventDefault();
 
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:create_report', session?.user.permissions)
+            ) {
+                toast.error("You don't have permission to create a report");
+            }
+
             if (!reportData.followupDone && reportData.followupDate === '') {
                 toast.error(
                     'Followup date is required because followup is set as pending for the report',
@@ -121,15 +131,26 @@ const Form: React.FC<propsType> = props => {
                 return;
             }
 
+            if (
+                session?.user.permissions &&
+                reportData.newLead &&
+                !hasPerm('crm:create_leads', session?.user.permissions)
+            ) {
+                toast.error("You don't have permission to create leads");
+            }
+
             setLoading(true);
 
-            let response = await fetchData('/v1/report/create-report', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            let response = await fetchApi(
+                { path: '/v1/report/create-report' },
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reportData),
                 },
-                body: JSON.stringify(reportData),
-            });
+            );
 
             if (response.ok) {
                 setReportData({
@@ -152,7 +173,9 @@ const Form: React.FC<propsType> = props => {
                     leadOrigin: 'generated',
                     newLead: NewLeadQuery?.current ?? false,
                 });
-                toast.success('New report added successfully');
+                toast.success(
+                    `New ${NewLeadQuery?.current ? 'lead' : 'report'} added successfully`,
+                );
             } else {
                 toast.error(response.data);
             }

@@ -349,6 +349,13 @@ const Table = () => {
         triggerFetch: fetchReports,
     });
 
+    useEffect(() => {
+        if (searchVersion > 0 && isFiltered && page === 1) {
+            fetchReports();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchVersion, isFiltered, page]);
+
     return (
         <>
             <div className="flex flex-col justify-center sm:flex-row sm:justify-end mb-4 gap-2">

@@ -62,8 +62,12 @@ export const USER_PERMISSIONS = [
     {
         label: 'CRM',
         options: [
+            {
+                value: 'crm:view_reports',
+                label: 'View reports', // ✅
+            },
             // crm
-            { value: 'crm:create_report', label: 'Create report' },
+            { value: 'crm:create_report', label: 'Create report' }, // ✅
             {
                 value: 'crm:delete_report_approval',
                 label: 'Delete report (approval)',
@@ -72,18 +76,15 @@ export const USER_PERMISSIONS = [
                 value: 'crm:edit_report',
                 label: 'Edit report',
             },
-            {
-                value: 'crm:view_reports',
-                label: 'View reports',
-            },
+
             { value: 'crm:send_client_request', label: 'Send client request' },
             {
                 value: 'crm:create_leads',
-                label: 'Create leads',
+                label: 'Create leads', // ✅
             },
             {
                 value: 'crm:view_leads',
-                label: 'View leads',
+                label: 'View leads', // ✅
             },
             {
                 value: 'crm:transfer_leads',
@@ -95,10 +96,9 @@ export const USER_PERMISSIONS = [
             },
             {
                 value: 'crm:verify_email',
-                label: 'Verify email',
+                label: 'Verify email', // ✅
             },
             // portals
-            { value: 'crm:view_reports', label: 'View reports' },
             { value: 'crm:view_crm_stats', label: 'View crm stats' },
             {
                 value: 'crm:check_client_request',

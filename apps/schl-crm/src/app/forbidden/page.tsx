@@ -23,8 +23,8 @@ export default function ForbiddenPage() {
                 </div>
                 <div className="p-6 space-y-4">
                     <p className="text-gray-700 text-base">
-                        You are <span className="font-semibold">denied</span> to
-                        access the page.
+                        You are <span className="font-semibold">forbidden</span>{' '}
+                        to access the page.
                     </p>
                     <div>
                         <span className="text-gray-600">Go to </span>

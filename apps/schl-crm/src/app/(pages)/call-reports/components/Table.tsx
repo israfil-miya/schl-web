@@ -11,11 +11,12 @@ import {
     countPassedDaysSinceADate as countDaysSinceLastCall,
     fetchApi,
 } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import { CirclePlus } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
@@ -71,7 +72,7 @@ const Table = () => {
                         path: '/v1/report/search-reports',
                         query: {
                             paginated: true,
-                            item_per_page: itemPerPage,
+                            itemsPerPage: itemPerPage,
                             page,
                         },
                     },
@@ -114,8 +115,8 @@ const Table = () => {
                         query: {
                             filtered: true,
                             paginated: true,
-                            item_per_page: itemPerPage,
-                            page: !isFiltered ? 1 : page,
+                            itemsPerPage: itemPerPage,
+                            page,
                         },
                     },
                     {
@@ -145,7 +146,7 @@ const Table = () => {
             }
             return;
         },
-        [filters, session?.user.provided_name, isFiltered],
+        [filters, session?.user.provided_name],
     );
 
     const fetchReports = useCallback(async () => {
@@ -167,6 +168,20 @@ const Table = () => {
             // block delete action if the report is others and the user is not the one who created the report
             if (reportData.marketer_name !== session?.user.provided_name) {
                 toast.error('You are not allowed to delete this report');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this report?')) {
+                return;
+            }
+
+            if (
+                !hasPerm(
+                    session?.user.permissions && 'crm:delete_report_approval',
+                    session?.user.permissions,
+                )
+            ) {
+                toast.error('You do not have permission to delete reports');
                 return;
             }
 
@@ -247,6 +262,18 @@ const Table = () => {
                 previousReportData.marketer_name !== session?.user.provided_name
             ) {
                 toast.error('You are not allowed to edit this report');
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:edit_report', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to edit reports');
                 setEditedData({
                     ...previousReportData,
                     updated_by: session?.user.real_name || '',
@@ -396,6 +423,13 @@ const Table = () => {
         setPage,
         triggerFetch: fetchReports,
     });
+
+    useEffect(() => {
+        if (searchVersion > 0 && isFiltered && page === 1) {
+            fetchReports();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchVersion, isFiltered, page]);
 
     return (
         <>
@@ -573,21 +607,45 @@ const Table = () => {
                                             >
                                                 <div className="inline-block">
                                                     <div className="flex gap-2">
-                                                        <EditButton
-                                                            isLoading={
-                                                                isLoading
-                                                            }
-                                                            submitHandler={
-                                                                editReport
-                                                            }
-                                                            reportData={item}
-                                                        />
-                                                        <DeleteButton
-                                                            submitHandler={
-                                                                deleteReport
-                                                            }
-                                                            reportData={item}
-                                                        />
+                                                        {session?.user
+                                                            .permissions &&
+                                                            hasPerm(
+                                                                'crm:edit_report',
+                                                                session?.user
+                                                                    .permissions,
+                                                            ) && (
+                                                                <EditButton
+                                                                    isLoading={
+                                                                        isLoading
+                                                                    }
+                                                                    submitHandler={
+                                                                        editReport
+                                                                    }
+                                                                    reportData={
+                                                                        item
+                                                                    }
+                                                                />
+                                                            )}
+                                                        {session?.user
+                                                            .permissions &&
+                                                            (hasPerm(
+                                                                'crm:delete_report_approval',
+                                                                session?.user
+                                                                    .permissions,
+                                                            ) ||
+                                                                item.marketer_name !==
+                                                                    session
+                                                                        ?.user
+                                                                        .provided_name) && (
+                                                                <DeleteButton
+                                                                    submitHandler={
+                                                                        deleteReport
+                                                                    }
+                                                                    reportData={
+                                                                        item
+                                                                    }
+                                                                />
+                                                            )}
                                                     </div>
                                                 </div>
                                             </td>

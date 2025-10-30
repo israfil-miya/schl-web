@@ -121,12 +121,11 @@ const Table = () => {
         }
     }, [isFiltered, page, itemPerPage, getAllNotices, getAllNoticesFiltered]);
 
-    const handleSearch = useCallback(async () => {
+    const handleSearch = useCallback(() => {
         setPage(1);
         setIsFiltered(true);
         setSearchVersion(prev => prev + 1);
-        await getAllNoticesFiltered(1, itemPerPage);
-    }, [itemPerPage, getAllNoticesFiltered]);
+    }, []);
 
     usePaginationManager({
         page,
@@ -137,6 +136,13 @@ const Table = () => {
         isFiltered,
         searchVersion,
     });
+
+    useEffect(() => {
+        if (searchVersion > 0 && isFiltered && page === 1) {
+            fetchNotices();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchVersion, isFiltered, page]);
 
     return (
         <>

@@ -159,12 +159,11 @@ const Table = () => {
         }
     }, [isFiltered, page, itemPerPage, getAllReports, getAllReportsFiltered]);
 
-    const handleSearch = useCallback(async () => {
+    const handleSearch = useCallback(() => {
         setPage(1);
         setIsFiltered(true);
         setSearchVersion(prev => prev + 1);
-        await getAllReportsFiltered(1, itemPerPage);
-    }, [itemPerPage, getAllReportsFiltered]);
+    }, []);
 
     usePaginationManager({
         page,
@@ -175,6 +174,13 @@ const Table = () => {
         isFiltered,
         searchVersion,
     });
+
+    useEffect(() => {
+        if (searchVersion > 0 && isFiltered && page === 1) {
+            fetchReports();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchVersion, isFiltered, page]);
 
     async function deleteReport(reportData: ReportDocument) {
         try {

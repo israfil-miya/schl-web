@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn, fetchApi } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -47,6 +48,14 @@ const Form: React.FC = () => {
 
             if (parsed.data.emails.trim() === '') {
                 toast.error('Email(s) is/are required!');
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:verify_email', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to verify emails');
                 return;
             }
 

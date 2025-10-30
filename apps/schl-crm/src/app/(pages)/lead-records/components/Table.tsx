@@ -354,6 +354,13 @@ const Table: React.FC = props => {
     });
 
     useEffect(() => {
+        if (searchVersion > 0 && isFiltered && page === 1) {
+            fetchReports();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchVersion, isFiltered, page]);
+
+    useEffect(() => {
         getAllMarketers();
     }, []);
 
