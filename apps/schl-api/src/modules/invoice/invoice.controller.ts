@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Post, Query, Req } from '@nestjs/common';
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { CreateInvoiceBodyDto } from './dto/create-invoice.dto';
 import { DeleteInvoiceQueryDto } from './dto/delete-invoice.dto';
 import {

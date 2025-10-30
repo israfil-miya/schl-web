@@ -1,4 +1,4 @@
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Report } from '@repo/schemas/report.schema';
 import { CreateReportBodyDto } from '../dto/create-report.dto';
 

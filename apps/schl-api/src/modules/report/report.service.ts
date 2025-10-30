@@ -8,11 +8,11 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Approval } from '@repo/schemas/approval.schema';
 import { Client } from '@repo/schemas/client.schema';
 import { Report } from '@repo/schemas/report.schema';
 import { PopulatedByEmployeeUser } from '@repo/schemas/types/populated-user.type';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import { User } from '@repo/schemas/user.schema';
 import { getTodayDate } from '@repo/schemas/utils/date-helpers';
 import {

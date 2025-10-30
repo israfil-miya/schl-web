@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Query, Req } from '@nestjs/common';
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { ApprovalService } from './approval.service';
 import { BulkApprovalBodyDto } from './dto/bulk-response.dto';
 import { CreateApprovalBodyDto } from './dto/create-approval.dto';

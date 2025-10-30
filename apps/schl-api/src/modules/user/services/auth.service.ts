@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { FullyPopulatedUser } from '@repo/schemas/types/populated-user.type';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import { User } from '@repo/schemas/user.schema';
 import { hasPerm, toPermissions } from '@repo/schemas/utils/permission-check';
 import jwt from 'jsonwebtoken';

@@ -6,16 +6,16 @@ import {
     InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { UserSession } from '@repo/common/types/user-session.type';
+import { Client } from '@repo/schemas/client.schema';
+import { Invoice } from '@repo/schemas/invoice.schema';
 import { applyDateRange } from '@repo/schemas/utils/date-helpers';
 import {
     addIfDefined,
     createRegexQuery,
 } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm } from '@repo/schemas/utils/permission-check';
-import { Client } from '@repo/schemas/client.schema';
-import { Invoice } from '@repo/schemas/invoice.schema';
+import { Model } from 'mongoose';
 import { CreateInvoiceBodyDto } from './dto/create-invoice.dto';
 import {
     SearchInvoicesBodyDto,

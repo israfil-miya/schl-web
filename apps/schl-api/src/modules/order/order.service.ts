@@ -6,11 +6,11 @@ import {
     InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Client } from '@repo/schemas/client.schema';
 import { CLIENT_COMMON_COUNTRY } from '@repo/schemas/constants/client.constant';
 import { Invoice } from '@repo/schemas/invoice.schema';
 import { Order } from '@repo/schemas/order.schema';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     applyDateRange,
     calculateTimeDifference,

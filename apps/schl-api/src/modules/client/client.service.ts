@@ -8,8 +8,8 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Client } from '@repo/schemas/client.schema';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     addIfDefined,
     buildOrRegex,

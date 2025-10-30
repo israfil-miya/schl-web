@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "@hookform/resolvers": "^3.10.0",
-        "@repo/schemas": "workspace:*",
+        "@repo/common": "workspace:*",
         "@zerobounce/zero-bounce-sdk": "^1.1.2",
         "chart.js": "^4.4.8",
         "chartjs-plugin-datalabels": "^2.2.0",

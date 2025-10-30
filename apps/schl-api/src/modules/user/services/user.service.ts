@@ -8,14 +8,14 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
+import { Role } from '@repo/schemas/role.schema';
 import type { Permissions } from '@repo/schemas/types/permission.type';
 import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { User } from '@repo/schemas/user.schema';
 import { buildOrRegex } from '@repo/schemas/utils/filter-helpers';
 import { hasPerm, toPermissions } from '@repo/schemas/utils/permission-check';
-import { Role } from '@repo/schemas/role.schema';
-import { User } from '@repo/schemas/user.schema';
+import { Model } from 'mongoose';
 import { CreateUserBodyDto } from '../dto/create-user.dto';
 import { UserFactory } from '../factories/user.factory';
 

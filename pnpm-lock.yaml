@@ -38,9 +38,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^11.0.1
         version: 11.1.6(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.6)
-      '@repo/schemas':
+      '@repo/common':
         specifier: workspace:*
-        version: link:../../packages/schemas
+        version: link:../../packages/common
       '@zerobounce/zero-bounce-sdk':
         specifier: ^1.1.2
         version: 1.1.2
@@ -168,9 +168,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.65.0(react@18.3.1))
-      '@repo/schemas':
+      '@repo/common':
         specifier: workspace:*
-        version: link:../../packages/schemas
+        version: link:../../packages/common
       '@zerobounce/zero-bounce-sdk':
         specifier: ^1.1.2
         version: 1.1.2
@@ -304,9 +304,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.65.0(react@18.3.1))
-      '@repo/schemas':
+      '@repo/common':
         specifier: workspace:*
-        version: link:../../packages/schemas
+        version: link:../../packages/common
       '@tiptap/extension-code':
         specifier: ^2.26.1
         version: 2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))
@@ -486,43 +486,7 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
 
-  packages/eslint-config:
-    devDependencies:
-      '@eslint/js':
-        specifier: ^9.33.0
-        version: 9.33.0
-      '@next/eslint-plugin-next':
-        specifier: ^15.4.6
-        version: 15.4.6
-      eslint:
-        specifier: ^9.33.0
-        version: 9.33.0(jiti@2.4.2)
-      eslint-config-prettier:
-        specifier: ^10.1.1
-        version: 10.1.1(eslint@9.33.0(jiti@2.4.2))
-      eslint-plugin-only-warn:
-        specifier: ^1.1.0
-        version: 1.1.0
-      eslint-plugin-react:
-        specifier: ^7.37.4
-        version: 7.37.4(eslint@9.33.0(jiti@2.4.2))
-      eslint-plugin-react-hooks:
-        specifier: ^5.2.0
-        version: 5.2.0(eslint@9.33.0(jiti@2.4.2))
-      eslint-plugin-turbo:
-        specifier: ^2.5.0
-        version: 2.5.0(eslint@9.33.0(jiti@2.4.2))(turbo@2.5.8)
-      globals:
-        specifier: ^16.3.0
-        version: 16.3.0
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
-      typescript-eslint:
-        specifier: ^8.39.0
-        version: 8.39.0(eslint@9.33.0(jiti@2.4.2))(typescript@5.9.2)
-
-  packages/schemas:
+  packages/common:
     dependencies:
       '@nestjs/mongoose':
         specifier: ^11.0.3
@@ -574,6 +538,42 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  packages/eslint-config:
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.33.0
+        version: 9.33.0
+      '@next/eslint-plugin-next':
+        specifier: ^15.4.6
+        version: 15.4.6
+      eslint:
+        specifier: ^9.33.0
+        version: 9.33.0(jiti@2.4.2)
+      eslint-config-prettier:
+        specifier: ^10.1.1
+        version: 10.1.1(eslint@9.33.0(jiti@2.4.2))
+      eslint-plugin-only-warn:
+        specifier: ^1.1.0
+        version: 1.1.0
+      eslint-plugin-react:
+        specifier: ^7.37.4
+        version: 7.37.4(eslint@9.33.0(jiti@2.4.2))
+      eslint-plugin-react-hooks:
+        specifier: ^5.2.0
+        version: 5.2.0(eslint@9.33.0(jiti@2.4.2))
+      eslint-plugin-turbo:
+        specifier: ^2.5.0
+        version: 2.5.0(eslint@9.33.0(jiti@2.4.2))(turbo@2.5.8)
+      globals:
+        specifier: ^16.3.0
+        version: 16.3.0
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+      typescript-eslint:
+        specifier: ^8.39.0
+        version: 8.39.0(eslint@9.33.0(jiti@2.4.2))(typescript@5.9.2)
+
   packages/tailwind-config:
     devDependencies:
       '@types/tailwindcss':
@@ -587,34 +587,6 @@ importers:
         version: 3.4.18
 
   packages/typescript-config: {}
-
-  packages/utilities:
-    dependencies:
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      jsonwebtoken:
-        specifier: ^9.0.2
-        version: 9.0.2
-      moment-timezone:
-        specifier: ^0.5.45
-        version: 0.5.48
-      tailwind-merge:
-        specifier: ^2.3.0
-        version: 2.6.0
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/jsonwebtoken':
-        specifier: ^9.0.9
-        version: 9.0.10
-      '@types/node':
-        specifier: ^20.17.30
-        version: 20.19.23
-      typescript:
-        specifier: ^5.5.4
-        version: 5.9.2
 
 packages:
 
@@ -7403,7 +7375,7 @@ snapshots:
   '@types/jsonwebtoken@9.0.10':
     dependencies:
       '@types/ms': 2.1.0
-      '@types/node': 22.15.30
+      '@types/node': 20.19.23
 
   '@types/linkify-it@5.0.0': {}
 

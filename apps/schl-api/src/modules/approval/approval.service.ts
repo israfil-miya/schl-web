@@ -7,15 +7,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
-import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
-import { UserSession } from '@repo/schemas/types/user-session.type';
-import { applyDateRange } from '@repo/schemas/utils/date-helpers';
-import { createRegexQuery } from '@repo/schemas/utils/filter-helpers';
-import {
-    hasPerm,
-    sanitizePermissions,
-} from '@repo/schemas/utils/permission-check';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Approval } from '@repo/schemas/approval.schema';
 import { Client } from '@repo/schemas/client.schema';
 import { Employee } from '@repo/schemas/employee.schema';
@@ -23,7 +15,15 @@ import { Order } from '@repo/schemas/order.schema';
 import { Report } from '@repo/schemas/report.schema';
 import { Role } from '@repo/schemas/role.schema';
 import { Schedule } from '@repo/schemas/schedule.schema';
+import { PopulatedByRoleUser } from '@repo/schemas/types/populated-user.type';
 import { User } from '@repo/schemas/user.schema';
+import { applyDateRange } from '@repo/schemas/utils/date-helpers';
+import { createRegexQuery } from '@repo/schemas/utils/filter-helpers';
+import {
+    hasPerm,
+    sanitizePermissions,
+} from '@repo/schemas/utils/permission-check';
+import mongoose, { FilterQuery, Model, PipelineStage } from 'mongoose';
 import { CreateApprovalBodyDto } from './dto/create-approval.dto';
 import {
     SearchApprovalsBodyDto,

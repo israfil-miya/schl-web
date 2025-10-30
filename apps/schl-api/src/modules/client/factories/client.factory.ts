@@ -1,4 +1,4 @@
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Client } from '@repo/schemas/client.schema';
 import { CreateClientBodyDto } from '../dto/create-client.dto';
 

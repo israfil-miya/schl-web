@@ -8,8 +8,8 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Employee } from '@repo/schemas/employee.schema';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     calculateSalaryComponents,
     getPFMoneyAmount,

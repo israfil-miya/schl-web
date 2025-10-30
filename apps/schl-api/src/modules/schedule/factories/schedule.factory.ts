@@ -1,4 +1,4 @@
-import { UserSession } from '@repo/schemas/types/user-session.type';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Schedule } from '@repo/schemas/schedule.schema';
 import { CreateScheduleBodyDto } from '../dto/create-schedule.dto';
 

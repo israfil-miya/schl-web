@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Schedule } from '@repo/schemas/schedule.schema';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import {
     addIfDefined,
     addPlusSeparatedContainsAllField,

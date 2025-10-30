@@ -8,8 +8,8 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { Notice } from '@repo/schemas/notice.schema';
-import { UserSession } from '@repo/schemas/types/user-session.type';
 import { applyDateRange } from '@repo/schemas/utils/date-helpers';
 import {
     addIfDefined,
