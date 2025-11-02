@@ -8,8 +8,10 @@ import {
     SalaryStructureType,
 } from '@repo/common/utils/account-helpers';
 import { cn } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import { Clock4, Coins, Mail } from 'lucide-react';
 import moment from 'moment-timezone';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
@@ -21,6 +23,7 @@ interface ProfilePropsTypes {
 
 const Profile: React.FC<ProfilePropsTypes> = props => {
     const { employeeInfo, avatarURI } = props;
+    const { data: session } = useSession();
 
     const [salaryStructure, setSalaryStructure] = useState<SalaryStructureType>(
         {
@@ -77,12 +80,18 @@ const Profile: React.FC<ProfilePropsTypes> = props => {
                         <Mail size={18} />
                         <span className="text-sm">{employeeInfo.email}</span>
                     </div>
-                    <Link
-                        href="/my-account/change-password"
-                        className="text-blue-600 text-sm hover:underline"
-                    >
-                        Change your password
-                    </Link>
+                    {session?.user?.permissions &&
+                        hasPerm(
+                            'settings:change_password',
+                            session.user.permissions,
+                        ) && (
+                            <Link
+                                href="/my-account/change-password"
+                                className="text-blue-600 text-sm hover:underline"
+                            >
+                                Change your password
+                            </Link>
+                        )}
                 </div>
             </div>
 

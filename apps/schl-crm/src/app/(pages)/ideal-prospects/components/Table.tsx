@@ -12,6 +12,7 @@ import {
     fetchApi,
     fetchApi as fetchData,
 } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -184,6 +185,21 @@ const Table = () => {
 
     async function deleteReport(reportData: ReportDocument) {
         try {
+            if (!confirm('Are you sure you want to delete this report?')) {
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm(
+                    'crm:delete_report_approval',
+                    session?.user.permissions,
+                )
+            ) {
+                toast.error('You do not have permission to delete reports');
+                return;
+            }
+
             const response = await fetchApi(
                 {
                     path: '/v1/approval/new-request',
@@ -240,6 +256,35 @@ const Table = () => {
             );
 
             const isRecallAllowed = daysPassedSinceLastCall > lastCallDaysCap;
+
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:edit_report', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to edit reports');
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
+            if (
+                previousReportData.client_status === 'none' &&
+                editedReportData.client_status &&
+                editedReportData.client_status !== 'none' &&
+                session?.user.permissions &&
+                !hasPerm('crm:send_client_request', session?.user.permissions)
+            ) {
+                toast.error(
+                    'You do not have permission to send client requests',
+                );
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
 
             if (
                 !editedReportData.followup_done &&
@@ -555,21 +600,41 @@ const Table = () => {
                                             >
                                                 <div className="inline-block">
                                                     <div className="flex gap-2">
-                                                        <EditButton
-                                                            isLoading={
-                                                                isLoading
-                                                            }
-                                                            submitHandler={
-                                                                editReport
-                                                            }
-                                                            reportData={item}
-                                                        />
-                                                        <DeleteButton
-                                                            submitHandler={
-                                                                deleteReport
-                                                            }
-                                                            reportData={item}
-                                                        />
+                                                        {session?.user
+                                                            .permissions &&
+                                                            hasPerm(
+                                                                'crm:edit_report',
+                                                                session?.user
+                                                                    .permissions,
+                                                            ) && (
+                                                                <EditButton
+                                                                    isLoading={
+                                                                        isLoading
+                                                                    }
+                                                                    submitHandler={
+                                                                        editReport
+                                                                    }
+                                                                    reportData={
+                                                                        item
+                                                                    }
+                                                                />
+                                                            )}
+                                                        {session?.user
+                                                            .permissions &&
+                                                            hasPerm(
+                                                                'crm:delete_report_approval',
+                                                                session?.user
+                                                                    .permissions,
+                                                            ) && (
+                                                                <DeleteButton
+                                                                    submitHandler={
+                                                                        deleteReport
+                                                                    }
+                                                                    reportData={
+                                                                        item
+                                                                    }
+                                                                />
+                                                            )}
                                                     </div>
                                                 </div>
                                             </td>

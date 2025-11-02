@@ -48,22 +48,22 @@ export class Employee {
     joining_date: string;
 
     @Prop({ default: '' })
-    phone?: string;
+    phone: string;
 
     @Prop({ default: '' })
-    email?: string;
+    email: string;
 
     @Prop({ default: '' })
-    birth_date?: string;
+    birth_date: string;
 
     @Prop({ default: '' })
-    nid?: string;
+    nid: string;
 
     @Prop({
         default: '',
         enum: EMPLOYEE_BLOOD_GROUPS,
     })
-    blood_group?: EmployeeBloodGroup;
+    blood_group: EmployeeBloodGroup;
 
     @Prop({ required: [true, 'Designation is required'] })
     designation: string;
@@ -87,37 +87,37 @@ export class Employee {
     status: EmployeeStatus;
 
     @Prop({ default: 0 })
-    provident_fund?: number; // percentage
+    provident_fund: number; // percentage
 
     @Prop({ type: String, default: null })
-    pf_start_date?: string | null; // provident fund start date
+    pf_start_date: string | null; // provident fund start date
 
     @Prop({ type: [ProvidentFundHistory], default: [] })
-    pf_history?: ProvidentFundHistory[];
+    pf_history: ProvidentFundHistory[];
 
     @Prop({ default: '' })
-    branch?: string;
+    branch: string;
 
     @Prop({ default: '' })
-    address?: string;
+    address: string;
 
     @Prop({ default: '' })
-    division?: string;
+    division: string;
 
     /*
     if the employee is a marketer, company usually provides a name for him/her (e.g. "John" instead of "Jabbar")
     */
     @Prop({ type: String, default: null })
-    company_provided_name?: string | null;
+    company_provided_name: string | null;
 
     @Prop({ default: '' })
-    note?: string;
+    note: string;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);

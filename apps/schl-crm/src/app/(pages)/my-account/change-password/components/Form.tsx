@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { fetchApi, generatePassword } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import { KeySquare } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
@@ -33,6 +34,14 @@ const Form: React.FC = props => {
 
     async function changePassword(data: ChangePasswordInputsType) {
         try {
+            if (
+                session?.user.permissions &&
+                !hasPerm('settings:change_password', session?.user.permissions)
+            ) {
+                toast.error("You don't have permission to change password");
+                return;
+            }
+
             setLoading(true);
             const parsed = validationSchema.safeParse(data);
 

@@ -165,23 +165,24 @@ const Table = () => {
 
     async function deleteReport(reportData: ReportDocument) {
         try {
-            // block delete action if the report is others and the user is not the one who created the report
-            if (reportData.marketer_name !== session?.user.provided_name) {
-                toast.error('You are not allowed to delete this report');
-                return;
-            }
-
             if (!confirm('Are you sure you want to delete this report?')) {
                 return;
             }
 
             if (
+                session?.user.permissions &&
                 !hasPerm(
-                    session?.user.permissions && 'crm:delete_report_approval',
+                    'crm:delete_report_approval',
                     session?.user.permissions,
                 )
             ) {
                 toast.error('You do not have permission to delete reports');
+                return;
+            }
+
+            // block delete action if the report is others and the user is not the one who created the report
+            if (reportData.marketer_name !== session?.user.provided_name) {
+                toast.error('You are not allowed to delete this report');
                 return;
             }
 
@@ -243,6 +244,35 @@ const Table = () => {
             const isRecallAllowed = daysPassedSinceLastCall >= lastCallDaysCap;
 
             if (
+                session?.user.permissions &&
+                !hasPerm('crm:edit_report', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to edit reports');
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
+            if (
+                previousReportData.client_status === 'none' &&
+                editedReportData.client_status &&
+                editedReportData.client_status !== 'none' &&
+                session?.user.permissions &&
+                !hasPerm('crm:send_client_request', session?.user.permissions)
+            ) {
+                toast.error(
+                    'You do not have permission to send client requests',
+                );
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
+            if (
                 !editedReportData.followup_done &&
                 editedReportData.followup_date === ''
             ) {
@@ -262,18 +292,6 @@ const Table = () => {
                 previousReportData.marketer_name !== session?.user.provided_name
             ) {
                 toast.error('You are not allowed to edit this report');
-                setEditedData({
-                    ...previousReportData,
-                    updated_by: session?.user.real_name || '',
-                });
-                return;
-            }
-
-            if (
-                session?.user.permissions &&
-                !hasPerm('crm:edit_report', session?.user.permissions)
-            ) {
-                toast.error('You do not have permission to edit reports');
                 setEditedData({
                     ...previousReportData,
                     updated_by: session?.user.real_name || '',

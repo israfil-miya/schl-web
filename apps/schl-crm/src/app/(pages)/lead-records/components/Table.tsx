@@ -10,6 +10,7 @@ import { PopulatedByEmployeeUser } from '@repo/common/types/populated-user.type'
 import { getObjectChanges } from '@repo/common/utils/changes-generate';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
 import { fetchApi } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -103,10 +104,16 @@ const Table: React.FC = props => {
     async function getAllMarketers() {
         try {
             let response = await fetchApi(
-                { path: '/v1/user/search-users' },
+                {
+                    path: '/v1/employee/search-employees',
+                    query: { paginated: false, filtered: true },
+                },
                 {
                     method: 'POST',
-                    body: JSON.stringify({}),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ department: 'Marketing' }),
                 },
             );
 
@@ -181,6 +188,18 @@ const Table: React.FC = props => {
 
     async function deleteLead(leadData: ReportDocument) {
         try {
+            if (!confirm('Are you sure you want to delete this lead?')) {
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:delete_leads_approval', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to delete leads');
+                return;
+            }
+
             // block delete action if the lead is others and the user is not the one who created the lead
             if (leadData.marketer_name !== session?.user.provided_name) {
                 toast.error('You are not allowed to delete this lead');
@@ -222,6 +241,18 @@ const Table: React.FC = props => {
     ) {
         try {
             if (
+                session?.user.permissions &&
+                !hasPerm('crm:edit_lead', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to edit leads');
+                setEditedData({
+                    ...previousLeadData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
+            if (
                 !editedLeadData.followup_done &&
                 editedLeadData.followup_date === ''
             ) {
@@ -251,6 +282,18 @@ const Table: React.FC = props => {
             if (
                 previousLeadData.marketer_name !== editedLeadData.marketer_name
             ) {
+                if (
+                    session?.user.permissions &&
+                    !hasPerm('crm:transfer_leads', session?.user.permissions)
+                ) {
+                    toast.error('You do not have permission to transfer leads');
+                    setEditedData({
+                        ...previousLeadData,
+                        updated_by: session?.user.real_name || '',
+                    });
+                    return;
+                }
+
                 let response = await fetchApi(
                     { path: '/v1/approval/new-request' },
                     {
@@ -319,6 +362,18 @@ const Table: React.FC = props => {
         try {
             console.log(originalLeadData.marketer_name, reqBy);
 
+            if (!confirm('Are you sure you want to delete this lead?')) {
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:withdraw_leads', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to withdraw leads');
+                return;
+            }
+
             // block withdraw action if the lead is others and the user is not the one who created the lead
             if (originalLeadData.marketer_name !== reqBy) {
                 toast.error('You are not allowed to withdraw this lead');
@@ -329,6 +384,7 @@ const Table: React.FC = props => {
                 { path: `/v1/report/withdraw-lead/${leadId}/${reqBy}` },
                 {
                     method: 'POST',
+                    body: JSON.stringify({}),
                 },
             );
 
@@ -586,36 +642,64 @@ const Table: React.FC = props => {
                                             >
                                                 <div className="inline-block">
                                                     <div className="flex gap-2">
-                                                        <EditButton
-                                                            isLoading={
-                                                                isLoading
-                                                            }
-                                                            submitHandler={
-                                                                editLead
-                                                            }
-                                                            leadData={item}
-                                                            marketerNames={
-                                                                marketerNames
-                                                            }
-                                                        />
+                                                        {session?.user
+                                                            .permissions &&
+                                                            hasPerm(
+                                                                'crm:edit_lead',
+                                                                session?.user
+                                                                    .permissions,
+                                                            ) && (
+                                                                <EditButton
+                                                                    isLoading={
+                                                                        isLoading
+                                                                    }
+                                                                    submitHandler={
+                                                                        editLead
+                                                                    }
+                                                                    leadData={
+                                                                        item
+                                                                    }
+                                                                    marketerNames={
+                                                                        marketerNames
+                                                                    }
+                                                                />
+                                                            )}
                                                         {!item.lead_withdrawn && (
                                                             <>
-                                                                <DeleteButton
-                                                                    submitHandler={
-                                                                        deleteLead
-                                                                    }
-                                                                    leadData={
-                                                                        item
-                                                                    }
-                                                                />
-                                                                <WithdrawLeadButton
-                                                                    submitHandler={
-                                                                        withdrawLead
-                                                                    }
-                                                                    leadData={
-                                                                        item
-                                                                    }
-                                                                />
+                                                                {session?.user
+                                                                    .permissions &&
+                                                                    hasPerm(
+                                                                        'crm:delete_leads_approval',
+                                                                        session
+                                                                            ?.user
+                                                                            .permissions,
+                                                                    ) && (
+                                                                        <DeleteButton
+                                                                            submitHandler={
+                                                                                deleteLead
+                                                                            }
+                                                                            leadData={
+                                                                                item
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                {session?.user
+                                                                    .permissions &&
+                                                                    hasPerm(
+                                                                        'crm:withdraw_leads',
+                                                                        session
+                                                                            ?.user
+                                                                            .permissions,
+                                                                    ) && (
+                                                                        <WithdrawLeadButton
+                                                                            submitHandler={
+                                                                                withdrawLead
+                                                                            }
+                                                                            leadData={
+                                                                                item
+                                                                            }
+                                                                        />
+                                                                    )}
                                                             </>
                                                         )}
                                                     </div>

@@ -1309,7 +1309,7 @@ export class ReportService {
         marketerCompanyName: string,
     ) {
         // Permission: who can remove a client from a report
-        if (!hasPerm('crm:create_report', userSession.permissions)) {
+        if (!hasPerm('crm:remove_client', userSession.permissions)) {
             throw new ForbiddenException(
                 'You do not have permission to remove client from report',
             );

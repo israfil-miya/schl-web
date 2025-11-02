@@ -31,13 +31,13 @@ export class User {
     employee: mongoose.Types.ObjectId;
 
     @Prop({ default: '' })
-    comment?: string;
+    comment: string;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

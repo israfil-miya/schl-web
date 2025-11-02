@@ -4,6 +4,7 @@ import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { ReportDocument } from '@repo/common/models/report.schema';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
 import { fetchApi } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -138,6 +139,18 @@ const Table = () => {
 
     async function deleteClient(clientData: ReportDocument) {
         try {
+            if (!confirm('Are you sure you want to delete this client?')) {
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:delete_report_approval', session.user.permissions)
+            ) {
+                toast.error('You do not have permission to delete reports');
+                return;
+            }
+
             if (clientData.marketer_name !== session?.user.provided_name) {
                 toast.error('You are not allowed to delete this client');
                 return;
@@ -177,6 +190,14 @@ const Table = () => {
         >,
     ) {
         try {
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:edit_report', session.user.permissions)
+            ) {
+                toast.error('You do not have permission to edit reports');
+                return;
+            }
+
             if (
                 originalClientData.marketer_name !== session?.user.provided_name
             ) {
@@ -232,6 +253,14 @@ const Table = () => {
         try {
             console.log(originalClientData.marketer_name, reqBy);
 
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:remove_client', session.user.permissions)
+            ) {
+                toast.error('You do not have permission to remove clients');
+                return;
+            }
+
             // block withdraw action if the client is others and the user is not the one who created the report
             if (originalClientData.marketer_name !== reqBy) {
                 toast.error('You are not allowed to remove this client');
@@ -239,13 +268,12 @@ const Table = () => {
             }
 
             let response = await fetchApi(
-                { path: '/v1/report/remove-client' },
+                {
+                    path: `/v1/report/remove-client-from-report/${clientId}/${reqBy}`,
+                },
                 {
                     method: 'POST',
-                    body: JSON.stringify({
-                        id: clientId,
-                        req_by: reqBy,
-                    }),
+                    body: JSON.stringify({}),
                 },
             );
 

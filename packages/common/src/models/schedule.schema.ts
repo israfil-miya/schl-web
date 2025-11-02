@@ -21,16 +21,16 @@ export class Schedule {
     task: string;
 
     @Prop({ default: '' })
-    comment?: string;
+    comment: string;
 
     @Prop({ type: String, default: null })
-    updated_by?: string | null;
+    updated_by: string | null;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const ScheduleSchema = SchemaFactory.createForClass(Schedule);

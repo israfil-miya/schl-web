@@ -28,8 +28,8 @@ export function isRouteAuthorized(
  * Routes with multiple permissions require any one of them (OR logic).
  */
 export const authorizedRoutes: AuthorizedRoute[] = [
-    // Root tasks page
-    { href: '/', label: 'Tasks', permissions: [] },
+    // Root stats page
+    { href: '/', label: 'Statistics', permissions: [] },
 
     // Reports
     {
@@ -98,6 +98,20 @@ export const authorizedRoutes: AuthorizedRoute[] = [
                 permissions: ['settings:change_password'],
             },
         ],
+    },
+
+    // Create Report
+    {
+        href: '/make-a-call',
+        label: 'Create Report',
+        permissions: ['crm:create_lead', 'crm:create_report'],
+    },
+
+    // verify emails
+    {
+        href: '/email-verify',
+        label: 'Verify Email',
+        permissions: ['crm:verify_email'],
     },
 ];
 

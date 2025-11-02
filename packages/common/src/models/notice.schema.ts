@@ -22,13 +22,13 @@ export class Notice {
     description: string;
 
     @Prop({ default: null, type: String })
-    file_name?: string | null;
+    file_name: string | null;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const NoticeSchema = SchemaFactory.createForClass(Notice);

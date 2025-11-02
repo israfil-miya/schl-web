@@ -112,10 +112,10 @@ export class Approval {
     rev_by: mongoose.Types.ObjectId | null;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const ApprovalSchema = SchemaFactory.createForClass(Approval);

@@ -7,6 +7,7 @@ import {
     YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY,
     getTodayDate,
 } from '@repo/common/utils/date-helpers';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
 
 interface PropsType {
@@ -520,25 +521,31 @@ const EditButton: React.FC<PropsType> = props => {
                                     Followup Pending
                                 </label>
                             </div>
-
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    name="new_client_req"
-                                    checked={
-                                        editedData.client_status == 'pending'
-                                    }
-                                    onChange={handleChange}
-                                    id="new-client-req-checkbox"
-                                    type="checkbox"
-                                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                                />
-                                <label
-                                    htmlFor="new-client-req-checkbox"
-                                    className="uppercase "
-                                >
-                                    New Client Request
-                                </label>
-                            </div>
+                            {session?.user.permissions &&
+                                hasPerm(
+                                    'crm:send_client_request',
+                                    session.user.permissions,
+                                ) && (
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            name="new_client_req"
+                                            checked={
+                                                editedData.client_status ==
+                                                'pending'
+                                            }
+                                            onChange={handleChange}
+                                            id="new-client-req-checkbox"
+                                            type="checkbox"
+                                            className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                        />
+                                        <label
+                                            htmlFor="new-client-req-checkbox"
+                                            className="uppercase "
+                                        >
+                                            New Client Request
+                                        </label>
+                                    </div>
+                                )}
 
                             <div className="flex gap-2 items-center">
                                 <input

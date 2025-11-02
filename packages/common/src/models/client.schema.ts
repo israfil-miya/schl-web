@@ -37,7 +37,7 @@ export class Client {
     address: string;
 
     @Prop({ default: '' })
-    prices?: string; // price list or special prices for the client
+    prices: string; // price list or special prices for the client
 
     @Prop({
         default: '$',
@@ -52,24 +52,24 @@ export class Client {
     tax_id: string;
 
     @Prop({ default: '' })
-    category?: string; // client category, e.g. "Photographer", "Agency" etc.
+    category: string; // client category, e.g. "Photographer", "Agency" etc.
 
     /*
     Last invoice number for the client (XX1234), used to continue the invoice number sequence for the next invoice.
     Explicit type is required because a union (string | null) is otherwise ambiguous to @nestjs/mongoose.
     */
     @Prop({ type: String, default: null })
-    last_invoice_number?: string | null;
+    last_invoice_number: string | null;
 
     // User id / username who last updated the client (nullable)
     @Prop({ type: String, default: null })
-    updated_by?: string | null;
+    updated_by: string | null;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

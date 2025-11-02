@@ -1,5 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import {
+    CLIENT_STATUSES,
+    type ClientStatus,
+} from '../constants/report.constant';
 
 export type ReportDocument = HydratedDocument<Report>;
 
@@ -74,8 +78,8 @@ export class Report {
     @Prop({ default: false })
     is_lead: boolean;
 
-    @Prop({ enum: ['none', 'pending', 'approved'], default: 'none' })
-    client_status: 'none' | 'pending' | 'approved';
+    @Prop({ default: 'none', enum: CLIENT_STATUSES })
+    client_status: ClientStatus;
 
     @Prop({ default: false })
     lead_withdrawn: boolean;

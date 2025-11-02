@@ -59,10 +59,6 @@ const Form: React.FC = () => {
                 return;
             }
 
-            const bodyData = parsed.data.emails.includes(';')
-                ? { emails: parsed.data.emails }
-                : { email: parsed.data.emails };
-
             // Use the API endpoint instead of calling ZeroBounce directly
             const endpoint = parsed.data.emails.includes(';')
                 ? `/v1/validator/bulk-email/${encodeURIComponent(parsed.data.emails.replace(/;/g, ','))}`

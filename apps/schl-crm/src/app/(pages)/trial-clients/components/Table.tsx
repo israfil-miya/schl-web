@@ -11,6 +11,7 @@ import {
     countPassedDaysSinceADate as countDaysSinceLastCall,
     fetchApi,
 } from '@repo/common/utils/general-utils';
+import { hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
@@ -181,6 +182,21 @@ const Table = () => {
 
     async function deleteReport(reportData: ReportDocument) {
         try {
+            if (!confirm('Are you sure you want to delete this report?')) {
+                return;
+            }
+
+            if (
+                session?.user.permissions &&
+                !hasPerm(
+                    'crm:delete_report_approval',
+                    session?.user.permissions,
+                )
+            ) {
+                toast.error('You do not have permission to delete reports');
+                return;
+            }
+
             // block delete action if the report is others and the user is not the one who created the report
             if (reportData.marketer_name !== session?.user.provided_name) {
                 toast.error('You are not allowed to delete this report');
@@ -226,6 +242,35 @@ const Table = () => {
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
     ) {
         try {
+            if (
+                session?.user.permissions &&
+                !hasPerm('crm:edit_report', session?.user.permissions)
+            ) {
+                toast.error('You do not have permission to edit reports');
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
+            if (
+                previousReportData.client_status === 'none' &&
+                editedReportData.client_status &&
+                editedReportData.client_status !== 'none' &&
+                session?.user.permissions &&
+                !hasPerm('crm:send_client_request', session?.user.permissions)
+            ) {
+                toast.error(
+                    'You do not have permission to send client requests',
+                );
+                setEditedData({
+                    ...previousReportData,
+                    updated_by: session?.user.real_name || '',
+                });
+                return;
+            }
+
             if (
                 !editedReportData.followup_done &&
                 editedReportData.followup_date === ''

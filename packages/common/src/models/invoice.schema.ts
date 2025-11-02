@@ -21,16 +21,16 @@ export class Invoice {
     time_period: { fromDate: string; toDate: string };
 
     @Prop({ default: 0 })
-    total_orders?: number;
+    total_orders: number;
 
     @Prop({ required: [true, 'Invoice number is required'] })
     invoice_number: string;
 
     @Prop({ type: Date })
-    readonly createdAt?: Date;
+    readonly createdAt: Date;
 
     @Prop({ type: Date })
-    readonly updatedAt?: Date;
+    readonly updatedAt: Date;
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(Invoice);

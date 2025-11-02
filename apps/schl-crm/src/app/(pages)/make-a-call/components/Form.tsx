@@ -134,7 +134,7 @@ const Form: React.FC<propsType> = props => {
             if (
                 session?.user.permissions &&
                 reportData.newLead &&
-                !hasPerm('crm:create_leads', session?.user.permissions)
+                !hasPerm('crm:create_lead', session?.user.permissions)
             ) {
                 toast.error("You don't have permission to create leads");
             }

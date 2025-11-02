@@ -6,7 +6,7 @@ export class BulkEmailParamDto {
     @Transform(({ value }: { value: string }) => {
         if (typeof value !== 'string') return [];
         return value
-            .split(';')
+            .split(',')
             .map(email => email.trim())
             .filter(email => email.length > 0);
     })

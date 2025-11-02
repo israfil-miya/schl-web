@@ -8,7 +8,7 @@ export class Role {
     @Prop({ required: [true, 'Name is required'] })
     name: string;
     @Prop({ default: '' })
-    description?: string;
+    description: string;
     @Prop({
         type: [String],
         minLength: [1, 'At least one permission is required'],
