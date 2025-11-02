@@ -58,7 +58,7 @@ export class UserController {
     verifyUser(
         @Body() body: VerifyUserBodyDto,
         @Req() req: Request & { user: UserSession },
-        @Param('redirect') redirectPath: string,
+        @Query('redirect') redirectPath: string,
     ) {
         return this.authService.verifyUser(
             body.username,

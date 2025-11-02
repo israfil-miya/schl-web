@@ -46,7 +46,12 @@ const Form: React.FC<PropsType> = props => {
             }
 
             const response = await fetchApi(
-                { path: '/v1/user/verify-user' },
+                {
+                    path: '/v1/user/verify-user',
+                    query: {
+                        redirect: props.redirect_path || '/',
+                    },
+                },
                 {
                     method: 'POST',
                     headers: {

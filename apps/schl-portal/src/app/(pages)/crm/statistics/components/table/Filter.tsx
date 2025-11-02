@@ -64,13 +64,21 @@ const FilterButton: React.FC<PropsType> = ({
 
                 const filters = data;
 
-                const response = await fetchApi({
-                    path: '/v1/report/report-statuses',
-                    query: {
-                        fromDate: filters.fromDate || undefined,
-                        toDate: filters.toDate || undefined,
+                const response = await fetchApi(
+                    {
+                        path: '/v1/report/report-statuses',
+                        query: {
+                            fromDate: filters.fromDate || undefined,
+                            toDate: filters.toDate || undefined,
+                        },
                     },
-                });
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        method: 'GET',
+                    },
+                );
 
                 if (response.ok) {
                     setReportsStatus(response.data as ReportsStatusState);

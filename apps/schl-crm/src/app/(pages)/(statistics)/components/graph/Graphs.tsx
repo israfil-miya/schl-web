@@ -26,7 +26,7 @@ const Graphs = () => {
 
             const response = await fetchApi(
                 {
-                    path: '/v1/report/get-reports-count',
+                    path: '/v1/report/call-reports-trend',
                     query: {
                         name: session?.user.provided_name,
                     },
@@ -60,7 +60,7 @@ const Graphs = () => {
 
             const response = await fetchApi(
                 {
-                    path: '/v1/report/get-clients-onboard',
+                    path: '/v1/report/clients-onboard-trend',
                     query: {
                         name: session?.user.provided_name,
                     },
@@ -97,7 +97,7 @@ const Graphs = () => {
 
             const response = await fetchApi(
                 {
-                    path: '/v1/report/get-test-orders-trend',
+                    path: '/v1/report/test-orders-trend',
                     query: {
                         name: session?.user.provided_name,
                     },

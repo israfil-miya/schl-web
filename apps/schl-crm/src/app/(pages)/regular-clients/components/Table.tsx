@@ -58,9 +58,14 @@ const Table = () => {
                 let response = await fetchApi(
                     {
                         path: '/v1/report/search-reports',
-                        query: { paginated: true, page, itemPerPage },
+                        query: {
+                            paginated: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
                     {
+                        headers: { 'Content-Type': 'application/json' },
                         method: 'POST',
                         body: JSON.stringify({
                             show: 'mine',
@@ -94,9 +99,14 @@ const Table = () => {
                 let response = await fetchApi(
                     {
                         path: '/v1/report/search-reports',
-                        query: { paginated: true, page, itemPerPage },
+                        query: {
+                            paginated: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
                     {
+                        headers: { 'Content-Type': 'application/json' },
                         method: 'POST',
                         body: JSON.stringify({
                             ...filters,

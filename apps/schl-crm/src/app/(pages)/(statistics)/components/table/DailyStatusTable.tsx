@@ -60,12 +60,17 @@ const DailyStatusTable = () => {
 
             let response = await fetchApi(
                 {
-                    path: '/v1/report/reports-status',
-                    query: { name: session?.user.provided_name },
+                    path: `/v1/report/report-statuses/${session?.user.provided_name}`,
+                    query: {
+                        fromDate: filters.fromDate || undefined,
+                        toDate: filters.toDate || undefined,
+                    },
                 },
                 {
-                    method: 'POST',
-                    body: JSON.stringify(filters),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    method: 'GET',
                 },
             );
 

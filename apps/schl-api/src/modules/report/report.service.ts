@@ -21,7 +21,7 @@ import {
     buildOrRegex,
     createRegexQuery,
 } from '@repo/common/utils/filter-helpers';
-import { hasPerm } from '@repo/common/utils/permission-check';
+import { hasAnyPerm, hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
 import { FilterQuery, Model } from 'mongoose';
 import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
@@ -47,7 +47,10 @@ export class ReportService {
 
     async callReportsTrend(userSession: UserSession, marketerName?: string) {
         try {
-            if (!hasPerm('crm:view_crm_stats', userSession.permissions)) {
+            if (
+                !marketerName &&
+                !hasPerm('crm:view_crm_stats', userSession.permissions)
+            ) {
                 throw new ForbiddenException(
                     'You do not have permission to view CRM stats',
                 );
@@ -127,7 +130,10 @@ export class ReportService {
 
     async clientsOnboardTrend(userSession: UserSession, marketerName?: string) {
         try {
-            if (!hasPerm('crm:view_crm_stats', userSession.permissions)) {
+            if (
+                !marketerName &&
+                !hasPerm('crm:view_crm_stats', userSession.permissions)
+            ) {
                 throw new ForbiddenException(
                     'You do not have permission to view CRM stats',
                 );
@@ -217,7 +223,10 @@ export class ReportService {
 
     async testOrdersTrend(userSession: UserSession, marketerName?: string) {
         try {
-            if (!hasPerm('crm:view_crm_stats', userSession.permissions)) {
+            if (
+                !marketerName &&
+                !hasPerm('crm:view_crm_stats', userSession.permissions)
+            ) {
                 throw new ForbiddenException(
                     'You do not have permission to view CRM stats',
                 );
@@ -313,7 +322,10 @@ export class ReportService {
         onlyMarketerName?: string,
     ) {
         try {
-            if (!hasPerm('crm:view_crm_stats', userSession.permissions)) {
+            if (
+                !onlyMarketerName &&
+                !hasPerm('crm:view_crm_stats', userSession.permissions)
+            ) {
                 throw new ForbiddenException(
                     'You do not have permission to view CRM stats',
                 );
@@ -853,7 +865,12 @@ export class ReportService {
         body: Partial<CreateReportBodyDto>,
         userSession: UserSession,
     ) {
-        if (!hasPerm('crm:create_report', userSession.permissions)) {
+        if (
+            !hasAnyPerm(
+                ['crm:edit_report', 'crm:edit_lead'],
+                userSession.permissions,
+            )
+        ) {
             throw new ForbiddenException(
                 'You do not have permission to update report',
             );
@@ -880,10 +897,9 @@ export class ReportService {
         userSession: UserSession,
         body: ConvertToClientBodyDto,
     ) {
-        // Permission gate: who can convert a report/company into a client
-        if (!hasPerm('crm:send_client_request', userSession.permissions)) {
+        if (!hasPerm('crm:check_client_request', userSession.permissions)) {
             throw new ForbiddenException(
-                'You do not have permission to convert to client',
+                'You do not have permission to approve client requests',
             );
         }
 
@@ -1135,7 +1151,7 @@ export class ReportService {
         marketerRealName: string,
     ) {
         // Permission: withdrawing a lead modifies reports
-        if (!hasPerm('crm:create_report', userSession.permissions)) {
+        if (!hasPerm('crm:edit_lead', userSession.permissions)) {
             throw new ForbiddenException(
                 'You do not have permission to withdraw lead',
             );
@@ -1231,7 +1247,7 @@ export class ReportService {
         marketerCompanyName: string,
     ) {
         // Permission: marking followup done modifies reports
-        if (!hasPerm('crm:create_report', userSession.permissions)) {
+        if (!hasPerm('crm:edit_report', userSession.permissions)) {
             throw new ForbiddenException(
                 'You do not have permission to mark follow-up done',
             );

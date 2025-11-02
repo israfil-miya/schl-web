@@ -71,9 +71,14 @@ const Table = () => {
                 let response = await fetchApi(
                     {
                         path: '/v1/report/search-reports',
-                        query: { paginated: true, page, itemPerPage },
+                        query: {
+                            paginated: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
                     {
+                        headers: { 'Content-Type': 'application/json' },
                         method: 'POST',
                         body: JSON.stringify({
                             followupDone: false,
@@ -108,9 +113,14 @@ const Table = () => {
                 let response = await fetchApi(
                     {
                         path: '/v1/report/search-reports',
-                        query: { paginated: true, page, itemPerPage },
+                        query: {
+                            paginated: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
                     {
+                        headers: { 'Content-Type': 'application/json' },
                         method: 'POST',
                         body: JSON.stringify({
                             ...filters,
@@ -432,7 +442,7 @@ const Table = () => {
             let response = await fetchApi(
                 {
                     path: '/v1/report/followup-count-for-today',
-                    query: { marketerName: session?.user.provided_name },
+                    query: { marketer: session?.user.provided_name },
                 },
                 {
                     method: 'GET',

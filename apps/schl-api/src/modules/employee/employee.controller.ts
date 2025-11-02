@@ -55,7 +55,7 @@ export class EmployeeController {
 
     @Get('get-employee/:param')
     getEmployee(
-        @Param('param') param: string,
+        @Param('param') param: string, // either e_id or _id of the employee
         @Req() req: Request & { user: UserSession },
     ) {
         const value = param.trim();

@@ -15,7 +15,9 @@ const getEmployeeInfo = async () => {
     const session = await auth();
     try {
         const response = await fetchApi(
-            `/v1/employee/get-employee/${encodeURIComponent(session?.user.real_name || '')}`,
+            {
+                path: `/v1/employee/get-employee/${encodeURIComponent(session?.user.db_id || session?.user.e_id || '')}`,
+            },
             {
                 method: 'GET',
                 cache: 'no-store',

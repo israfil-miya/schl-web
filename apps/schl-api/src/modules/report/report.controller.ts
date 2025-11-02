@@ -27,40 +27,24 @@ export class ReportController {
     constructor(private readonly reportService: ReportService) {}
 
     @Get('call-reports-trend')
-    callReportsTrend(@Req() req: Request & { user: UserSession }) {
-        return this.reportService.callReportsTrend(req.user);
-    }
-
-    @Get('call-reports-trend/:name')
-    callReportsTrendByName(
+    callReportsTrend(
         @Req() req: Request & { user: UserSession },
-        @Param('name') name: string,
+        @Query('name') name: string,
     ) {
         return this.reportService.callReportsTrend(req.user, name);
     }
 
     @Get('clients-onboard-trend')
-    clientsOnboardTrend(@Req() req: Request & { user: UserSession }) {
-        return this.reportService.clientsOnboardTrend(req.user);
-    }
-
-    @Get('clients-onboard-trend/:name')
-    clientsOnboardTrendByName(
+    clientsOnboardTrend(
         @Req() req: Request & { user: UserSession },
-        @Param('name') name: string,
+        @Query('name') name: string,
     ) {
         return this.reportService.clientsOnboardTrend(req.user, name);
     }
-
     @Get('test-orders-trend')
-    testOrdersTrend(@Req() req: Request & { user: UserSession }) {
-        return this.reportService.testOrdersTrend(req.user);
-    }
-
-    @Get('test-orders-trend/:name')
-    testOrdersTrendByName(
+    testOrdersTrend(
         @Req() req: Request & { user: UserSession },
-        @Param('name') name: string,
+        @Query('name') name: string,
     ) {
         return this.reportService.testOrdersTrend(req.user, name);
     }
@@ -160,10 +144,10 @@ export class ReportController {
         return this.reportService.markDuplicateClientRequest(req.user, id);
     }
 
-    @Get('followup-count-for-today/:name')
+    @Get('followup-count-for-today')
     followupCountForToday(
         @Req() req: Request & { user: UserSession },
-        @Param('name') name: string, // marketer's company given name
+        @Query('marketer') name: string, // marketer's company given name
     ) {
         return this.reportService.followupCountForToday(req.user, name);
     }

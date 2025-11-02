@@ -51,9 +51,14 @@ const Table = () => {
                 let response = await fetchApi(
                     {
                         path: '/v1/notice/search-notices',
-                        query: { paginated: true, page, itemPerPage },
+                        query: {
+                            paginated: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
                     {
+                        headers: { 'Content-Type': 'application/json' },
                         method: 'POST',
                         body: JSON.stringify({ channel: 'marketers' }),
                     },
@@ -84,9 +89,14 @@ const Table = () => {
                 let response = await fetchApi(
                     {
                         path: '/v1/notice/search-notices',
-                        query: { paginated: true, page, itemPerPage },
+                        query: {
+                            paginated: true,
+                            page,
+                            itemsPerPage: itemPerPage,
+                        },
                     },
                     {
+                        headers: { 'Content-Type': 'application/json' },
                         method: 'POST',
                         body: JSON.stringify({
                             ...filters,

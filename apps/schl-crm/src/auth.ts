@@ -23,7 +23,7 @@ async function getUser(
             {
                 path: '/v1/user/login',
                 query: {
-                    clientType: 'portal',
+                    clientType: 'crm',
                 },
             },
             {
