@@ -9,7 +9,7 @@ import {
     Req,
 } from '@nestjs/common';
 import { UserSession } from '@repo/common/types/user-session.type';
-import { IdParamDto } from 'src/common/dto/id-param.dto';
+import { IdParamDto } from '../../common/dto/id-param.dto';
 import { ClientService } from './client.service';
 import { CreateClientBodyDto } from './dto/create-client.dto';
 import {

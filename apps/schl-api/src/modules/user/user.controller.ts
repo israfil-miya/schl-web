@@ -11,8 +11,8 @@ import {
     Request,
 } from '@nestjs/common';
 import { UserSession } from '@repo/common/types/user-session.type';
-import { Public } from 'src/common/auth/public.decorator';
-import { IdParamDto } from 'src/common/dto/id-param.dto';
+import { Public } from '../../common/auth/public.decorator';
+import { IdParamDto } from '../../common/dto/id-param.dto';
 import { ChangePasswordBodyDto } from './dto/change-password.dto';
 import { CreateUserBodyDto } from './dto/create-user.dto';
 import { GetUserQueryDto } from './dto/get-user.dto';

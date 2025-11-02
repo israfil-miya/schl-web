@@ -13,8 +13,8 @@ import { UserSession } from '@repo/common/types/user-session.type';
 import {
     ClientCodeParamDto,
     ClientCodeRequiredParamDto,
-} from 'src/common/dto/client-code-param.dto';
-import { IdParamDto } from 'src/common/dto/id-param.dto';
+} from '../../common/dto/client-code-param.dto';
+import { IdParamDto } from '../../common/dto/id-param.dto';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
 import {
     OrdersByCountryParamDto,
