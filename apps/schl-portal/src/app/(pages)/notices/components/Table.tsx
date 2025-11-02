@@ -102,7 +102,7 @@ const Table = () => {
                         (response.data as NoticesState).pagination.pageCount,
                     );
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -143,7 +143,7 @@ const Table = () => {
                         (response.data as NoticesState).pagination.pageCount,
                     );
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);

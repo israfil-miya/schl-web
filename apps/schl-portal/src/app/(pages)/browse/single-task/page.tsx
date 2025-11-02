@@ -22,7 +22,7 @@ const getOrderData = async (orderId: string) => {
         if (response.ok) {
             return response.data as OrderDataType;
         } else {
-            console.error(response.data);
+            console.error(response.data.message);
             return null;
         }
     } catch (e) {

@@ -79,7 +79,7 @@ const Table = () => {
                     setIsFiltered(false);
                     setPageCount(response.data.pagination.pageCount);
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -120,7 +120,7 @@ const Table = () => {
                     setIsFiltered(true);
                     setPageCount(response.data.pagination.pageCount);
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -241,7 +241,7 @@ const Table = () => {
 
                 toast.success('Edited the client data successfully');
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
@@ -292,7 +292,7 @@ const Table = () => {
 
                 toast.success('The client has been removed successfully');
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);

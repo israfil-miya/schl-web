@@ -95,7 +95,6 @@ const Table: React.FC = props => {
                 );
 
                 if (response.ok) {
-                    console.log('response', response.data);
                     setApprovals(response.data as ApprovalsState);
                     setPageCount(
                         (response.data as ApprovalsState).pagination.pageCount,
@@ -185,7 +184,6 @@ const Table: React.FC = props => {
             );
 
             if (response.ok) {
-                console.log('response', response.data);
                 toast.success('Request processed successfully', {
                     id: toastId,
                 });

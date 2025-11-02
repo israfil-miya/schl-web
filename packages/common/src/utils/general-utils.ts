@@ -65,11 +65,33 @@ const buildUrl = (target: FetchApiTarget): URL => {
     return url;
 };
 
-export const fetchApi = async (
+export interface NestJsError {
+    statusCode: number;
+    message: string | string[];
+    error: string;
+}
+
+type FetchSuccess<TData> = {
+    data: TData;
+    ok: true;
+    status: number;
+    headers: Headers;
+};
+
+type FetchError = {
+    data: NestJsError;
+    ok: false;
+    status: number;
+    headers: Headers;
+};
+
+export type FetchApiResponse<TData> = FetchSuccess<TData> | FetchError;
+
+export const fetchApi = async <TData = unknown>(
     target: FetchApiTarget,
     options: RequestInit = {},
     authToken?: string,
-): Promise<{ data: any; ok: boolean; status: number; headers: Headers }> => {
+): Promise<FetchApiResponse<TData>> => {
     try {
         const url = buildUrl(target);
 
@@ -84,7 +106,7 @@ export const fetchApi = async (
             headers: mergedHeaders,
         });
 
-        let data: any = null;
+        let data: unknown = null;
         const contentType = response.headers.get('content-type');
 
         if (contentType?.includes('application/json')) {
@@ -108,9 +130,17 @@ export const fetchApi = async (
             }
         }
 
+        if (response.ok) {
+            return {
+                data: data as TData,
+                ok: true,
+                status: response.status,
+                headers: response.headers,
+            };
+        }
         return {
-            data,
-            ok: response.ok,
+            data: data as NestJsError,
+            ok: false,
             status: response.status,
             headers: response.headers,
         };
@@ -326,7 +356,7 @@ export const constructFileName = (
 
 export const isValidMails = (mail: string): boolean => {
     const emailPattern =
-        /^(([^<>()\[\]\.,;:\s@"]+(\.[^<>()\[\]\.,;:\s@"]+)*)|(".+"))@(([^<>()\.,;\s@"]+\.{0,1})+([^<>()\.,;:\s@"]{2,}|[\d\.]+))$/;
+        /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;\s@"]+\.{0,1})+([^<>()[\].,;\s@"]{2,}|[\d.]+))$/;
 
     // Split the input string by ' / ' and trim any extra spaces
     const emails: string[] = mail.split(' / ').map(email => email.trim());

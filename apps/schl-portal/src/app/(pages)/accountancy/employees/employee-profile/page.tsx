@@ -24,7 +24,7 @@ const getEmployeeInfo = async (identifier: string) => {
         if (response.ok) {
             return response.data as EmployeeDocument;
         } else {
-            console.error(response.data);
+            console.error(response.data.message);
             return null;
         }
     } catch (e) {

@@ -44,9 +44,8 @@ function TestAndCorrection() {
 
             if (response.ok) {
                 setOrders(response.data as OrderDocument[]);
-                console.log(response.data);
             } else {
-                toast.error(response.data as string);
+                toast.error(response.data?.message);
             }
         } catch (error) {
             console.error(error);
@@ -216,8 +215,8 @@ function TestAndCorrection() {
                     <table className="table border">
                         <tbody>
                             <tr key={0}>
-                                <td className="align-center capitalize text-center text-wrap">
-                                    No Test or Correction To Show.
+                                <td className="align-center capitalize text-center text-wrap text-gray-400">
+                                    No Test or Correction To Show
                                 </td>
                             </tr>
                         </tbody>

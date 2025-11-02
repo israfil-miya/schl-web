@@ -177,7 +177,7 @@ const Form: React.FC<propsType> = props => {
                     `New ${NewLeadQuery?.current ? 'lead' : 'report'} added successfully`,
                 );
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);

@@ -134,7 +134,7 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
                 }
                 setNotice(response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
                 router.push(process.env.NEXT_PUBLIC_BASE_URL + '/notices');
             }
         } catch (error) {

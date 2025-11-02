@@ -39,7 +39,7 @@ const Graphs = () => {
             if (response.ok) {
                 setReportsCount(response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
@@ -73,7 +73,7 @@ const Graphs = () => {
             if (response.ok) {
                 setClientsOnboard(response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
@@ -110,7 +110,7 @@ const Graphs = () => {
             if (response.ok) {
                 setTestOrdersTrend(response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);

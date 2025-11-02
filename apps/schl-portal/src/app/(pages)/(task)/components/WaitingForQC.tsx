@@ -1,7 +1,11 @@
+'use client';
+
 import type { OrderDocument } from '@repo/common/models/order.schema';
 import { fetchApi } from '@repo/common/utils/general-utils';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
+import { isArray } from 'lodash';
+import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import OrderRenderer from './OrderRenderer';
@@ -9,6 +13,7 @@ import OrderRenderer from './OrderRenderer';
 function WaitingForQC() {
     const [loading, setLoading] = useState(true);
     const [orders, setOrders] = useState<OrderDocument[]>([]);
+    const { data: session } = useSession();
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -25,13 +30,19 @@ function WaitingForQC() {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                 },
+                session?.accessToken,
             );
 
-            console.log(response.data);
             if (response.ok) {
                 setOrders(response.data as OrderDocument[]);
             } else {
-                toast.error(response.data as string);
+                if (isArray(response.data?.message)) {
+                    response.data?.message.forEach((msg: string) =>
+                        toast.error(msg),
+                    );
+                } else {
+                    toast.error(response.data?.message);
+                }
             }
         } catch (error) {
             console.error(error);

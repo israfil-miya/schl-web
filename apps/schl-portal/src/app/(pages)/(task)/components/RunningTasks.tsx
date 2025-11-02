@@ -27,11 +27,10 @@ function RunningTasks() {
                 },
             );
 
-            console.log(response.data);
             if (response.ok) {
                 setOrders(response.data as OrderDocument[]);
             } else {
-                toast.error(response.data as string);
+                toast.error(response.data?.message);
             }
         } catch (error) {
             console.error(error);

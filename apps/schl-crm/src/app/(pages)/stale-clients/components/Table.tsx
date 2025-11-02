@@ -88,7 +88,7 @@ const Table = () => {
                     setIsFiltered(false);
                     setPageCount(response.data.pagination.pageCount);
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -132,7 +132,7 @@ const Table = () => {
                     setIsFiltered(true);
                     setPageCount(response.data.pagination.pageCount);
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -316,7 +316,7 @@ const Table = () => {
                                     setEditedData({});
                                     setIsRecall(false);
                                 } else {
-                                    toast.error(response.data);
+                                    toast.error(response.data.message);
                                 }
                             } else {
                                 const submitData = {
@@ -381,7 +381,7 @@ const Table = () => {
 
                     toast.success('Edited the report successfully');
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             }
         } catch (error) {

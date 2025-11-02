@@ -85,7 +85,7 @@ const DailyStatusTable = () => {
                         countDays(filters.fromDate, filters.toDate),
                 );
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);

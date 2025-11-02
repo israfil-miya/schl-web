@@ -94,7 +94,7 @@ const Table: React.FC = props => {
                     setIsFiltered(false);
                     setPageCount(response.data.pagination.pageCount);
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -169,7 +169,7 @@ const Table: React.FC = props => {
                     setIsFiltered(true);
                     setPageCount(response.data.pagination.pageCount);
                 } else {
-                    toast.error(response.data);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 console.error(error);
@@ -350,7 +350,7 @@ const Table: React.FC = props => {
 
                 toast.success('Edited the lead successfully');
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
@@ -403,7 +403,7 @@ const Table: React.FC = props => {
 
                 toast.success('The lead has been withdrawn successfully');
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);

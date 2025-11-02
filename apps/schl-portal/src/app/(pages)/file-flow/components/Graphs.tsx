@@ -53,7 +53,7 @@ const Graphs = () => {
             if (response.ok) {
                 setFlowData(response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
@@ -84,7 +84,7 @@ const Graphs = () => {
             if (response.ok) {
                 setStatusData(response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
@@ -116,10 +116,8 @@ const Graphs = () => {
 
             if (response.ok) {
                 setCountryData(response.data);
-
-                console.log('Country Data:', response.data);
             } else {
-                toast.error(response.data);
+                toast.error(response.data.message);
             }
         } catch (error) {
             console.error(error);
