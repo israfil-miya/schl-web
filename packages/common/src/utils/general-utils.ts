@@ -1,3 +1,4 @@
+import camelcaseKeys from 'camelcase-keys';
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
@@ -87,6 +88,22 @@ type FetchError = {
 
 export type FetchApiResponse<TData> = FetchSuccess<TData> | FetchError;
 
+const stripUpdatedByField = (input: unknown): unknown => {
+    if (Array.isArray(input)) {
+        return input.map(item => stripUpdatedByField(item));
+    }
+    if (input && typeof input === 'object') {
+        const record = input as Record<string, unknown>;
+        delete record.updated_by;
+        delete record.updatedBy;
+        Object.keys(record).forEach(key => {
+            record[key] = stripUpdatedByField(record[key]);
+        });
+        return record;
+    }
+    return input;
+};
+
 export const fetchApi = async <TData = unknown>(
     target: FetchApiTarget,
     options: RequestInit = {},
@@ -95,7 +112,23 @@ export const fetchApi = async <TData = unknown>(
     try {
         const url = buildUrl(target);
 
-        const mergedHeaders = new Headers(options.headers);
+        const newOptions = { ...options };
+
+        if (newOptions.body && typeof newOptions.body === 'string') {
+            try {
+                const parsedBody = JSON.parse(newOptions.body);
+                const strippedBody = stripUpdatedByField(parsedBody);
+                const camelCasedBody = camelcaseKeys(strippedBody, {
+                    deep: false,
+                });
+                const sanitizedBody = stripUpdatedByField(camelCasedBody);
+                newOptions.body = JSON.stringify(sanitizedBody);
+            } catch {
+                // Not a JSON body, leave it as is
+            }
+        }
+
+        const mergedHeaders = new Headers(newOptions.headers);
 
         if (typeof window !== 'undefined') {
             // Client-side: Use browser's location
@@ -133,7 +166,7 @@ export const fetchApi = async <TData = unknown>(
         }
 
         const response = await fetch(url, {
-            ...options,
+            ...newOptions,
             headers: mergedHeaders,
         });
 

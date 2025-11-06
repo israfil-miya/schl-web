@@ -3,7 +3,7 @@ import { IsArray, IsIn, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateApprovalBodyDto {
     @IsIn(['User', 'Report', 'Employee', 'Order', 'Client', 'Schedule'])
-    target_model:
+    targetModel:
         | 'User'
         | 'Report'
         | 'Employee'
@@ -17,7 +17,7 @@ export class CreateApprovalBodyDto {
     // Required for update/delete
     @IsOptional()
     @IsString()
-    object_id?: string;
+    objectId?: string;
 
     // Required for update
     @IsOptional()
@@ -27,10 +27,10 @@ export class CreateApprovalBodyDto {
     // Required for create
     @IsOptional()
     @IsObject()
-    new_data?: Record<string, any> | null;
+    newData?: Record<string, any> | null;
 
     // Required for delete
     @IsOptional()
     @IsObject()
-    deleted_data?: Record<string, any> | null;
+    deletedData?: Record<string, any> | null;
 }

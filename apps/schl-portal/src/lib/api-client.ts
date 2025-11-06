@@ -6,12 +6,19 @@ import {
     type NestJsError,
 } from '@repo/common/utils/general-utils';
 import { isArray } from 'lodash';
-import { useSession } from 'next-auth/react';
-import { useCallback } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export const useAuthedFetchApi = () => {
     const { data: session, status } = useSession();
+
+    useEffect(() => {
+        if (session?.error === 'RefreshAccessTokenError') {
+            toast.error('Your session has expired. Please log in again.');
+            signOut({ callbackUrl: '/login' });
+        }
+    }, [session]);
 
     return useCallback(
         async <TData>(
@@ -48,6 +55,7 @@ export const useAuthedFetchApi = () => {
 export const toastFetchError = (
     response: FetchApiResponse<unknown>,
     fallbackMessage?: string,
+    toastId?: string,
 ) => {
     if (response.ok) return;
 
@@ -63,15 +71,17 @@ export const toastFetchError = (
 
     if (!error?.message) {
         if (fallbackMessage) {
-            toast.error(fallbackMessage);
+            toast.error(fallbackMessage, { id: toastId || 'default-toast-id' });
         }
         return;
     }
 
     if (isArray(error.message)) {
-        error.message.forEach((msg: string) => toast.error(msg));
+        error.message.forEach((msg: string) =>
+            toast.error(msg, { id: toastId || 'default-toast-id' }),
+        );
         return;
     }
 
-    toast.error(error.message);
+    toast.error(error.message, { id: toastId || 'default-toast-id' });
 };

@@ -6,7 +6,7 @@ export class CreateNoticeBodyDto {
 
     @IsString()
     @IsNotEmpty()
-    notice_no: string;
+    noticeNo: string;
 
     @IsString()
     @IsNotEmpty()
@@ -18,5 +18,5 @@ export class CreateNoticeBodyDto {
 
     @IsOptional()
     @IsString()
-    file_name?: string | null;
+    fileName?: string | null;
 }

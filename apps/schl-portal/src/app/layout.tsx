@@ -1,4 +1,5 @@
 import '@/app/globals.css';
+import SessionProvider from '@/components/SessionProvider';
 import { cn } from '@repo/common/utils/general-utils';
 import type { Metadata } from 'next';
 import { Karla, Lato } from 'next/font/google';
@@ -29,17 +30,19 @@ export default async function RootLayout({
                     lato.className,
                 )}
             >
-                <NextTopLoader color="#7ba541" height={4} />
-                <noscript>
-                    You need to enable JavaScript to run this app.
-                </noscript>
-                <main>{children}</main>
-                <Toaster
-                    closeButton
-                    richColors
-                    position="top-right"
-                    pauseWhenPageIsHidden
-                />
+                <SessionProvider>
+                    <NextTopLoader color="#7ba541" height={4} />
+                    <noscript>
+                        You need to enable JavaScript to run this app.
+                    </noscript>
+                    <main>{children}</main>
+                    <Toaster
+                        closeButton
+                        richColors
+                        position="top-right"
+                        pauseWhenPageIsHidden
+                    />
+                </SessionProvider>
             </body>
         </html>
     );

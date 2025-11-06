@@ -97,7 +97,8 @@ export class OrderController {
     ) {
         return this.orderService.updateOrder(id, body, req.user);
     }
-    @Get('orders-by-month/:code')
+
+    @Get(['orders-by-month', 'orders-by-month/:code'])
     ordersByMonth(
         @Query() query: OrdersByMonthQueryDto,
         @Param() { code }: ClientCodeParamDto,
@@ -108,11 +109,7 @@ export class OrderController {
             itemsPerPage: query.itemsPerPage,
         };
 
-        return this.orderService.ordersByMonth(
-            code || undefined,
-            pagination,
-            req.user,
-        );
+        return this.orderService.ordersByMonth(code, pagination, req.user);
     }
 
     @Get('orders-by-country/:country')

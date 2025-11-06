@@ -408,8 +408,8 @@ export class ApprovalService {
             'User' | 'Report' | 'Employee' | 'Order' | 'Client' | 'Schedule'
         > = ['User', 'Report', 'Employee', 'Order', 'Client', 'Schedule'];
 
-        if (!allowedTargets.includes(approvalData.target_model)) {
-            throw new BadRequestException('Invalid target_model');
+        if (!allowedTargets.includes(approvalData.targetModel)) {
+            throw new BadRequestException('Invalid targetModel');
         }
 
         if (!['create', 'update', 'delete'].includes(approvalData.action)) {
@@ -418,12 +418,12 @@ export class ApprovalService {
 
         // Validate required fields based on action
         if (approvalData.action === 'create') {
-            if (!approvalData.new_data) {
-                throw new BadRequestException('new_data is required');
+            if (!approvalData.newData) {
+                throw new BadRequestException('newData is required');
             }
         } else if (approvalData.action === 'update') {
-            if (!approvalData.object_id) {
-                throw new BadRequestException('object_id is required');
+            if (!approvalData.objectId) {
+                throw new BadRequestException('objectId is required');
             }
             if (
                 !Array.isArray(approvalData.changes) ||
@@ -432,11 +432,11 @@ export class ApprovalService {
                 throw new BadRequestException('changes array is required');
             }
         } else if (approvalData.action === 'delete') {
-            if (!approvalData.object_id) {
-                throw new BadRequestException('object_id is required');
+            if (!approvalData.objectId) {
+                throw new BadRequestException('objectId is required');
             }
-            if (!approvalData.deleted_data) {
-                throw new BadRequestException('deleted_data is required');
+            if (!approvalData.deletedData) {
+                throw new BadRequestException('deletedData is required');
             }
         }
 

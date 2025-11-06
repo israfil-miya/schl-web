@@ -134,4 +134,10 @@ export class SearchReportsBodyDto {
     @Transform(({ value }) => toBoolean(value, undefined))
     @IsBoolean()
     freshLead?: boolean; // when true, lead_withdrawn = false
+
+    @IsOptional()
+    @Type(() => String)
+    @Transform(({ value }) => toBoolean(value, undefined))
+    @IsBoolean()
+    clientApprovalWaiting?: boolean; // when true, waitingForClientApproval = true
 }

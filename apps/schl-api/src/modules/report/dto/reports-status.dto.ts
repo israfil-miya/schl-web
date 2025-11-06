@@ -7,11 +7,3 @@ export class ReportStatusesQueryDto {
     @IsNotEmpty()
     toDate: string; // YYYY-MM-DD
 }
-
-export class ReportStatusesByNameQueryDto {
-    @IsNotEmpty()
-    fromDate: string; // YYYY-MM-DD
-
-    @IsNotEmpty()
-    toDate: string; // YYYY-MM-DD
-}

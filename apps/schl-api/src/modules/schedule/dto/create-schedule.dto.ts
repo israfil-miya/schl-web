@@ -3,19 +3,19 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateScheduleBodyDto {
     @IsString()
     @IsNotEmpty()
-    receive_date: string;
+    receiveDate: string;
 
     @IsString()
     @IsNotEmpty()
-    delivery_date: string;
+    deliveryDate: string;
 
     @IsString()
     @IsNotEmpty()
-    client_code: string;
+    clientCode: string;
 
     @IsString()
     @IsNotEmpty()
-    client_name: string;
+    clientName: string;
 
     @IsString()
     @IsNotEmpty()

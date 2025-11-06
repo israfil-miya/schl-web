@@ -55,12 +55,10 @@ const Table = () => {
     const [filters, setFilters] = useState({
         country: '',
         companyName: '',
-        category: '',
         fromDate: '',
         toDate: '',
         marketerName: '',
         generalSearchString: '',
-        show: 'all',
     });
 
     const getAllClientApprovals = useCallback(
@@ -85,7 +83,7 @@ const Table = () => {
                         },
                         body: JSON.stringify({
                             show: 'all',
-                            regularClient: true,
+                            clientApprovalWaiting: true,
                         }),
                     },
                 );
@@ -130,7 +128,8 @@ const Table = () => {
                         },
                         body: JSON.stringify({
                             ...filters,
-                            regularClient: true,
+                            show: 'all',
+                            clientApprovalWaiting: true,
                         }),
                     },
                 );

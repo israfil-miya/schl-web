@@ -280,7 +280,11 @@ const Details: React.FC<DetailsProps> = props => {
             );
 
             if (!ftp_response.ok) {
-                toastFetchError(ftp_response, toastId);
+                toastFetchError(
+                    ftp_response,
+                    'Unable to save invoice in FTP',
+                    toastId,
+                );
                 return;
             }
 

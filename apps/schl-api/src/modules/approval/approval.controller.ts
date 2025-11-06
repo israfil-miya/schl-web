@@ -18,6 +18,12 @@ export class ApprovalController {
         @Body() noticeData: CreateApprovalBodyDto,
         @Req() req: Request & { user: UserSession },
     ) {
+        console.log(
+            'Creating approval request:',
+            noticeData,
+            'by user:',
+            req.user,
+        );
         return this.approvalService.createApproval(noticeData, req.user);
     }
 

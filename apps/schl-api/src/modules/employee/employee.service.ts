@@ -48,11 +48,11 @@ export class EmployeeService {
             );
         }
 
-        const e_id = employeeData.e_id.trim();
+        const e_id = employeeData.eId.trim();
 
         const payload = EmployeeFactory.fromCreateDto({
             ...employeeData,
-            e_id,
+            eId: e_id,
         });
 
         try {
@@ -110,14 +110,14 @@ export class EmployeeService {
         >;
 
         if (
-            employeeData.gross_salary !== undefined &&
-            employeeData.gross_salary < 0
+            employeeData.grossSalary !== undefined &&
+            employeeData.grossSalary < 0
         ) {
             throw new BadRequestException('Gross salary cannot be negative');
         }
         if (
-            employeeData.provident_fund !== undefined &&
-            employeeData.provident_fund < 0
+            employeeData.providentFund !== undefined &&
+            employeeData.providentFund < 0
         ) {
             throw new BadRequestException(
                 'Provident fund percentage cannot be negative',
@@ -129,11 +129,11 @@ export class EmployeeService {
         Object.assign(existing, patch);
 
         const grossChanged =
-            employeeData.gross_salary !== undefined &&
-            employeeData.gross_salary !== original.gross_salary;
+            employeeData.grossSalary !== undefined &&
+            employeeData.grossSalary !== original.gross_salary;
         const pfChanged =
-            employeeData.provident_fund !== undefined &&
-            employeeData.provident_fund !== original.provident_fund;
+            employeeData.providentFund !== undefined &&
+            employeeData.providentFund !== original.provident_fund;
 
         // If either changed, append pf_history record based on ORIGINAL values
         if (grossChanged || pfChanged) {

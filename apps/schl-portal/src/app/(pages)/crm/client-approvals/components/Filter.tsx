@@ -18,12 +18,10 @@ interface PropsType {
     filters: {
         country: string;
         companyName: string;
-        category: string;
         fromDate: string;
         toDate: string;
         marketerName: string;
         generalSearchString: string;
-        show: string;
     };
     setFilters: React.Dispatch<React.SetStateAction<any>>;
     loading: boolean;
@@ -65,12 +63,10 @@ const FilterButton: React.FC<PropsType> = props => {
         setFilters({
             country: '',
             companyName: '',
-            category: '',
             fromDate: '',
             toDate: '',
             marketerName: '',
             generalSearchString: '',
-            show: 'all',
         });
     };
     const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -195,19 +191,6 @@ const FilterButton: React.FC<PropsType> = props => {
                                         onChange={handleChange}
                                         type="text"
                                         placeholder="Search by country name"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-                                        Category
-                                    </label>
-                                    <input
-                                        className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                                        name="category"
-                                        value={filters.category}
-                                        onChange={handleChange}
-                                        type="text"
-                                        placeholder="Search by category"
                                     />
                                 </div>
                                 <div>

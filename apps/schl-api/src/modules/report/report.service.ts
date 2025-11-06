@@ -547,27 +547,8 @@ export class ReportService {
             leadOrigin,
             show,
             freshLead,
+            clientApprovalWaiting,
         } = filters;
-
-        // interface QueryShape {
-        //     country?: ReturnType<typeof createRegexQuery>;
-        //     company_name?: ReturnType<typeof createRegexQuery>;
-        //     category?: ReturnType<typeof createRegexQuery>;
-        //     marketer_name?:
-        //         | ReturnType<typeof createRegexQuery>
-        //         | { [k: string]: string | ReturnType<typeof createRegexQuery> };
-        //     is_prospected?: boolean;
-        //     is_lead?: boolean;
-        //     followup_done?: boolean;
-        //     client_status?: string | { $in: string[] };
-        //     calling_date_history?: Record<string, any>;
-        //     test_given_date_history?: Record<string, any>;
-        //     prospect_status?: ReturnType<typeof createRegexQuery>;
-        //     lead_origin?: string | { $ne: string };
-        //     lead_withdrawn?: boolean;
-        //     onboard_date?: Record<string, any>;
-        //     $or?: Record<string, ReturnType<typeof createRegexQuery>>[];
-        // }
 
         const query: QueryShape = {};
 
@@ -591,11 +572,21 @@ export class ReportService {
         query.is_lead = onlyLead || false;
         addIfDefined(query, 'followup_done', followupDone);
 
+        if (regularClient === true && clientApprovalWaiting === true) {
+            throw new BadRequestException(
+                'Cannot filter by both regularClient and clientApprovalWaiting',
+            );
+        }
+
         // Client status: regular clients are approved; non-regular are none|pending
         if (regularClient) {
             query.client_status = 'approved';
         } else if (regularClient === false) {
             query.client_status = { $in: ['none', 'pending'] };
+        }
+
+        if (clientApprovalWaiting) {
+            query.client_status = 'pending';
         }
 
         // Fresh lead: not withdrawn
@@ -733,19 +724,26 @@ export class ReportService {
 
         // General search
         if (generalSearchString) {
-            const ors = buildOrRegex(generalSearchString, [
+            const generalSearchFields = [
+                'marketer_name',
                 'country',
                 'company_name',
-                'category',
-                'marketer_name',
-                'designation',
-                'website',
                 'contact_person',
-                'contact_number',
-                'calling_status',
                 'email_address',
-                'linkedin',
-            ]);
+            ];
+            if (clientApprovalWaiting !== true) {
+                generalSearchFields.push(
+                    'category',
+                    'designation',
+                    'website',
+                    'contact_number',
+                    'calling_status',
+                    'linkedin',
+                );
+            }
+
+            const ors = buildOrRegex(generalSearchString, generalSearchFields);
+
             if (ors.length > 0) searchQuery.$or = ors;
         }
 

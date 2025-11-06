@@ -6,12 +6,19 @@ import {
     type NestJsError,
 } from '@repo/common/utils/general-utils';
 import { isArray } from 'lodash';
-import { useSession } from 'next-auth/react';
-import { useCallback } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export const useAuthedFetchApi = () => {
     const { data: session, status } = useSession();
+
+    useEffect(() => {
+        if (session?.error === 'RefreshAccessTokenError') {
+            toast.error('Your session has expired. Please log in again.');
+            signOut({ callbackUrl: '/login' });
+        }
+    }, [session]);
 
     return useCallback(
         async <TData>(

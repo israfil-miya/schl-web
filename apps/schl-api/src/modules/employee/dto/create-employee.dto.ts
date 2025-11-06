@@ -17,15 +17,15 @@ import {
 export class CreateEmployeeBodyDto {
     @IsString()
     @IsNotEmpty()
-    e_id: string;
+    eId: string;
 
     @IsString()
     @IsNotEmpty()
-    real_name: string;
+    realName: string;
 
     @IsString()
     @IsNotEmpty()
-    joining_date: string;
+    joiningDate: string;
 
     @IsOptional()
     @IsString()
@@ -37,7 +37,7 @@ export class CreateEmployeeBodyDto {
 
     @IsOptional()
     @IsString()
-    birth_date?: string;
+    birthDate?: string;
 
     @IsOptional()
     @IsString()
@@ -45,7 +45,7 @@ export class CreateEmployeeBodyDto {
 
     @IsOptional()
     @IsIn(EMPLOYEE_BLOOD_GROUPS as readonly EmployeeBloodGroup[])
-    blood_group?: EmployeeBloodGroup;
+    bloodGroup?: EmployeeBloodGroup;
 
     @IsString()
     @IsNotEmpty()
@@ -57,15 +57,15 @@ export class CreateEmployeeBodyDto {
 
     @IsNumber()
     @Min(0)
-    gross_salary: number;
+    grossSalary: number;
 
     @IsNumber()
     @Min(0)
-    bonus_eid_ul_adha: number;
+    bonusEidUlAdha: number;
 
     @IsNumber()
     @Min(0)
-    bonus_eid_ul_fitr: number;
+    bonusEidUlFitr: number;
 
     @IsString()
     @IsNotEmpty()
@@ -75,11 +75,11 @@ export class CreateEmployeeBodyDto {
     @IsOptional()
     @IsNumber()
     @Min(0)
-    provident_fund?: number;
+    providentFund?: number;
 
     @IsOptional()
     @IsString()
-    pf_start_date?: string | null;
+    pfStartDate?: string | null;
 
     @IsOptional()
     @IsString()
@@ -95,7 +95,7 @@ export class CreateEmployeeBodyDto {
 
     @IsOptional()
     @IsString()
-    company_provided_name?: string | null;
+    companyProvidedName?: string | null;
 
     @IsOptional()
     @IsString()

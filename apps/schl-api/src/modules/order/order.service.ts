@@ -300,7 +300,7 @@ export class OrderService {
             );
         }
         try {
-            const payload = OrderFactory.fromCreateDto(orderData);
+            const payload = OrderFactory.fromCreateDto(orderData, userSession);
             const created = await this.orderModel.create(payload);
             if (!created) {
                 throw new InternalServerErrorException(
@@ -403,10 +403,7 @@ export class OrderService {
             throw new BadRequestException('Order not found');
         }
 
-        const updateDoc = OrderFactory.fromUpdateDto(
-            orderData,
-            userSession.db_id,
-        );
+        const updateDoc = OrderFactory.fromUpdateDto(orderData, userSession);
         const keys = Object.keys(updateDoc).filter(k => k !== 'updated_by');
         if (keys.length === 0) {
             throw new BadRequestException('No update fields provided');

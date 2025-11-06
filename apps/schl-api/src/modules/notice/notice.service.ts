@@ -56,7 +56,7 @@ export class NoticeService {
         try {
             // prevent duplicate notice number
             const exists = await this.noticeModel.countDocuments({
-                notice_no: createRegexQuery(noticeData.notice_no, {
+                notice_no: createRegexQuery(noticeData.noticeNo, {
                     exact: true,
                 }),
             });

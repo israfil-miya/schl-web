@@ -12,10 +12,7 @@ import { UserSession } from '@repo/common/types/user-session.type';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
 import { CreateReportBodyDto } from './dto/create-report.dto';
-import {
-    ReportStatusesByNameQueryDto,
-    ReportStatusesQueryDto,
-} from './dto/reports-status.dto';
+import { ReportStatusesQueryDto } from './dto/reports-status.dto';
 import {
     SearchReportsBodyDto,
     SearchReportsQueryDto,
@@ -49,23 +46,11 @@ export class ReportController {
         return this.reportService.testOrdersTrend(req.user, name);
     }
 
-    @Get('report-statuses')
-    reportStatuses(
-        @Req() req: Request & { user: UserSession },
+    @Get(['report-statuses', 'report-statuses/:name'])
+    async reportStatuses(
         @Query() query: ReportStatusesQueryDto,
-    ) {
-        return this.reportService.reportStatuses(
-            req.user,
-            query.fromDate,
-            query.toDate,
-        );
-    }
-
-    @Get('report-statuses/:name')
-    async reportStatusesByName(
         @Req() req: Request & { user: UserSession },
-        @Param('name') name: string, // marketer's company given name
-        @Query() query: ReportStatusesByNameQueryDto,
+        @Param('name') name?: string, // marketer's company given name
     ) {
         const map = await this.reportService.reportStatuses(
             req.user,
@@ -73,16 +58,20 @@ export class ReportController {
             query.toDate,
             name,
         );
-        const key = (name || '').trim();
-        return (
-            map[key] || {
-                totalCalls: 0,
-                totalLeads: 0,
-                totalClients: 0,
-                totalTests: 0,
-                totalProspects: 0,
-            }
-        );
+
+        if (name) {
+            const key = (name || '').trim();
+            return (
+                map[key] || {
+                    totalCalls: 0,
+                    totalLeads: 0,
+                    totalClients: 0,
+                    totalTests: 0,
+                    totalProspects: 0,
+                }
+            );
+        }
+        return map;
     }
 
     @Post('search-reports')

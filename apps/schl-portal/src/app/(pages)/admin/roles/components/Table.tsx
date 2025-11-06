@@ -7,17 +7,12 @@ import { RoleDocument } from '@repo/common/models/role.schema';
 import type { Permissions } from '@repo/common/types/permission.type';
 import { cn } from '@repo/common/utils/general-utils';
 
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { hasAnyPerm, hasPerm } from '@repo/common/utils/permission-check';
 import { CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { validationSchema, RoleDataType as zod_RoleDataType } from '../schema';
 import DeleteButton from './Delete';
@@ -56,89 +51,101 @@ const Table: React.FC = () => {
     const [pageCount, setPageCount] = useState<number>(0);
     const [itemPerPage, setItemPerPage] = useState<number>(30);
     const [loading, setLoading] = useState<boolean>(true);
-
-    const prevPageCount = useRef<number>(0);
-    const prevPage = useRef<number>(1);
+    const [searchVersion, setSearchVersion] = useState<number>(0);
 
     const [filters, setFilters] = useState({
         name: '',
     });
 
-    const getAllRoles = useCallback(async () => {
-        try {
-            // setLoading(true);
+    const getAllRoles = useCallback(
+        async (page: number, itemPerPage: number) => {
+            try {
+                setLoading(true);
 
-            const response = await authedFetchApi<RolesState>(
-                {
-                    path: '/v1/role/search-roles',
-                    query: {
-                        paginated: true,
-                        // filtered: false,
-                        itemsPerPage: itemPerPage,
-                        page,
+                const response = await authedFetchApi<RolesState>(
+                    {
+                        path: '/v1/role/search-roles',
+                        query: {
+                            paginated: true,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                },
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({}),
                     },
-                    body: JSON.stringify({}),
-                },
-            );
+                );
 
-            if (response.ok) {
-                setRules(response.data);
-            } else {
-                toastFetchError(response);
+                if (response.ok) {
+                    setRules(response.data);
+                    setPageCount(response.data.pagination.pageCount);
+                } else {
+                    toastFetchError(response);
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('An error occurred while retrieving roles data');
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error(error);
-            toast.error('An error occurred while retrieving roles data');
-        } finally {
-            setLoading(false);
-        }
-    }, [authedFetchApi, itemPerPage, page]);
+        },
+        [authedFetchApi],
+    );
 
-    const getAllRolesFiltered = useCallback(async () => {
-        try {
-            // setLoading(true);
+    const getAllRolesFiltered = useCallback(
+        async (page: number, itemPerPage: number) => {
+            try {
+                setLoading(true);
 
-            const response = await authedFetchApi<RolesState>(
-                {
-                    path: '/v1/role/search-roles',
-                    query: {
-                        paginated: true,
-                        // filtered: true,
-                        itemsPerPage: itemPerPage,
-                        page: isFiltered ? page : 1,
+                const response = await authedFetchApi<RolesState>(
+                    {
+                        path: '/v1/role/search-roles',
+                        query: {
+                            paginated: true,
+                            itemsPerPage: itemPerPage,
+                            page,
+                        },
                     },
-                },
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...filters,
+                        }),
                     },
-                    body: JSON.stringify({
-                        ...filters,
-                    }),
-                },
-            );
+                );
 
-            if (response.ok) {
-                setRules(response.data);
-                setIsFiltered(true);
-            } else {
-                toastFetchError(response);
+                if (response.ok) {
+                    setRules(response.data);
+                    setIsFiltered(true);
+                    setPageCount(response.data.pagination.pageCount);
+                } else {
+                    toastFetchError(response);
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('An error occurred while retrieving roles data');
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error(error);
-            toast.error('An error occurred while retrieving roles data');
-        } finally {
-            setLoading(false);
+            return;
+        },
+        [authedFetchApi, filters],
+    );
+
+    const fetchRoles = useCallback(async () => {
+        if (!isFiltered) {
+            await getAllRoles(page, itemPerPage);
+        } else {
+            await getAllRolesFiltered(page, itemPerPage);
         }
-        return;
-    }, [authedFetchApi, filters, isFiltered, itemPerPage, page]);
+    }, [getAllRoles, getAllRolesFiltered, isFiltered, itemPerPage, page]);
 
     const deleteRole = useCallback(
         async (roleData: RoleDocument) => {
@@ -164,11 +171,7 @@ const Table: React.FC = () => {
 
                 if (response.ok) {
                     toast.success('Deleted the role successfully');
-                    if (!isFiltered) {
-                        await getAllRoles();
-                    } else {
-                        await getAllRolesFiltered();
-                    }
+                    await fetchRoles();
                 } else {
                     toastFetchError(response);
                 }
@@ -178,13 +181,7 @@ const Table: React.FC = () => {
             }
             return;
         },
-        [
-            authedFetchApi,
-            getAllRoles,
-            getAllRolesFiltered,
-            isFiltered,
-            session?.user?.permissions,
-        ],
+        [authedFetchApi, fetchRoles, session?.user?.permissions],
     );
 
     const editRole = useCallback(
@@ -247,12 +244,7 @@ const Table: React.FC = () => {
 
                 if (response.ok) {
                     toast.success('Updated the role data');
-
-                    if (!isFiltered) {
-                        await getAllRoles();
-                    } else {
-                        await getAllRolesFiltered();
-                    }
+                    await fetchRoles();
                 } else {
                     toastFetchError(response);
                 }
@@ -263,55 +255,29 @@ const Table: React.FC = () => {
                 setLoading(false);
             }
         },
-        [
-            authedFetchApi,
-            getAllRoles,
-            getAllRolesFiltered,
-            isFiltered,
-            session?.user?.permissions,
-        ],
+        [authedFetchApi, fetchRoles, session?.user?.permissions],
     );
 
-    useEffect(() => {
-        getAllRoles();
-    }, [getAllRoles]);
-
-    useEffect(() => {
-        if (prevPage.current !== 1 || page > 1) {
-            if (roles?.pagination?.pageCount == 1) return;
-            if (!isFiltered) getAllRoles();
-            else getAllRolesFiltered();
-        }
-        prevPage.current = page;
-    }, [
-        getAllRoles,
-        getAllRolesFiltered,
-        isFiltered,
+    usePaginationManager({
         page,
-        roles?.pagination?.pageCount,
-    ]);
+        itemPerPage,
+        pageCount,
+        setPage,
+        triggerFetch: fetchRoles,
+    });
 
     useEffect(() => {
-        if (roles?.pagination?.pageCount !== undefined) {
-            setPage(1);
-            if (prevPageCount.current !== 0) {
-                if (!isFiltered) getAllRolesFiltered();
-            }
-            if (roles) setPageCount(roles?.pagination?.pageCount);
-            prevPageCount.current = roles?.pagination?.pageCount;
-            prevPage.current = 1;
+        if (searchVersion > 0 && isFiltered && page === 1) {
+            fetchRoles();
         }
-    }, [getAllRolesFiltered, isFiltered, roles]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchVersion, isFiltered, page]);
 
-    useEffect(() => {
-        // Reset to first page when itemPerPage changes
-        prevPageCount.current = 0;
-        prevPage.current = 1;
+    const handleSearch = useCallback(() => {
+        setIsFiltered(true);
         setPage(1);
-
-        if (!isFiltered) getAllRoles();
-        else getAllRolesFiltered();
-    }, [getAllRoles, getAllRolesFiltered, isFiltered, itemPerPage]);
+        setSearchVersion(v => v + 1);
+    }, [setIsFiltered, setPage]);
 
     return (
         <>
@@ -359,7 +325,7 @@ const Table: React.FC = () => {
                     </select>
                     <FilterButton
                         loading={loading}
-                        submitHandler={getAllRolesFiltered}
+                        submitHandler={handleSearch}
                         setFilters={setFilters}
                         filters={filters}
                         className="w-full justify-between sm:w-auto"

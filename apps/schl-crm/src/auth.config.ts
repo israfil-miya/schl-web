@@ -3,17 +3,23 @@ import jwt from 'jsonwebtoken';
 import type { NextAuthConfig } from 'next-auth';
 import { UserSessionType } from './auth';
 
-// Access token lifetime (short-lived, exposed to frontend). Keep it short to reduce XSS blast radius.
-const ACCESS_TOKEN_TTL_SECONDS = 10 * 60; // 10 minutes
+// Access token lifetime (short-lived, exposed to frontend)
+// Keeping it short to reduce XSS blast radius
+const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
+const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 2 * 60; // 2 minutes
 
 function signAccessToken(
-    payload: Pick<UserSessionType, 'db_id' | 'db_role_id' | 'permissions'>,
+    payload: Pick<
+        UserSessionType,
+        'real_name' | 'db_id' | 'db_role_id' | 'permissions'
+    >,
 ) {
     const secret = process.env.AUTH_SECRET;
     if (!secret)
         throw new Error('Missing AUTH_SECRET for signing access token');
     return jwt.sign(
         {
+            name: payload.real_name,
             sub: payload.db_id,
             role: payload.db_role_id,
             perms: payload.permissions,
@@ -26,7 +32,7 @@ function signAccessToken(
 export const authConfig: NextAuthConfig = {
     session: {
         strategy: 'jwt', // session stored in secure, HttpOnly JWT cookie
-        maxAge: 10 * 60, // 10 minutes
+        maxAge: 24 * 60 * 60, // 24 hours
     },
     pages: {
         error: '/login',
@@ -46,6 +52,7 @@ export const authConfig: NextAuthConfig = {
 
                 try {
                     token.accessToken = signAccessToken({
+                        real_name: user.real_name,
                         db_id: user.db_id as string,
                         db_role_id: user.db_role_id as string,
                         permissions: (user.permissions as Permissions[]) || [],
@@ -54,6 +61,7 @@ export const authConfig: NextAuthConfig = {
                         Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;
                 } catch (e) {
                     console.error('Failed to sign access token', e);
+                    token.error = 'RefreshAccessTokenError';
                 }
                 return token;
             }
@@ -61,10 +69,13 @@ export const authConfig: NextAuthConfig = {
             // Subsequent calls: rotate if expired (silent refresh on usage)
             if (
                 token.accessTokenExpires &&
-                Date.now() > (token.accessTokenExpires as number)
+                Date.now() >
+                    (token.accessTokenExpires as number) -
+                        ACCESS_TOKEN_REFRESH_BUFFER_SECONDS * 1000
             ) {
                 try {
                     token.accessToken = signAccessToken({
+                        real_name: token.real_name as string,
                         db_id: token.db_id as string,
                         db_role_id: token.db_role_id as string,
                         permissions: (token.permissions as Permissions[]) || [],
@@ -73,6 +84,7 @@ export const authConfig: NextAuthConfig = {
                         Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;
                 } catch (e) {
                     console.error('Failed to refresh access token', e);
+                    token.error = 'RefreshAccessTokenError';
                 }
             }
             return token;
@@ -90,6 +102,7 @@ export const authConfig: NextAuthConfig = {
                 };
                 session.accessToken = token.accessToken; // expose short-lived access token
                 session.accessTokenExpires = token.accessTokenExpires;
+                session.error = token.error;
             }
             return session;
         },

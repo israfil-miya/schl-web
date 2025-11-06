@@ -8,10 +8,10 @@ export class ScheduleFactory {
         session: UserSession,
     ): Partial<Schedule> {
         return {
-            receive_date: dto.receive_date.trim(),
-            delivery_date: dto.delivery_date.trim(),
-            client_code: dto.client_code.trim(),
-            client_name: dto.client_name.trim(),
+            receiveDate: dto.receiveDate.trim(),
+            delivery_date: dto.deliveryDate.trim(),
+            client_code: dto.clientCode.trim(),
+            client_name: dto.clientName.trim(),
             task: dto.task.trim(),
             comment: dto.comment?.trim() || '',
             updated_by: session.real_name,
@@ -23,14 +23,14 @@ export class ScheduleFactory {
         session: UserSession,
     ): Partial<Schedule> {
         const patch: Partial<Schedule> = {};
-        if (dto.receive_date !== undefined)
-            patch.receive_date = dto.receive_date.trim();
-        if (dto.delivery_date !== undefined)
-            patch.delivery_date = dto.delivery_date.trim();
-        if (dto.client_code !== undefined)
-            patch.client_code = dto.client_code.trim();
-        if (dto.client_name !== undefined)
-            patch.client_name = dto.client_name.trim();
+        if (dto.receiveDate !== undefined)
+            patch.receive_date = dto.receiveDate.trim();
+        if (dto.deliveryDate !== undefined)
+            patch.delivery_date = dto.deliveryDate.trim();
+        if (dto.clientCode !== undefined)
+            patch.client_code = dto.clientCode.trim();
+        if (dto.clientName !== undefined)
+            patch.client_name = dto.clientName.trim();
         if (dto.task !== undefined) patch.task = dto.task.trim();
         if (dto.comment !== undefined)
             patch.comment = dto.comment?.trim() || '';

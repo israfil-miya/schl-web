@@ -4,7 +4,7 @@ import {
     ChevronsLeft,
     ChevronsRight,
     ChevronsUp,
-} from 'lucide-react'; // or your icon library
+} from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 type PaginationProps = {
@@ -40,7 +40,7 @@ const Pagination: React.FC<PaginationProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    function renderCompactPagination() {
+    const renderCompactPagination = () => {
         const inlinePages = getInlinePages(page, pageCount);
 
         return (
@@ -52,12 +52,13 @@ const Pagination: React.FC<PaginationProps> = ({
                             setPage(pg);
                             setShowAllPages(false);
                         }}
-                        className={cn(`px-4 py-2 text-sm border-y border-r border-gray-200 transition-colors duration-150 
-                ${
-                    pg === page
-                        ? 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600 hover:border-blue-600'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                }`)}
+                        className={cn(
+                            `px-4 py-2 text-sm border-y border-r border-gray-200 transition-colors duration-150 ${
+                                pg === page
+                                    ? 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600 hover:border-blue-600'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                            }`,
+                        )}
                         aria-label={`Go to page ${pg}`}
                     >
                         {pg}
@@ -101,8 +102,11 @@ const Pagination: React.FC<PaginationProps> = ({
                                             setPage(pg);
                                             setShowAllPages(false);
                                         }}
-                                        className={`block w-full text-left px-3 py-1 transition-colors duration-150 hover:bg-blue-100
-                        ${pg === page ? 'bg-blue-200 font-bold' : ''}`}
+                                        className={`block w-full text-left px-3 py-1 transition-colors duration-150 hover:bg-blue-100 ${
+                                            pg === page
+                                                ? 'bg-blue-200 font-bold'
+                                                : ''
+                                        }`}
                                         aria-label={`Go to page ${pg}`}
                                     >
                                         {pg}
@@ -114,31 +118,28 @@ const Pagination: React.FC<PaginationProps> = ({
                 )}
             </div>
         );
-    }
+    };
 
     return (
         <div className="inline-flex items-center" role="group">
-            {/* First button */}
             <button
                 onClick={() => setPage(1)}
                 disabled={page === 1 || pageCount === 0 || isLoading}
                 className="hidden md:inline-flex gap-2 items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-l-md 
-            focus:outline-none focus:bg-white hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors duration-150 "
+          focus:outline-none hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors duration-150"
                 aria-label="Go to first page"
             >
                 <ChevronsLeft size={16} className="stroke-slate-400" />
                 <span>First</span>
             </button>
 
-            {/* Inline pagination and ellipsis dropdown */}
             {renderCompactPagination()}
 
-            {/* Last button */}
             <button
                 onClick={() => setPage(pageCount)}
                 disabled={page === pageCount || pageCount === 0 || isLoading}
                 className="hidden md:inline-flex gap-2 items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-r-md 
-            focus:outline-none focus:bg-white hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400  disabled:cursor-not-allowed transition-colors duration-150 "
+          focus:outline-none hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors duration-150"
                 aria-label="Go to last page"
             >
                 <span>Last</span>

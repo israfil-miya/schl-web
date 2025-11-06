@@ -1,8 +1,12 @@
 import { Order } from '@repo/common/models/order.schema';
+import { UserSession } from '@repo/common/types/user-session.type';
 import { CreateOrderBodyDto } from '../dto/create-order.dto';
 
 export class OrderFactory {
-    static fromCreateDto(dto: CreateOrderBodyDto): Partial<Order> {
+    static fromCreateDto(
+        dto: CreateOrderBodyDto,
+        session: UserSession,
+    ): Partial<Order> {
         return {
             client_code: dto.clientCode.trim(),
             client_name: dto.clientName.trim(),
@@ -22,15 +26,15 @@ export class OrderFactory {
             status: dto.status ?? 'running',
             folder_path: dto.folderPath ?? '',
             priority: dto.priority ?? 'medium',
-            updated_by: null,
+            updated_by: session.real_name,
         };
     }
 
     static fromUpdateDto(
         dto: Partial<CreateOrderBodyDto>,
-        updatedBy: string,
+        session: UserSession,
     ): Record<string, any> {
-        const doc: Record<string, any> = { updated_by: updatedBy };
+        const doc: Record<string, any> = { updated_by: session.real_name };
 
         if (dto.clientCode !== undefined)
             doc.client_code = dto.clientCode.trim();

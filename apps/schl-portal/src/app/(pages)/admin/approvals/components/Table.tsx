@@ -164,10 +164,10 @@ const Table: React.FC = props => {
         req_id: string,
         res: 'approve' | 'reject',
     ) => {
+        const toastId = toast.loading(
+            'Sending request for approval...',
+        ) as string;
         try {
-            const toastId = toast.loading(
-                'Sending request for approval...',
-            ) as string;
             const response = await authedFetchApi<{ message: string }>(
                 { path: '/v1/approval/single-response' },
                 {
@@ -189,20 +189,25 @@ const Table: React.FC = props => {
                 });
                 await fetchApprovals();
             } else {
-                toastFetchError(response, toastId);
+                toastFetchError(response, 'Unable to process request', toastId);
             }
         } catch (error) {
             console.error(error);
-            toast.error('An error occurred while sending request for approval');
+            toast.error(
+                'An error occurred while sending request for approval',
+                {
+                    id: toastId,
+                },
+            );
         }
         return;
     };
 
     const multipleApproval = async (res: 'approve' | 'reject') => {
+        const toastId = toast.loading(
+            'Sending request for approval...',
+        ) as string;
         try {
-            const toastId = toast.loading(
-                'Sending request for approval...',
-            ) as string;
             const response = await authedFetchApi<{ message: string }>(
                 { path: '/v1/approval/bulk-response' },
                 {
@@ -228,11 +233,16 @@ const Table: React.FC = props => {
                 setApprovalIds([]);
                 await fetchApprovals();
             } else {
-                toastFetchError(response, toastId);
+                toastFetchError(response, 'Unable to process request', toastId);
             }
         } catch (error) {
             console.error(error);
-            toast.error('An error occurred while sending request for approval');
+            toast.error(
+                'An error occurred while sending request for approval',
+                {
+                    id: toastId,
+                },
+            );
         }
         return;
     };

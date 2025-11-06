@@ -8,6 +8,7 @@ declare module 'next-auth' {
         user: UserSessionType;
         accessToken?: string;
         accessTokenExpires?: number; // epoch ms
+        error?: string;
     }
 
     interface User {
@@ -29,5 +30,6 @@ declare module 'next-auth/jwt' {
         e_id: string;
         accessToken?: string;
         accessTokenExpires?: number; // epoch ms
+        error?: string;
     }
 }

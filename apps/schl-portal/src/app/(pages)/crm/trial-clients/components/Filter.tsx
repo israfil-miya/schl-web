@@ -1,11 +1,12 @@
 'use client';
 
+import { cn } from '@repo/common/utils/general-utils';
 import {
     setCalculatedZIndex,
     setClassNameAndIsDisabled,
     setMenuPortalTarget,
 } from '@repo/common/utils/select-helpers';
-import { X } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import Select from 'react-select';
 
@@ -86,20 +87,17 @@ const FilterButton: React.FC<PropsType> = props => {
 
     return (
         <>
-            {isOpen && (
-                <section
-                    onClick={handleClickOutside}
-                    className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors bg-black/20 disable-page-scroll`}
-                >
-                    <article
-                        ref={popupRef}
-                        onClick={e => e.stopPropagation()}
-                        className="scale-100 opacity-100 bg-white rounded-lg lg:w-[35vw] md:w-[70vw] sm:w-[80vw] shadow relative"
-                    >
-                        {/* ...existing code... */}
-                    </article>
-                </section>
-            )}
+            <button
+                onClick={() => setIsOpen(true)}
+                type="button"
+                className={cn(
+                    `flex items-center gap-2 rounded-md bg-blue-600 hover:opacity-90 hover:ring-4 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
+                    props.className,
+                )}
+            >
+                Filter
+                <Filter size={18} />
+            </button>
             <section
                 onClick={handleClickOutside}
                 className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}

@@ -49,8 +49,8 @@ export class UserController {
     ) {
         return this.userService.changePassword(
             id,
-            body.old_password,
-            body.new_password,
+            body.oldPassword,
+            body.newPassword,
         );
     }
 

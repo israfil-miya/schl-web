@@ -3,8 +3,10 @@ import jwt from 'jsonwebtoken';
 import type { NextAuthConfig } from 'next-auth';
 import { UserSessionType } from './auth';
 
-// Access token lifetime (short-lived, exposed to frontend). Keep it short to reduce XSS blast radius.
-const ACCESS_TOKEN_TTL_SECONDS = 5 * 60; // 5 minutes
+// Access token lifetime (short-lived, exposed to frontend)
+// Keeping it short to reduce XSS blast radius
+const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
+const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 2 * 60; // 2 minutes
 
 function signAccessToken(
     payload: Pick<
@@ -30,7 +32,7 @@ function signAccessToken(
 export const authConfig: NextAuthConfig = {
     session: {
         strategy: 'jwt', // session stored in secure, HttpOnly JWT cookie
-        maxAge: 10 * 60, // 10 minutes
+        maxAge: 24 * 60 * 60, // 24 hours
     },
     pages: {
         error: '/login',
@@ -58,6 +60,7 @@ export const authConfig: NextAuthConfig = {
                         Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;
                 } catch (e) {
                     console.error('Failed to sign access token', e);
+                    token.error = 'RefreshAccessTokenError';
                 }
                 return token;
             }
@@ -65,7 +68,9 @@ export const authConfig: NextAuthConfig = {
             // Subsequent calls: rotate if expired (silent refresh on usage)
             if (
                 token.accessTokenExpires &&
-                Date.now() > (token.accessTokenExpires as number)
+                Date.now() >
+                    (token.accessTokenExpires as number) -
+                        ACCESS_TOKEN_REFRESH_BUFFER_SECONDS * 1000
             ) {
                 try {
                     token.accessToken = signAccessToken({
@@ -78,6 +83,7 @@ export const authConfig: NextAuthConfig = {
                         Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;
                 } catch (e) {
                     console.error('Failed to refresh access token', e);
+                    token.error = 'RefreshAccessTokenError';
                 }
             }
             return token;
@@ -94,6 +100,7 @@ export const authConfig: NextAuthConfig = {
                 };
                 session.accessToken = token.accessToken; // expose short-lived access token
                 session.accessTokenExpires = token.accessTokenExpires;
+                session.error = token.error;
             }
             return session;
         },

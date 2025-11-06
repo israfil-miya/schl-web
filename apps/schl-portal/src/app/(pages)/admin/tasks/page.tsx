@@ -29,6 +29,8 @@ const getAllClients = async () => {
         if (response.ok) {
             const data = response.data as ClientDocument[];
             clients = data;
+
+            console.log('Fetched clients:', clients);
         } else {
             console.error('Unable to fetch clients');
         }
