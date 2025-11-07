@@ -134,7 +134,7 @@ const Form: React.FC = () => {
                         </span>
                     </label>
                     <input
-                        {...register('e_id')}
+                        {...register('e_id', { required: true })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="text"
                         placeholder='Enter employee ID e.g. "0001"'
@@ -148,7 +148,7 @@ const Form: React.FC = () => {
                         </span>
                     </label>
                     <input
-                        {...register('real_name')}
+                        {...register('real_name', { required: true })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="text"
                         placeholder="Enter employee full name"
@@ -162,14 +162,14 @@ const Form: React.FC = () => {
                         </span>
                     </label>
                     <input
-                        {...register('joining_date')}
+                        {...register('joining_date', { required: true })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="date"
                     />
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Phone*</span>
+                        <span className="uppercase">Phone</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.phone && errors.phone.message}
                         </span>
@@ -197,7 +197,7 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">NID Number*</span>
+                        <span className="uppercase">NID Number</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.nid && errors.nid.message}
                         </span>
@@ -211,7 +211,7 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Birth Date*</span>
+                        <span className="uppercase">Birth Date</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.birth_date && errors.birth_date.message}
                         </span>
@@ -224,13 +224,13 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Designation</span>
+                        <span className="uppercase">Designation*</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.designation && errors.designation.message}
                         </span>
                     </label>
                     <input
-                        {...register('designation')}
+                        {...register('designation', { required: true })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="text"
                         placeholder="Enter employee designation"
@@ -238,7 +238,7 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Branch*</span>
+                        <span className="uppercase">Branch</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.designation && errors.designation.message}
                         </span>
@@ -266,13 +266,16 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Gross Salary</span>
+                        <span className="uppercase">Gross Salary*</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.gross_salary && errors.gross_salary.message}
                         </span>
                     </label>
                     <input
-                        {...register('gross_salary', { valueAsNumber: true })}
+                        {...register('gross_salary', {
+                            valueAsNumber: true,
+                            required: true,
+                        })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="number"
                         placeholder="Enter employee gross salary"
@@ -344,7 +347,7 @@ const Form: React.FC = () => {
 
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Bonus - 1</span>
+                        <span className="uppercase">Bonus-1*</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.bonus_eid_ul_fitr &&
                                 errors.bonus_eid_ul_fitr.message}
@@ -353,6 +356,7 @@ const Form: React.FC = () => {
                     <input
                         {...register('bonus_eid_ul_fitr', {
                             valueAsNumber: true,
+                            required: true,
                         })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="number"
@@ -369,7 +373,7 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Bonus - 2</span>
+                        <span className="uppercase">Bonus-2*</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.bonus_eid_ul_adha &&
                                 errors.bonus_eid_ul_adha.message}
@@ -378,6 +382,7 @@ const Form: React.FC = () => {
                     <input
                         {...register('bonus_eid_ul_adha', {
                             valueAsNumber: true,
+                            required: true,
                         })}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         type="number"
@@ -426,7 +431,7 @@ const Form: React.FC = () => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Department</span>
+                        <span className="uppercase">Department*</span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.department && errors.department?.message}
                         </span>

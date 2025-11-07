@@ -883,7 +883,7 @@ export class ReportService {
             const update = ReportFactory.fromUpdateDto(body, userSession);
 
             const updated = await this.reportModel
-                .findByIdAndUpdate(id, update)
+                .findByIdAndUpdate(id, update, { new: true })
                 .exec();
 
             if (!updated) {

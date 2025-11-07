@@ -54,25 +54,35 @@ const EditButton: React.FC<PropsType> = props => {
         label: employee.e_id,
     }));
 
-    const editorPerms = useMemo(
-        () => new Set(session?.user.permissions || []),
-        [session?.user.permissions],
-    );
-
     const allowedRoles = useMemo(() => {
+        const canAssignAnyRole = hasPerm(
+            'admin:assign_role' as Permissions,
+            userPermissions,
+        );
+
         return (props.rolesData || []).filter(role => {
             const perms = role.permissions || [];
+
             if (
                 perms.includes('settings:the_super_admin' as Permissions) &&
-                !editorPerms.has('settings:the_super_admin' as Permissions)
-            )
+                !hasPerm(
+                    'settings:the_super_admin' as Permissions,
+                    userPermissions,
+                )
+            ) {
                 return false;
-            return perms.every(p => editorPerms.has(p as Permissions));
+            }
+
+            if (canAssignAnyRole) {
+                return true;
+            }
+
+            return perms.every(p => hasPerm(p as Permissions, userPermissions));
         });
-    }, [props.rolesData, editorPerms]);
+    }, [props.rolesData, userPermissions]);
 
     const roleOptions = allowedRoles.map(role => ({
-        value: role._id,
+        value: String(role._id),
         label: role.name,
     }));
 
@@ -87,7 +97,9 @@ const EditButton: React.FC<PropsType> = props => {
         }
     };
 
-    const [employeeId, setEmployeeId] = useState<string>('');
+    const [employeeId, setEmployeeId] = useState<string>(
+        () => props.userData.employee?.e_id ?? '',
+    );
 
     const {
         watch,
@@ -103,6 +115,22 @@ const EditButton: React.FC<PropsType> = props => {
             ...props.userData,
         },
     });
+
+    useEffect(() => {
+        setEmployeeId(props.userData.employee?.e_id ?? '');
+    }, [props.userData.employee?.e_id]);
+
+    const watchedRole = watch('role');
+    const rolePermissions = Array.isArray(watchedRole?.permissions)
+        ? (watchedRole?.permissions as Permissions[])
+        : [];
+
+    const companyProvidedNameValue = watch('employee.company_provided_name');
+
+    const shouldShowProvidedNameField =
+        rolePermissions.includes('login:crm') &&
+        typeof companyProvidedNameValue === 'string' &&
+        companyProvidedNameValue.trim().length > 0;
 
     const fillEmployeeData = useCallback(() => {
         try {
@@ -313,12 +341,12 @@ const EditButton: React.FC<PropsType> = props => {
                                             control={control}
                                             render={({ field }) => (
                                                 <Select
-                                                    {...field}
+                                                    name={field.name}
                                                     {...setClassNameAndIsDisabled(
                                                         isOpen,
                                                     )}
                                                     options={roleOptions}
-                                                    closeMenuOnSelect={true}
+                                                    closeMenuOnSelect
                                                     placeholder="Select role"
                                                     classNamePrefix="react-select"
                                                     menuPortalTarget={
@@ -327,32 +355,70 @@ const EditButton: React.FC<PropsType> = props => {
                                                     styles={setCalculatedZIndex(
                                                         baseZIndex,
                                                     )}
-                                                    value={
-                                                        roleOptions.find(
-                                                            option =>
-                                                                String(
-                                                                    option.value,
-                                                                ) ===
-                                                                String(
-                                                                    field.value,
-                                                                ),
-                                                        ) || null
-                                                    }
+                                                    value={(() => {
+                                                        const currentValue =
+                                                            typeof field.value ===
+                                                            'string'
+                                                                ? field.value
+                                                                : (field.value
+                                                                      ?._id ??
+                                                                  '');
+
+                                                        if (!currentValue) {
+                                                            return null;
+                                                        }
+
+                                                        return (
+                                                            roleOptions.find(
+                                                                option =>
+                                                                    option.value ===
+                                                                    currentValue,
+                                                            ) || null
+                                                        );
+                                                    })()}
+                                                    onBlur={field.onBlur}
                                                     onChange={option => {
-                                                        field.onChange(
-                                                            option
-                                                                ? option.value
-                                                                : '',
-                                                        );
-                                                        setValue(
-                                                            'role.permissions',
-                                                            props.rolesData.find(
+                                                        if (!option) {
+                                                            field.onChange({
+                                                                _id: '',
+                                                                name: '',
+                                                                permissions: [],
+                                                            });
+                                                            return;
+                                                        }
+
+                                                        const selectedRole =
+                                                            allowedRoles.find(
                                                                 role =>
-                                                                    role._id ===
-                                                                    option?.value,
-                                                            )?.permissions ||
-                                                                [],
-                                                        );
+                                                                    String(
+                                                                        role._id,
+                                                                    ) ===
+                                                                    option.value,
+                                                            );
+
+                                                        if (!selectedRole) {
+                                                            field.onChange({
+                                                                _id: '',
+                                                                name: '',
+                                                                permissions: [],
+                                                            });
+                                                            return;
+                                                        }
+
+                                                        field.onChange({
+                                                            _id: String(
+                                                                selectedRole._id,
+                                                            ),
+                                                            name:
+                                                                selectedRole.name ||
+                                                                '',
+                                                            permissions:
+                                                                Array.isArray(
+                                                                    selectedRole.permissions,
+                                                                )
+                                                                    ? selectedRole.permissions
+                                                                    : [],
+                                                        });
                                                     }}
                                                 />
                                             )}
@@ -361,9 +427,7 @@ const EditButton: React.FC<PropsType> = props => {
                                 </div>
                             )}
 
-                            {watch('role.permissions')?.includes(
-                                'login:crm',
-                            ) && (
+                            {shouldShowProvidedNameField && (
                                 <div>
                                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                                         <span className="uppercase">

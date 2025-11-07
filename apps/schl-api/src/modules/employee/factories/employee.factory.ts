@@ -20,7 +20,7 @@ export class EmployeeFactory {
             bonus_eid_ul_fitr: dto.bonusEidUlFitr,
             status: dto.status,
             provident_fund: dto.providentFund ?? 0,
-            pf_start_date: dto.providentFund ? dto.pfStartDate || null : null,
+            pf_start_date: dto.pfStartDate || null,
             pf_history: [],
             branch: dto.branch?.trim() || '',
             address: dto.address?.trim() || '',

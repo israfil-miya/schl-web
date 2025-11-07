@@ -1,8 +1,19 @@
-import camelcaseKeys from 'camelcase-keys';
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
 import { twMerge } from 'tailwind-merge';
+
+type CamelcaseKeysFn = (typeof import('camelcase-keys'))['default'];
+
+let cachedCamelcaseKeys: CamelcaseKeysFn | null = null;
+
+const loadCamelcaseKeys = async (): Promise<CamelcaseKeysFn> => {
+    if (!cachedCamelcaseKeys) {
+        const module = await import('camelcase-keys');
+        cachedCamelcaseKeys = module.default;
+    }
+    return cachedCamelcaseKeys;
+};
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
 
@@ -118,7 +129,8 @@ export const fetchApi = async <TData = unknown>(
             try {
                 const parsedBody = JSON.parse(newOptions.body);
                 const strippedBody = stripUpdatedByField(parsedBody);
-                const camelCasedBody = camelcaseKeys(strippedBody, {
+                const camelcaseKeysTransform = await loadCamelcaseKeys();
+                const camelCasedBody = camelcaseKeysTransform(strippedBody, {
                     deep: false,
                 });
                 const sanitizedBody = stripUpdatedByField(camelCasedBody);
@@ -226,70 +238,73 @@ export function escapeRegex(text: string) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// generatePassword: build a 12+ character password with strong entropy while staying somewhat memorable
+// generatePassword: produce a readable "Word#123" style password with sensible fallbacks
 export function generatePassword(
     inputString: string,
     specifiedDigits?: number | string,
 ): string {
     const fallbackWords = [
-        'aurora',
-        'falcon',
-        'ember',
-        'harbor',
-        'lagoon',
-        'meadow',
-        'nebula',
-        'onyx',
-        'prairie',
-        'quartz',
-        'ranger',
-        'saffron',
-        'tundra',
-        'vertex',
-        'willow',
-        'zephyr',
+        'Aurora',
+        'Falcon',
+        'Ember',
+        'Harbor',
+        'Lagoon',
+        'Meadow',
+        'Nebula',
+        'Onyx',
+        'Prairie',
+        'Quartz',
+        'Ranger',
+        'Saffron',
+        'Tundra',
+        'Vertex',
+        'Willow',
+        'Zephyr',
     ];
+    const symbolSet = '!@#$%&*-_=+';
+    const digitSet = '0123456789';
 
-    const alphaOnly = (inputString || '')
-        .trim()
-        .replace(/[^a-zA-Z]/g, '')
-        .toLowerCase();
-    const base =
-        alphaOnly || fallbackWords[getRandomInt(fallbackWords.length) || 0];
+    const toTitleCase = (value: string): string => {
+        if (!value) return '';
+        const lower = value.toLowerCase();
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+    };
 
-    const digitsSource = (specifiedDigits ?? '')
+    const extractBaseWord = (value: string): string => {
+        const trimmed = (value || '').trim();
+        if (!trimmed) return '';
+        const parts = trimmed.split(/\s+/).filter(Boolean);
+        if (!parts.length) return '';
+        const lastPart = parts[parts.length - 1].replace(/[^a-zA-Z]/g, '');
+        return toTitleCase(lastPart);
+    };
+
+    const baseWord =
+        extractBaseWord(inputString) ||
+        fallbackWords[getRandomInt(fallbackWords.length) || 0];
+
+    const symbol = pickRandom(symbolSet) || '@';
+
+    const digitsPool = (specifiedDigits ?? '')
         .toString()
         .replace(/\D/g, '')
-        .slice(0, 6);
+        .split('');
 
-    const upperSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowerSet = 'abcdefghijklmnopqrstuvwxyz';
-    const digitSet = '0123456789';
-    const specialSet = '!@#$%&*-_=+';
-    const combinedSet = upperSet + lowerSet + digitSet + specialSet;
+    const digitsBuilder: string[] = [];
+    const availableDigits = [...digitsPool];
 
-    const requiredChars: string[] = [];
-    requiredChars.push(
-        base ? base.charAt(0).toUpperCase() : pickRandom(upperSet),
-    );
-    requiredChars.push(
-        base.length > 1 ? pickRandom(base.slice(1)) : pickRandom(lowerSet),
-    );
-    requiredChars.push(
-        digitsSource ? digitsSource.charAt(0) : pickRandom(digitSet),
-    );
-    requiredChars.push(pickRandom(specialSet));
-
-    const targetLength = Math.max(12, base.length + 6);
-    const extras: string[] = digitsSource.split('').slice(1);
-
-    while (requiredChars.length + extras.length < targetLength) {
-        extras.push(pickRandom(combinedSet));
+    while (digitsBuilder.length < 3) {
+        if (availableDigits.length) {
+            const index = getRandomInt(availableDigits.length);
+            digitsBuilder.push(availableDigits.splice(index, 1)[0]);
+        } else {
+            digitsBuilder.push(pickRandom(digitSet) || '0');
+        }
     }
 
-    const passwordChars = [...requiredChars, ...extras].slice(0, targetLength);
-    shuffleInPlace(passwordChars);
-    return passwordChars.join('');
+    const digits = digitsBuilder.join('');
+
+    return `${baseWord}${symbol}${digits}`;
 }
 
 function getRandomInt(max: number): number {
@@ -309,15 +324,6 @@ function getRandomInt(max: number): number {
 function pickRandom(source: string): string {
     if (!source) return '';
     return source.charAt(getRandomInt(source.length));
-}
-
-function shuffleInPlace(chars: string[]): void {
-    for (let i = chars.length - 1; i > 0; i -= 1) {
-        const j = getRandomInt(i + 1);
-        const temp = chars[i];
-        chars[i] = chars[j];
-        chars[j] = temp;
-    }
 }
 
 export const isEmployeePermanent = (
@@ -377,11 +383,6 @@ export const generateAvatar = async (text: string): Promise<string> => {
     return avatar;
 };
 
-/**
- * Creates a delay for a specified number of milliseconds.
- * @param ms - The number of milliseconds to delay.
- * @returns A Promise that resolves after the specified delay.
- */
 export const delay = (ms: number): Promise<void> => {
     return new Promise(resolve => setTimeout(resolve, ms));
 };

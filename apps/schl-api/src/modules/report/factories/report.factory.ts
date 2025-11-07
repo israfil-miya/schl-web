@@ -2,6 +2,17 @@ import { Report } from '@repo/common/models/report.schema';
 import { UserSession } from '@repo/common/types/user-session.type';
 import { CreateReportBodyDto } from '../dto/create-report.dto';
 
+const normalizeEmailList = (value?: string | null): string => {
+    if (!value) return '';
+
+    const parts = value
+        .split('/')
+        .map(part => part.trim().toLowerCase())
+        .filter(part => part.length > 0);
+
+    return parts.join(' / ');
+};
+
 export class ReportFactory {
     static fromCreateDto(
         dto: CreateReportBodyDto,
@@ -21,7 +32,7 @@ export class ReportFactory {
             company_name: dto.company.trim(),
             contact_person: dto.contactPerson.trim(),
             contact_number: (dto.contactNumber ?? '').trim(),
-            email_address: (dto.email ?? '').toLowerCase().trim(),
+            email_address: normalizeEmailList(dto.email ?? ''),
             calling_status: (dto.status ?? '').trim(),
             linkedin: (dto.linkedin ?? '').trim(),
             calling_date_history: [callingDate],
@@ -31,7 +42,7 @@ export class ReportFactory {
             prospect_status: (dto.prospectingStatus ?? '').trim(),
             is_lead: dto.newLead ?? false,
             lead_withdrawn: false,
-            client_status: 'none',
+            client_status: dto.clientStatus ?? 'none',
             lead_origin: dto.leadOrigin ?? null,
             test_given_date_history: dto.testJob ? [callingDate] : [],
             onboard_date: '',
@@ -65,7 +76,7 @@ export class ReportFactory {
         if (dto.contactNumber !== undefined)
             $set.contact_number = (dto.contactNumber ?? '').trim();
         if (dto.email !== undefined)
-            $set.email_address = (dto.email ?? '').toLowerCase().trim();
+            $set.email_address = normalizeEmailList(dto.email ?? '');
         if (dto.status !== undefined)
             $set.calling_status = (dto.status ?? '').trim();
         if (dto.linkedin !== undefined)
@@ -80,6 +91,9 @@ export class ReportFactory {
             $set.lead_origin = dto.leadOrigin ?? null;
         if (dto.testJob && dto.callingDate) {
             $addToSet.test_given_date_history = dto.callingDate;
+        }
+        if (dto.clientStatus !== undefined) {
+            $set.client_status = dto.clientStatus;
         }
 
         const update: {

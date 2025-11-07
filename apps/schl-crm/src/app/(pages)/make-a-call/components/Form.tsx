@@ -1,6 +1,7 @@
 'use client';
 
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
+import { ClientStatus } from '@repo/common/constants/report.constant';
 import {
     isValidHttpUrls,
     isValidMails,
@@ -43,6 +44,7 @@ const Form: React.FC<propsType> = props => {
         prospectingStatus: '',
         followupDone: false,
         leadOrigin: 'generated',
+        clientStatus: 'none' as ClientStatus,
         newLead: NewLeadQuery?.current ?? false,
     });
 
@@ -177,6 +179,7 @@ const Form: React.FC<propsType> = props => {
                 prospectingStatus: '',
                 followupDone: false,
                 leadOrigin: 'generated',
+                clientStatus: 'none' as ClientStatus,
                 newLead: NewLeadQuery?.current ?? false,
             });
             toast.success(
@@ -394,7 +397,7 @@ const Form: React.FC<propsType> = props => {
                         className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
                         htmlFor="grid-password"
                     >
-                        Email address
+                        Email address*
                         <span className="cursor-pointer has-tooltip">
                             &#9432;
                             <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
@@ -408,6 +411,7 @@ const Form: React.FC<propsType> = props => {
                         value={reportData.email}
                         onChange={handleChange}
                         type="text"
+                        required
                         placeholder="Contact person's/company's email"
                     />
                 </div>

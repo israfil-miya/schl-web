@@ -12,21 +12,25 @@ export const validationSchema = z
         e_id: z.string().min(1, 'Employee ID is required.'),
         real_name: z.string().min(1, 'Real Name is required.'),
         joining_date: z.string().min(1, 'Joining Date is required.'),
-        phone: z.string().min(1, 'Phone is required.'),
+        phone: z.string(),
         email: z
             .optional(z.string().email('This is not a valid email.'))
             .default(''),
         birth_date: z.string(),
         nid: z.string(),
         blood_group: z.optional(z.enum(EMPLOYEE_BLOOD_GROUPS)),
-        designation: z.string(),
+        designation: z.string().min(1, 'Designation is required.'),
         department: z.enum(EMPLOYEE_DEPARTMENTS),
-        gross_salary: z.number(),
+        gross_salary: z.number({
+            invalid_type_error: 'Gross Salary is required.',
+        }),
         bonus_eid_ul_fitr: z.optional(z.number()).default(0),
         bonus_eid_ul_adha: z.optional(z.number()).default(0),
         status: z.enum(EMPLOYEE_STATUSES),
-        provident_fund: z.number(),
-        pf_start_date: z.string(),
+        provident_fund: z.number({
+            invalid_type_error: 'Provident Fund is required.',
+        }),
+        pf_start_date: z.string().min(1, 'PF Start Date is required.'),
         pf_history: z.optional(
             z.array(
                 z.object({

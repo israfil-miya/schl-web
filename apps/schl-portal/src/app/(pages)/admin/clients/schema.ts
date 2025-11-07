@@ -16,7 +16,9 @@ export const validationSchema = z.object({
     designation: z.optional(z.string()),
     contact_number: z.optional(z.string()),
     email: z.optional(z.string()),
-    address: z.optional(z.string()),
+    address: z
+        .string({ invalid_type_error: "Address can't be empty" })
+        .min(1, "Address can't be empty"),
     country: z.optional(z.string()),
     prices: z.optional(z.string()),
     currency: z.optional(z.string()),
