@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { setMenuPortalTarget } from '@repo/common/utils/select-helpers';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { ClientDataType, validationSchema } from '../../schema';
 
@@ -57,7 +57,7 @@ const Form: React.FC<PropsType> = props => {
             country: '',
             address: '',
             prices: '',
-            currency: '',
+            currency: '$',
             category: '',
             last_invoice_number: null,
             updated_by: session?.user.real_name || '',
@@ -112,7 +112,7 @@ const Form: React.FC<PropsType> = props => {
         }
     }
 
-    const onSubmit = async (data: ClientDataType) => {
+    const onSubmit: SubmitHandler<ClientDataType> = async data => {
         await createClient(data);
     };
 
@@ -240,7 +240,15 @@ const Form: React.FC<PropsType> = props => {
                 </div>
                 <div>
                     <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                        <span className="uppercase">Email</span>
+                        <span className="uppercase">
+                            Email{' '}
+                            <span className="cursor-pointer has-tooltip">
+                                &#9432;
+                                <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
+                                    Separated by <span>&ldquo; / &rdquo;</span>
+                                </span>
+                            </span>
+                        </span>
                         <span className="text-red-700 text-wrap block text-xs">
                             {errors.email && errors.email.message}
                         </span>

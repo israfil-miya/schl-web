@@ -1,15 +1,25 @@
 import {
-    IsEmail,
     IsIn,
     IsNotEmpty,
     IsOptional,
     IsString,
+    Validate,
 } from 'class-validator';
 
 import {
     CLIENT_CURRENCY,
     type ClientCurrency,
 } from '@repo/common/constants/client.constant';
+import { normalizeEmailListInput } from '@repo/common/utils/general-utils';
+import { Transform, TransformFnParams } from 'class-transformer';
+import { MultiEmailStringConstraint } from '../../../common/validators/multi-email-string.validator';
+
+const transformEmailList = ({
+    value,
+}: TransformFnParams): string | undefined => {
+    const normalized = normalizeEmailListInput(value);
+    return typeof normalized === 'string' ? normalized : undefined;
+};
 
 export class CreateClientBodyDto {
     @IsString()
@@ -32,7 +42,10 @@ export class CreateClientBodyDto {
     @IsNotEmpty()
     contact_number: string;
 
-    @IsEmail()
+    @IsString()
+    @IsNotEmpty()
+    @Transform(transformEmailList)
+    @Validate(MultiEmailStringConstraint)
     email: string;
 
     @IsString()

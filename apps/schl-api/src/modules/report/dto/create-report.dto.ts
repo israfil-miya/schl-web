@@ -2,65 +2,24 @@ import {
     CLIENT_STATUSES,
     type ClientStatus,
 } from '@repo/common/constants/report.constant';
+import { normalizeEmailListInput } from '@repo/common/utils/general-utils';
 import { toBoolean } from '@repo/common/utils/transformers';
-import { Transform, Type } from 'class-transformer';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
 import {
     IsBoolean,
     IsIn,
     IsOptional,
     IsString,
     Validate,
-    ValidatorConstraint,
-    ValidatorConstraintInterface,
-    isEmail,
 } from 'class-validator';
+import { MultiEmailStringConstraint } from '../../../common/validators/multi-email-string.validator';
 
-const normalizeEmailList = (raw: unknown): string | undefined => {
-    if (raw === undefined || raw === null) return undefined;
-    if (typeof raw !== 'string') return undefined;
-
-    const parts = raw
-        .split('/')
-        .map(part => part.trim())
-        .filter(part => part.length > 0);
-
-    if (!parts.length) return undefined;
-
-    return parts.join(' / ');
+const transformEmailList = ({
+    value,
+}: TransformFnParams): string | undefined => {
+    const normalized = normalizeEmailListInput(value);
+    return typeof normalized === 'string' ? normalized : undefined;
 };
-
-const splitEmailList = (value: string): string[] =>
-    value
-        .split('/')
-        .map(part => part.trim())
-        .filter(part => part.length > 0);
-
-@ValidatorConstraint({ name: 'multiEmailString', async: false })
-export class MultiEmailStringConstraint
-    implements ValidatorConstraintInterface
-{
-    validate(value: unknown): boolean {
-        console.log('Validating emails:', value);
-        if (value === undefined || value === null || value === '') {
-            return true;
-        }
-
-        if (typeof value !== 'string') {
-            return false;
-        }
-
-        const emails = splitEmailList(value);
-        if (!emails.length) {
-            return true;
-        }
-
-        return emails.every(email => isEmail(email));
-    }
-
-    defaultMessage(): string {
-        return 'each email must be valid and separated by " / "';
-    }
-}
 
 export class CreateReportBodyDto {
     @IsString()
@@ -93,7 +52,7 @@ export class CreateReportBodyDto {
     contactNumber?: string;
 
     @IsOptional()
-    @Transform(({ value }) => normalizeEmailList(value))
+    @Transform(transformEmailList)
     @Validate(MultiEmailStringConstraint)
     email?: string;
 

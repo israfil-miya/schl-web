@@ -1,17 +1,7 @@
 import { Report } from '@repo/common/models/report.schema';
 import { UserSession } from '@repo/common/types/user-session.type';
+import { normalizeEmailListForStorage } from '@repo/common/utils/general-utils';
 import { CreateReportBodyDto } from '../dto/create-report.dto';
-
-const normalizeEmailList = (value?: string | null): string => {
-    if (!value) return '';
-
-    const parts = value
-        .split('/')
-        .map(part => part.trim().toLowerCase())
-        .filter(part => part.length > 0);
-
-    return parts.join(' / ');
-};
 
 export class ReportFactory {
     static fromCreateDto(
@@ -32,7 +22,7 @@ export class ReportFactory {
             company_name: dto.company.trim(),
             contact_person: dto.contactPerson.trim(),
             contact_number: (dto.contactNumber ?? '').trim(),
-            email_address: normalizeEmailList(dto.email ?? ''),
+            email_address: normalizeEmailListForStorage(dto.email ?? ''),
             calling_status: (dto.status ?? '').trim(),
             linkedin: (dto.linkedin ?? '').trim(),
             calling_date_history: [callingDate],
@@ -76,7 +66,7 @@ export class ReportFactory {
         if (dto.contactNumber !== undefined)
             $set.contact_number = (dto.contactNumber ?? '').trim();
         if (dto.email !== undefined)
-            $set.email_address = normalizeEmailList(dto.email ?? '');
+            $set.email_address = normalizeEmailListForStorage(dto.email ?? '');
         if (dto.status !== undefined)
             $set.calling_status = (dto.status ?? '').trim();
         if (dto.linkedin !== undefined)

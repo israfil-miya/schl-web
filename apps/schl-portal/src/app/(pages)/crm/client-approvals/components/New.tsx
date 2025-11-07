@@ -233,7 +233,16 @@ const EditButton: React.FC<PropsType> = props => {
                             </div>
                             <div>
                                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                                    <span className="uppercase">Email</span>
+                                    <span className="uppercase">
+                                        Email{' '}
+                                        <span className="cursor-pointer has-tooltip">
+                                            &#9432;
+                                            <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
+                                                Separated by{' '}
+                                                <span>&ldquo; / &rdquo;</span>
+                                            </span>
+                                        </span>
+                                    </span>
                                     <span className="text-red-700 text-wrap block text-xs">
                                         {errors.email && errors.email.message}
                                     </span>

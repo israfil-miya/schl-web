@@ -77,6 +77,29 @@ const buildUrl = (target: FetchApiTarget): URL => {
     return url;
 };
 
+export const splitEmailList = (value: string): string[] =>
+    value
+        .split('/')
+        .map(part => part.trim())
+        .filter(part => part.length > 0);
+
+export const normalizeEmailListInput = (raw: unknown): string | undefined => {
+    if (raw === undefined || raw === null) return undefined;
+    if (typeof raw !== 'string') return undefined;
+
+    const parts = splitEmailList(raw);
+    if (!parts.length) return undefined;
+
+    return parts.join(' / ');
+};
+
+export const normalizeEmailListForStorage = (value?: string | null): string => {
+    if (!value) return '';
+    const parts = splitEmailList(value);
+    if (!parts.length) return '';
+    return parts.map(part => part.toLowerCase()).join(' / ');
+};
+
 export interface NestJsError {
     statusCode: number;
     message: string | string[];
