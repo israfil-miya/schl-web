@@ -12,7 +12,7 @@ export class CreateUserBodyDto {
     username: string;
 
     @IsString()
-    @MinLength(6)
+    @MinLength(1)
     password: string;
 
     @IsMongoId()
