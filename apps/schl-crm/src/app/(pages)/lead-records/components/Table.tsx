@@ -6,10 +6,12 @@ import Linkify from '@/components/Linkify';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
+import { EmployeeDocument } from '@repo/common/models/employee.schema';
 import { ReportDocument } from '@repo/common/models/report.schema';
 import { PopulatedByEmployeeUser } from '@repo/common/types/populated-user.type';
 import { getObjectChanges } from '@repo/common/utils/changes-generate';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
+import { removeDuplicates } from '@repo/common/utils/general-utils';
 import { hasPerm } from '@repo/common/utils/permission-check';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
@@ -110,7 +112,7 @@ const Table: React.FC = props => {
 
     const getAllMarketers = useCallback(async () => {
         try {
-            const response = await authedFetchApi<PopulatedByEmployeeUser[]>(
+            const response = await authedFetchApi<EmployeeDocument[]>(
                 {
                     path: '/v1/employee/search-employees',
                     query: {
@@ -128,12 +130,16 @@ const Table: React.FC = props => {
             );
 
             if (response.ok) {
-                const marketers = response.data as PopulatedByEmployeeUser[];
+                const marketers = response.data as EmployeeDocument[];
 
-                const marketer_names = marketers.map(
-                    marketer => marketer.employee.company_provided_name!,
+                const marketerNames = removeDuplicates(
+                    marketers
+                        .map(marketer => marketer.company_provided_name?.trim())
+                        .filter((name): name is string => Boolean(name)),
+                    name => name.toLowerCase(),
                 );
-                setMarketerNames(marketer_names);
+
+                setMarketerNames(marketerNames);
             } else {
                 console.error('Unable to fetch marketers');
                 toast.error('Unable to fetch marketers');
@@ -204,10 +210,6 @@ const Table: React.FC = props => {
 
     async function deleteLead(leadData: ReportDocument) {
         try {
-            if (!confirm('Are you sure you want to delete this lead?')) {
-                return;
-            }
-
             if (
                 session?.user.permissions &&
                 !hasPerm('crm:delete_leads_approval', session?.user.permissions)
@@ -378,10 +380,6 @@ const Table: React.FC = props => {
         try {
             console.log(originalLeadData.marketer_name, reqBy);
 
-            if (!confirm('Are you sure you want to delete this lead?')) {
-                return;
-            }
-
             if (
                 session?.user.permissions &&
                 !hasPerm('crm:withdraw_leads', session?.user.permissions)
@@ -511,11 +509,11 @@ const Table: React.FC = props => {
                                     <th>Designation</th>
                                     <th>Contact Number</th>
                                     <th>Email Address</th>
-                                    <th>Calling Status</th>
                                     <th>LinkedIn</th>
                                     <th>Test</th>
                                     <th>Prospected</th>
-                                    <th>Action</th>
+                                    <th>Comment</th>
+                                    <th>Manage</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -626,9 +624,6 @@ const Table: React.FC = props => {
                                             <td className="text-wrap">
                                                 {item.email_address}
                                             </td>
-                                            <CallingStatusTd
-                                                data={item.calling_status}
-                                            />
                                             <td>
                                                 {item.linkedin.length ? (
                                                     <Linkify
@@ -650,6 +645,9 @@ const Table: React.FC = props => {
                                                     ? `Yes (${item.followup_done ? 'Done' : 'Pending'})`
                                                     : 'No'}
                                             </td>
+                                            <CallingStatusTd
+                                                data={item.calling_status}
+                                            />
                                             <td
                                                 className="text-center"
                                                 style={{

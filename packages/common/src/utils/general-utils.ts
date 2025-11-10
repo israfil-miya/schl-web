@@ -486,6 +486,29 @@ export const constructFileName = (
     return new_file_name;
 };
 
+export function removeDuplicates<T>(
+    items: Iterable<T> | null | undefined,
+    keySelector?: (item: T) => unknown,
+): T[] {
+    if (!items) {
+        return [];
+    }
+
+    const seen = new Set<unknown>();
+    const output: T[] = [];
+
+    for (const item of items) {
+        const key = keySelector ? keySelector(item) : item;
+        if (seen.has(key)) {
+            continue;
+        }
+        seen.add(key);
+        output.push(item);
+    }
+
+    return output;
+}
+
 export const isValidMails = (mail: string): boolean => {
     const emailPattern =
         /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;\s@"]+\.{0,1})+([^<>()[\].,;\s@"]{2,}|[\d.]+))$/;

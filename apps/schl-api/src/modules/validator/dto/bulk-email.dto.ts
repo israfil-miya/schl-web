@@ -1,8 +1,7 @@
 import { Transform } from 'class-transformer';
-import { ArrayNotEmpty, IsEmail, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsEmail } from 'class-validator';
 
 export class BulkEmailParamDto {
-    @IsString()
     @Transform(({ value }: { value: string }) => {
         if (typeof value !== 'string') return [];
         return value
@@ -10,6 +9,7 @@ export class BulkEmailParamDto {
             .map(email => email.trim())
             .filter(email => email.length > 0);
     })
+    @IsArray()
     @ArrayNotEmpty()
     @IsEmail({}, { each: true })
     emails: string[];

@@ -2,7 +2,7 @@
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
 
 import ExtendableTd from '@/components/ExtendableTd';
-import { cn } from '@repo/common/utils/general-utils';
+import { cn, removeDuplicates } from '@repo/common/utils/general-utils';
 
 import { hasPerm } from '@repo/common/utils/permission-check';
 
@@ -215,9 +215,13 @@ const Table: React.FC = () => {
                     : Array.isArray(response.data?.items)
                       ? response.data.items
                       : [];
-                const marketerNames = marketers
-                    .map(marketer => marketer.company_provided_name)
-                    .filter((name): name is string => Boolean(name));
+                const marketerNames = removeDuplicates(
+                    marketers
+                        .map(marketer => marketer.company_provided_name?.trim())
+                        .filter((name): name is string => Boolean(name)),
+                    name => name.toLowerCase(),
+                );
+
                 setMarketerNames(marketerNames);
             } else {
                 toastFetchError(response);

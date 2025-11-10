@@ -55,6 +55,11 @@ export class ValidatorService {
             // Implement the logic to validate a single email using ZeroBounce
             const validation = await zeroBounce.validateEmail(email);
 
+            console.log(
+                'ZeroBounce single email validation result:',
+                validation,
+            );
+
             if (!validation) {
                 throw new InternalServerErrorException(
                     'No validation result returned',

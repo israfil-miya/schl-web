@@ -152,10 +152,6 @@ const Table = () => {
 
     async function deleteClient(clientData: ReportDocument) {
         try {
-            if (!confirm('Are you sure you want to delete this client?')) {
-                return;
-            }
-
             if (
                 session?.user.permissions &&
                 !hasPerm('crm:delete_report_approval', session.user.permissions)

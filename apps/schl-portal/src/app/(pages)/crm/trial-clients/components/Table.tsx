@@ -9,6 +9,7 @@ import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { EmployeeDocument } from '@repo/common/models/employee.schema';
 import { ReportDocument } from '@repo/common/models/report.schema';
 import { formatDate } from '@repo/common/utils/date-helpers';
+import { removeDuplicates } from '@repo/common/utils/general-utils';
 import { hasAnyPerm, hasPerm } from '@repo/common/utils/permission-check';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -209,9 +210,13 @@ const Table = () => {
                     ? (response.data as EmployeeDocument[])
                     : ((response.data as { items?: EmployeeDocument[] })
                           ?.items ?? []);
-                const marketerNames = marketers
-                    .map(marketer => marketer.company_provided_name)
-                    .filter((name): name is string => Boolean(name));
+                const marketerNames = removeDuplicates(
+                    marketers
+                        .map(marketer => marketer.company_provided_name?.trim())
+                        .filter((name): name is string => Boolean(name)),
+                    name => name.toLowerCase(),
+                );
+
                 setMarketerNames(marketerNames);
             } else {
                 toastFetchError(response);

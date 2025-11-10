@@ -166,10 +166,6 @@ const Table = () => {
 
     async function deleteReport(reportData: ReportDocument) {
         try {
-            if (!confirm('Are you sure you want to delete this report?')) {
-                return;
-            }
-
             if (
                 session?.user.permissions &&
                 !hasPerm(
@@ -542,10 +538,10 @@ const Table = () => {
                                     <th>Designation</th>
                                     <th>Contact Number</th>
                                     <th>Email Address</th>
-                                    <th>Calling Status</th>
                                     <th>LinkedIn</th>
                                     <th>Test</th>
                                     <th>Prospected</th>
+                                    <th>Calling Status</th>
                                     <th>Manage</th>
                                 </tr>
                             </thead>
@@ -621,9 +617,7 @@ const Table = () => {
                                             <td className="text-wrap">
                                                 {item.email_address}
                                             </td>
-                                            <CallingStatusTd
-                                                data={item.calling_status}
-                                            />
+
                                             <td>
                                                 {item.linkedin.length ? (
                                                     <Linkify
@@ -645,6 +639,9 @@ const Table = () => {
                                                     ? `Yes (${item.followup_done ? 'Done' : 'Pending'})`
                                                     : 'No'}
                                             </td>
+                                            <CallingStatusTd
+                                                data={item.calling_status}
+                                            />
                                             <td
                                                 className="text-center"
                                                 style={{

@@ -17,10 +17,12 @@ type ValidationEntry = {
     [key: string]: unknown;
 };
 
-type ValidationResponse = {
-    validations?: ValidationEntry[];
-    validation?: ValidationEntry;
-};
+type ValidationResponse =
+    | ValidationEntry[]
+    | {
+          validations?: ValidationEntry[];
+          validation?: ValidationEntry;
+      };
 
 const Form: React.FC = () => {
     const authedFetchApi = useAuthedFetchApi();
@@ -92,23 +94,20 @@ const Form: React.FC = () => {
             const result = response.data as ValidationResponse;
             console.log('Validation result:', result);
 
-            if (
-                (!result.validations || result.validations.length === 0) &&
-                !result.validation
-            ) {
-                toast.error('No valid email data returned');
-                return;
-            }
+            const normalizeResult = (value: ValidationResponse) => {
+                if (Array.isArray(value)) return value;
+                if (value?.validations && Array.isArray(value.validations)) {
+                    return value.validations;
+                }
+                if (value?.validation) {
+                    return [value.validation];
+                }
+                return [];
+            };
 
-            // Handle both single and bulk validation results
-            let validation_data;
-            if (result.validations) {
-                // Bulk validation
-                validation_data = result.validations;
-            } else if (result.validation) {
-                // Single validation
-                validation_data = [result.validation];
-            } else {
+            const validation_data = normalizeResult(result);
+
+            if (!validation_data.length) {
                 toast.error('No valid email data returned');
                 return;
             }
