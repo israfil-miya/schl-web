@@ -559,12 +559,12 @@ export class ReportService {
         addIfDefined(
             query,
             'marketer_name',
-            createRegexQuery(marketerName, { exact: false, flexible: true }),
+            createRegexQuery(marketerName, { exact: true, flexible: false }),
         );
         addIfDefined(
             query,
             'prospect_status',
-            createRegexQuery(prospectStatus, { exact: false, flexible: true }),
+            createRegexQuery(prospectStatus, { exact: true, flexible: false }),
         );
 
         // Booleans
@@ -694,8 +694,8 @@ export class ReportService {
                     if (marketerNameFromSession) {
                         query.marketer_name = {
                             $not: createRegexQuery(marketerNameFromSession, {
-                                exact: false,
-                                flexible: true,
+                                exact: true,
+                                flexible: false,
                             })!,
                         };
                     }
@@ -705,8 +705,8 @@ export class ReportService {
                         query,
                         'marketer_name',
                         createRegexQuery(marketerNameFromSession || '', {
-                            exact: false,
-                            flexible: true,
+                            exact: true,
+                            flexible: false,
                         }),
                     );
                     break;
@@ -752,6 +752,7 @@ export class ReportService {
             const count = await this.reportModel.countDocuments(
                 searchQuery as Record<string, unknown>,
             );
+            console.log('Total count:', count, searchQuery);
             const pipeline: any[] = [
                 { $match: searchQuery },
                 {

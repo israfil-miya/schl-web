@@ -80,7 +80,8 @@ const Table = () => {
                             prospect: true,
                             test: false,
                             regularClient: false,
-                            marketerName: session?.user.provided_name,
+                            show: 'mine',
+                            marketerName: session?.user.provided_name, // doesn't matter in this case as 'mine' is set
                         }),
                     },
                 );
@@ -128,6 +129,7 @@ const Table = () => {
                             prospect: true,
                             test: false,
                             regularClient: false,
+                            show: 'mine',
                             marketerName: session?.user.provided_name,
                         }),
                     },

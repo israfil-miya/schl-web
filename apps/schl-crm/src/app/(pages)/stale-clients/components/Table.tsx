@@ -77,7 +77,8 @@ const Table = () => {
                             staleClient: true,
                             regularClient: false,
                             test: false,
-                            marketerName: session?.user.provided_name,
+                            show: 'mine',
+                            marketerName: session?.user.provided_name, // doesn't matter in this case as 'mine' is set
                         }),
                     },
                 );
@@ -122,7 +123,8 @@ const Table = () => {
                             staleClient: true,
                             regularClient: false,
                             test: false,
-                            marketerName: session?.user.provided_name,
+                            show: 'mine',
+                            marketerName: session?.user.provided_name, // doesn't matter in this case as 'mine' is set
                         }),
                     },
                 );
