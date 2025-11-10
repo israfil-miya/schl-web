@@ -1,3 +1,4 @@
+import type { Permissions } from '@repo/common/types/permission.type';
 import {
     ArrayNotEmpty,
     IsArray,
@@ -18,5 +19,5 @@ export class CreateRoleBodyDto {
     @IsArray()
     @ArrayNotEmpty()
     @IsString({ each: true })
-    permissions: string[];
+    permissions: Permissions[];
 }
