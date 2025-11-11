@@ -281,7 +281,7 @@ const Table: React.FC = props => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchInvoices();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [searchVersion, isFiltered, page]);
 
     const handleSearch = useCallback(() => {

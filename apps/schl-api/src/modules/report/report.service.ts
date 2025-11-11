@@ -890,7 +890,11 @@ export class ReportService {
         }
 
         try {
-            const update = ReportFactory.fromUpdateDto(body, userSession);
+            const update = ReportFactory.fromUpdateDto(
+                body,
+                getTodayDate(),
+                userSession,
+            );
 
             const updated = await this.reportModel
                 .findByIdAndUpdate(id, update, { new: true })

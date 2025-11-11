@@ -181,7 +181,6 @@ const Table = () => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchReports();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchVersion, isFiltered, page]);
 
     async function deleteReport(reportData: ReportDocument) {
@@ -231,11 +230,13 @@ const Table = () => {
     async function editReport(
         editedReportData: Partial<ReportDocument>,
         isRecall: boolean,
+        isTest: boolean,
         previousReportData: ReportDocument,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) {
         try {
             // setIsLoading(true);
@@ -331,6 +332,8 @@ const Table = () => {
                                         body: JSON.stringify({
                                             ...editedReportData,
                                             updated_by: session?.user.real_name,
+                                            recall: isRecall,
+                                            testJob: isTest,
                                         }),
                                         headers: {
                                             'Content-Type': 'application/json',
@@ -408,7 +411,11 @@ const Table = () => {
                     },
                     {
                         method: 'PUT',
-                        body: JSON.stringify(editedReportData),
+                        body: JSON.stringify({
+                            ...editedReportData,
+                            recall: isRecall,
+                            testJob: isTest,
+                        }),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -432,6 +439,8 @@ const Table = () => {
                 updated_by: session?.user.real_name || '',
             });
             setIsLoading(false);
+            setIsRecall(false);
+            setIsTest(false);
         }
     }
 
@@ -651,14 +660,6 @@ const Table = () => {
                         </td>
                     </tr>
                 ))}
-            <style jsx>
-                {`
-                    th,
-                    td {
-                        padding: 2.5px 10px;
-                    }
-                `}
-            </style>
         </>
     );
 };

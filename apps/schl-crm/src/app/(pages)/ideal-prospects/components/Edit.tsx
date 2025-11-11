@@ -3,10 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 import { ReportDocument } from '@repo/common/models/report.schema';
-import {
-    YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY,
-    getTodayDate,
-} from '@repo/common/utils/date-helpers';
+import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
 
 interface PropsType {
     reportData: ReportDocument;
@@ -14,11 +11,13 @@ interface PropsType {
     submitHandler: (
         editedReportData: Partial<ReportDocument>,
         isRecall: boolean,
+        isTest: boolean,
         previousReportData: ReportDocument,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) => Promise<void>;
 }
 
@@ -60,46 +59,10 @@ const EditButton: React.FC<PropsType> = props => {
 
             if (name === 'is_recall') {
                 setIsRecall(checked);
-                const today = getTodayDate();
-
-                setEditedData(prevData => {
-                    const currentHistory = prevData.calling_date_history || [];
-
-                    return {
-                        ...prevData,
-                        calling_date_history: checked
-                            ? currentHistory.includes(today)
-                                ? currentHistory
-                                : [...currentHistory, today]
-                            : currentHistory.filter(
-                                  (date: string) => date !== today,
-                              ),
-                    };
-                });
             }
 
             if (name === 'is_test') {
                 setIsTest(checked);
-                setEditedData(prevData => {
-                    const today = getTodayDate();
-                    let updatedTestHistory =
-                        prevData.test_given_date_history || [];
-
-                    if (checked) {
-                        if (!updatedTestHistory.includes(today)) {
-                            updatedTestHistory.push(today);
-                        }
-                    } else {
-                        updatedTestHistory = updatedTestHistory.filter(
-                            date => date !== today,
-                        );
-                    }
-
-                    return {
-                        ...prevData,
-                        test_given_date_history: updatedTestHistory,
-                    };
-                });
             }
 
             if (name === 'is_prospected')
@@ -581,9 +544,11 @@ const EditButton: React.FC<PropsType> = props => {
                                     props.submitHandler(
                                         editedData,
                                         isRecall,
+                                        isTest,
                                         props.reportData,
                                         setEditedData,
                                         setIsRecall,
+                                        setIsTest,
                                     );
                                     setIsOpen(false);
                                 }}

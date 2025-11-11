@@ -284,7 +284,7 @@ const Table: React.FC<{
         if (searchVersion > 0 && page === 1) {
             fetchUsers();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [searchVersion, page]);
 
     const handleSearch = useCallback(() => {

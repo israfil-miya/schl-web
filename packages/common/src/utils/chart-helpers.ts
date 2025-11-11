@@ -22,7 +22,7 @@ const transparentize = (color: string, opacity: number = 0.7): string => {
     if (color.startsWith('#')) {
         return hexToRgba(color, opacity);
     } else if (color.startsWith('rgba')) {
-        return color.replace(/[\d\.]+\)$/, `${opacity})`);
+        return color.replace(/[\d.]+\)$/, `${opacity})`);
     } else if (color.startsWith('rgb')) {
         return color.replace(')', `, ${opacity})`).replace('rgb', 'rgba');
     }

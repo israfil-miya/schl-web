@@ -150,7 +150,7 @@ const Table: React.FC<{ clientsData: ClientDocument[] }> = props => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchOrders();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [searchVersion, isFiltered, page]);
 
     const handleSearch = useCallback(() => {

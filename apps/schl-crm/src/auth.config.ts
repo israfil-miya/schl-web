@@ -3,10 +3,10 @@ import jwt from 'jsonwebtoken';
 import type { NextAuthConfig } from 'next-auth';
 import { UserSessionType } from './auth';
 
-// Access token lifetime (short-lived, exposed to frontend)
-// Keeping it short to reduce XSS blast radius
-const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
-const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 2 * 60; // 2 minutes
+// Align access token lifetime with the session cookie so users stay signed in.
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
+const ACCESS_TOKEN_TTL_SECONDS = SESSION_MAX_AGE_SECONDS;
+const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 15 * 60; // 15 minutes
 
 function signAccessToken(
     payload: Pick<
@@ -32,7 +32,7 @@ function signAccessToken(
 export const authConfig: NextAuthConfig = {
     session: {
         strategy: 'jwt', // session stored in secure, HttpOnly JWT cookie
-        maxAge: 24 * 60 * 60, // 24 hours
+        maxAge: SESSION_MAX_AGE_SECONDS,
     },
     pages: {
         error: '/login',

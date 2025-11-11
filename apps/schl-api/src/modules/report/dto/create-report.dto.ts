@@ -96,6 +96,12 @@ export class CreateReportBodyDto {
     @IsBoolean()
     testJob?: boolean;
 
+    @IsOptional()
+    @Type(() => String)
+    @Transform(({ value }) => toBoolean(value, false))
+    @IsBoolean()
+    recall?: boolean;
+
     @IsString()
     @IsIn(CLIENT_STATUSES)
     clientStatus: ClientStatus;

@@ -9,7 +9,6 @@
         "./config": "./tailwind.config.ts"
     },
     "devDependencies": {
-        "@types/tailwindcss": "^3.1.0",
         "postcss": "^8.5.3",
         "tailwindcss": "^3.4.18"
     }

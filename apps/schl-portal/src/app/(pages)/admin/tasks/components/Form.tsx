@@ -158,8 +158,6 @@ const Form: React.FC<PropsType> = props => {
             console.error(
                 'An error occurred while retrieving client name on input focus',
             );
-        } finally {
-            return;
         }
     };
 

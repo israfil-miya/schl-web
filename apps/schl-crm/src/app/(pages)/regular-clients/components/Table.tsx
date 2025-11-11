@@ -192,10 +192,10 @@ const Table = () => {
     }
 
     async function editClient(
-        originalClientData: { [key: string]: any },
-        editedData: { [key: string]: any },
+        originalClientData: ReportDocument,
+        editedData: Partial<ReportDocument>,
         setEditedData: React.Dispatch<
-            React.SetStateAction<{ [key: string]: any }>
+            React.SetStateAction<Partial<ReportDocument>>
         >,
     ) {
         try {
@@ -219,7 +219,7 @@ const Table = () => {
                     'Followup date is required because followup is set as pending for this client',
                 );
                 setEditedData({
-                    ...originalClientData,
+                    ...(originalClientData as Partial<ReportDocument>),
                     updated_by: session?.user.real_name || '',
                 });
                 return;
@@ -247,7 +247,7 @@ const Table = () => {
             toast.error('An error occurred while editing the client data');
         } finally {
             setEditedData({
-                ...originalClientData,
+                ...(originalClientData as Partial<ReportDocument>),
                 updated_by: session?.user.real_name || '',
             });
             setIsLoading(false);
@@ -255,7 +255,7 @@ const Table = () => {
     }
 
     async function removeClient(
-        originalClientData: { [key: string]: any },
+        originalClientData: ReportDocument,
         clientId: string,
         reqBy: string,
     ) {
@@ -311,7 +311,6 @@ const Table = () => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchReports();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchVersion, isFiltered, page]);
 
     return (
@@ -430,20 +429,8 @@ const Table = () => {
                         </table>
                     </div>
                 ) : (
-                    <tr key={0}>
-                        <td colSpan={16} className=" align-center text-center">
-                            No Clients To Show.
-                        </td>
-                    </tr>
+                    <div className="text-center">No Clients To Show.</div>
                 ))}
-            <style jsx>
-                {`
-                    th,
-                    td {
-                        padding: 2.5px 10px;
-                    }
-                `}
-            </style>
         </>
     );
 };

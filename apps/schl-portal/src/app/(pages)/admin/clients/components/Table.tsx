@@ -174,9 +174,11 @@ const Table: React.FC = () => {
                     },
                 );
 
-                response.ok
-                    ? toast.success('Request sent for approval')
-                    : toastFetchError(response);
+                if (response.ok) {
+                    toast.success('Request sent for approval');
+                } else {
+                    toastFetchError(response);
+                }
             } catch (error) {
                 console.error(error);
                 toast.error(
@@ -232,10 +234,7 @@ const Table: React.FC = () => {
         }
     }, [authedFetchApi]);
 
-    const editClient = async (
-        editedClientData: zod_ClientDataType,
-        previousClientData: zod_ClientDataType,
-    ) => {
+    const editClient = async (editedClientData: zod_ClientDataType) => {
         try {
             setLoading(true);
             const parsed = validationSchema.safeParse(editedClientData);
@@ -246,8 +245,7 @@ const Table: React.FC = () => {
                 return;
             }
 
-            const { _id, createdAt, updatedAt, __v, updated_by, ...rest } =
-                parsed.data;
+            const { _id, ...rest } = parsed.data;
 
             if (!_id) {
                 toast.error('Missing client identifier');
@@ -309,7 +307,6 @@ const Table: React.FC = () => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchClients();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchVersion, isFiltered, page]);
 
     const handleSearch = useCallback(() => {

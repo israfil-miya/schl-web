@@ -1,13 +1,14 @@
 'use client';
 
+import { ReportDocument } from '@repo/common/models/report.schema';
 import { ListX } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
-    clientData: { [key: string]: any };
+    clientData: ReportDocument;
     submitHandler: (
-        originalClientData: { [key: string]: any },
+        originalClientData: ReportDocument,
         clientId: string,
         reqBy: string,
     ) => Promise<void>;
@@ -82,7 +83,7 @@ const RemoveClientButton: React.FC<PropsType> = props => {
                             onClick={() => {
                                 props.submitHandler(
                                     props.clientData,
-                                    props.clientData?._id,
+                                    props.clientData._id.toString(),
                                     session?.user.provided_name || '',
                                 );
                                 setIsOpen(false);

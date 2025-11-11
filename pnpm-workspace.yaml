@@ -1,9 +1,12 @@
 packages:
-  - apps/*
-  - packages/*
+    - apps/*
+    - packages/*
 
 onlyBuiltDependencies:
-  - '@nestjs/core'
-  - '@parcel/watcher'
-  - sharp
-  - unrs-resolver
+    - '@nestjs/core'
+    - '@parcel/watcher'
+    - sharp
+    - unrs-resolver
+
+overrides:
+    validator: '>=13.15.20'

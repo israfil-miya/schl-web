@@ -156,8 +156,6 @@ const EditButton: React.FC<PropsType> = props => {
             console.error(
                 'An error occurred while retrieving employee name on input focus',
             );
-        } finally {
-            return;
         }
     }, [employeeId, props.employeesData, setValue]);
 

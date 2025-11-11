@@ -41,6 +41,7 @@ export class ReportFactory {
 
     static fromUpdateDto(
         dto: Partial<CreateReportBodyDto>,
+        today: string,
         session: UserSession,
     ): {
         $set: Record<string, any>;
@@ -51,7 +52,9 @@ export class ReportFactory {
 
         if (dto.callingDate !== undefined) {
             $set.calling_date = dto.callingDate;
-            $addToSet.calling_date_history = dto.callingDate;
+        }
+        if (dto.recall !== undefined) {
+            $addToSet.calling_date_history = dto.recall ? today : undefined;
         }
         if (dto.followupDate !== undefined)
             $set.followup_date = dto.followupDate ?? '';
@@ -79,8 +82,8 @@ export class ReportFactory {
         if (dto.newLead !== undefined) $set.is_lead = dto.newLead;
         if (dto.leadOrigin !== undefined)
             $set.lead_origin = dto.leadOrigin ?? null;
-        if (dto.testJob && dto.callingDate) {
-            $addToSet.test_given_date_history = dto.callingDate;
+        if (dto.testJob !== undefined) {
+            $addToSet.test_given_date_history = today;
         }
         if (dto.clientStatus !== undefined) {
             $set.client_status = dto.clientStatus;
@@ -122,7 +125,7 @@ export class ReportFactory {
             followup_done: lead.followup_done || false,
             client_status: lead.client_status || 'none',
             lead_origin: lead.lead_origin || null,
-            test_given_date_history: lead.test_given_date_history || [],
+            test_given_date_history: [...lead.test_given_date_history],
             onboard_date: '',
             updated_by: updatedBy,
         };

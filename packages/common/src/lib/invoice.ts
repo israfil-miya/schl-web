@@ -295,9 +295,11 @@ export default async function generateInvoice(
         // Helper to render contact table rows
         const renderContactRows = () => {
             contactRowSpans.forEach((span, i) => {
-                span.rows > 1
-                    ? setRows(span.start, span.end, h20)
-                    : (sheet.getRow(span.start).height = h22);
+                if (span.rows > 1) {
+                    setRows(span.start, span.end, h20);
+                } else {
+                    sheet.getRow(span.start).height = h22;
+                }
                 // NEW: Always merge both sides over the full span if either side requires multiple rows.
                 const mergeBoth = span.rows > 1; // unified span length
                 const vendorRange = mergeBoth
@@ -760,9 +762,11 @@ export default async function generateInvoice(
                 const span = bankSpans[i];
                 // Unified alignment: if either side needs multiple rows, merge BOTH sides across the full span.
                 const mergeBoth = span!.rows > 1;
-                mergeBoth
-                    ? setRows(span!.start, span!.end, h20)
-                    : (sheet.getRow(span!.start).height = h22);
+                if (mergeBoth) {
+                    setRows(span!.start, span!.end, h20);
+                } else {
+                    sheet.getRow(span!.start).height = h22;
+                }
 
                 const left = leftPairs[i];
                 const right = rightPairs[i];

@@ -175,9 +175,11 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
                     },
                 );
 
-                response.ok
-                    ? toast.success('Request sent for approval')
-                    : toastFetchError(response);
+                if (response.ok) {
+                    toast.success('Request sent for approval');
+                } else {
+                    toastFetchError(response);
+                }
             } catch (error) {
                 console.error(error);
                 toast.error(
@@ -189,10 +191,7 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
         [authedFetchApi],
     );
 
-    const editedSchedule = async (
-        editedScheduleData: zod_ScheduleDataType,
-        previousScheduleData: zod_ScheduleDataType,
-    ) => {
+    const editedSchedule = async (editedScheduleData: zod_ScheduleDataType) => {
         try {
             setLoading(true);
             const parsed = validationSchema.safeParse(editedScheduleData);
@@ -203,8 +202,7 @@ const Table: React.FC<{ clientsData: OrderDocument[] }> = props => {
                 return;
             }
 
-            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
-                parsed.data;
+            const { _id, ...payload } = parsed.data;
 
             if (!_id) {
                 toast.error('Missing schedule identifier');

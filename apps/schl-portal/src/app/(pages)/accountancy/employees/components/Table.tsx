@@ -251,7 +251,7 @@ const Table = () => {
 
     useEffect(() => {
         fetchEmployees();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     return (

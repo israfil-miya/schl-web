@@ -14,8 +14,8 @@ type SessionProviderProps = {
     refetchOnWindowFocus?: boolean;
     refreshBufferSeconds?: number;
 };
-
-const DEFAULT_REFRESH_BUFFER_SECONDS = 120;
+const MAX_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 hours cap
+const DEFAULT_REFRESH_BUFFER_SECONDS = 0;
 
 const SessionAutoRefresher: React.FC<{
     bufferSeconds: number;
@@ -48,10 +48,12 @@ const SessionAutoRefresher: React.FC<{
             return;
         }
 
+        const scheduleInMs = Math.min(refreshInMs, MAX_TIMEOUT_MS);
+
         const id = window.setTimeout(() => {
             lastImmediateRefreshRef.current = undefined;
             void update();
-        }, refreshInMs);
+        }, scheduleInMs);
         refreshTimeoutRef.current = id;
 
         return () => {
@@ -66,17 +68,22 @@ const SessionAutoRefresher: React.FC<{
 export default function SessionProvider({
     children,
     session,
-    refetchInterval = 60,
-    refetchOnWindowFocus = true,
+    refetchInterval = 0,
+    refetchOnWindowFocus = false,
     refreshBufferSeconds = DEFAULT_REFRESH_BUFFER_SECONDS,
 }: SessionProviderProps) {
+    const shouldAutoRefresh =
+        typeof refreshBufferSeconds === 'number' && refreshBufferSeconds > 0;
+
     return (
         <NextAuthSessionProvider
             session={session}
             refetchInterval={refetchInterval}
             refetchOnWindowFocus={refetchOnWindowFocus}
         >
-            <SessionAutoRefresher bufferSeconds={refreshBufferSeconds} />
+            {shouldAutoRefresh ? (
+                <SessionAutoRefresher bufferSeconds={refreshBufferSeconds} />
+            ) : null}
             {children}
         </NextAuthSessionProvider>
     );

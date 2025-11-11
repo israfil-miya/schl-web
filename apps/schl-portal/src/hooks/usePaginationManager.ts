@@ -31,7 +31,7 @@ export function usePaginationManager({
     useEffect(() => {
         triggerFetch();
         didMountRef.current = true;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []); // run only once
 
     // 5) Changing items-per-page → reset to page 1

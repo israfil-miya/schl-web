@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { ReportDocument } from '@repo/common/models/report.schema';
 import { useSession } from 'next-auth/react';
 
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
 
 interface PropsType {
-    clientData: { [key: string]: any };
+    clientData: ReportDocument;
     isLoading: boolean;
     submitHandler: (
-        originalClientData: { [key: string]: any },
-        editedData: { [key: string]: any },
+        originalClientData: ReportDocument,
+        editedData: Partial<ReportDocument>,
         setEditedData: React.Dispatch<
-            React.SetStateAction<{ [key: string]: any }>
+            React.SetStateAction<Partial<ReportDocument>>
         >,
     ) => Promise<void>;
 }
@@ -22,7 +23,7 @@ const EditButton: React.FC<PropsType> = props => {
     const [editedBy, setEditedBy] = useState<string>('');
     const popupRef = useRef<HTMLElement>(null);
 
-    const [editedData, setEditedData] = useState<{ [key: string]: any }>({
+    const [editedData, setEditedData] = useState<Partial<ReportDocument>>({
         ...props.clientData,
         updated_by: session?.user.real_name || '',
     });
@@ -419,6 +420,7 @@ const EditButton: React.FC<PropsType> = props => {
                             <div className="flex gap-2 items-center">
                                 <input
                                     name="is_test"
+                                    // @ts-expect-error is_test may not be in ReportDocument
                                     checked={editedData.is_test}
                                     onChange={handleChange}
                                     id="test-job-checkbox"
@@ -430,6 +432,23 @@ const EditButton: React.FC<PropsType> = props => {
                                     className="uppercase "
                                 >
                                     Test Job
+                                </label>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <input
+                                    name="recall"
+                                    // @ts-expect-error recall may not be in ReportDocument
+                                    checked={editedData.recall}
+                                    onChange={handleChange}
+                                    id="recall-checkbox"
+                                    type="checkbox"
+                                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                />
+                                <label
+                                    htmlFor="recall-checkbox"
+                                    className="uppercase "
+                                >
+                                    Recall
                                 </label>
                             </div>
                         </div>

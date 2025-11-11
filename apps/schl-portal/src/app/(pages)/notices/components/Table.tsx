@@ -193,11 +193,13 @@ const Table = () => {
                                 method: 'DELETE',
                             },
                         );
-                        ftp_response.ok
-                            ? toast.success(
-                                  'Deleted the attached file from FTP server',
-                              )
-                            : toastFetchError(ftp_response);
+                        if (ftp_response.ok) {
+                            toast.success(
+                                'Deleted the attached file from FTP server',
+                            );
+                        } else {
+                            toastFetchError(ftp_response);
+                        }
                     } else {
                         toast.success(response.data.message);
                     }
@@ -228,8 +230,7 @@ const Table = () => {
                 return;
             }
 
-            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
-                parsed.data;
+            const { _id, ...payload } = parsed.data;
 
             if (!_id) {
                 toast.error('Missing notice identifier');

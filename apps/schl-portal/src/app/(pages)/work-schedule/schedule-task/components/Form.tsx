@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { taskOptions } from '@repo/common/constants/order.constant';
 import { ClientDocument } from '@repo/common/models/client.schema';
 import { setMenuPortalTarget } from '@repo/common/utils/select-helpers';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
@@ -22,7 +21,6 @@ interface PropsType {
 const Form: React.FC<PropsType> = props => {
     const authedFetchApi = useAuthedFetchApi();
     const [loading, setLoading] = useState(false);
-    const { data: session } = useSession();
 
     const clientNames = props.clientsData?.map(client => client.client_name);
     const clientCodes = props.clientsData?.map(client => client.client_code);
@@ -68,8 +66,7 @@ const Form: React.FC<PropsType> = props => {
                 return;
             }
 
-            const { _id, createdAt, updatedAt, __v, updated_by, ...payload } =
-                parsed.data;
+            const { ...payload } = parsed.data;
 
             const response = await authedFetchApi(
                 { path: '/v1/schedule/create-schedule' },
@@ -141,8 +138,6 @@ const Form: React.FC<PropsType> = props => {
             console.error(
                 'An error occurred while retrieving client name on input focus',
             );
-        } finally {
-            return;
         }
     };
 

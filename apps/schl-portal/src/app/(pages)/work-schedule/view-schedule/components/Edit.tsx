@@ -93,7 +93,6 @@ const EditButton: React.FC<PropsType> = props => {
         if (isOpen) {
             reset(props.scheduleData);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
     const customStyles = {
@@ -136,8 +135,6 @@ const EditButton: React.FC<PropsType> = props => {
             console.error(
                 'An error occurred while retrieving client name on input focus',
             );
-        } finally {
-            return;
         }
     };
 
