@@ -270,7 +270,6 @@ const Table: React.FC = () => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchRoles();
         }
-         
     }, [searchVersion, isFiltered, page]);
 
     const handleSearch = useCallback(() => {

@@ -9,9 +9,11 @@ interface PropsType {
     submitHandler: (
         previousLeadData: ReportDocument,
         editedLeadData: Partial<ReportDocument>,
+        isTest: boolean,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) => Promise<void>;
 }
 
@@ -20,6 +22,7 @@ const EditButton: React.FC<PropsType> = props => {
     const { data: session } = useSession();
     const [editedBy, setEditedBy] = useState<string>('');
     const popupRef = useRef<HTMLElement>(null);
+    const [isTest, setIsTest] = useState<boolean>(false);
 
     const [editedData, setEditedData] = useState<Partial<ReportDocument>>({
         ...props.leadData,
@@ -47,6 +50,10 @@ const EditButton: React.FC<PropsType> = props => {
                     ...prevData,
                     followup_done: !checked, // to mark as pending, followup_done should be false when checked
                 }));
+            }
+
+            if (name === 'is_test') {
+                setIsTest(checked);
             }
 
             if (name === 'is_prospected')
@@ -417,19 +424,22 @@ const EditButton: React.FC<PropsType> = props => {
                         </div>
 
                         <div className="checkboxes flex flex-col sm:flex-row gap-4 mt-4">
-                            {/* <div className="flex gap-2 items-center">
-                <input
-                  name="is_test"
-                  checked={editedData.is_test}
-                  onChange={handleChange}
-                  id="test-job-checkbox"
-                  type="checkbox"
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label htmlFor="test-job-checkbox" className="uppercase ">
-                  Test Job
-                </label>
-              </div> */}
+                            <div className="flex gap-2 items-center">
+                                <input
+                                    name="is_test"
+                                    checked={isTest}
+                                    onChange={handleChange}
+                                    id="test-job-checkbox"
+                                    type="checkbox"
+                                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                />
+                                <label
+                                    htmlFor="test-job-checkbox"
+                                    className="uppercase "
+                                >
+                                    Test Job
+                                </label>
+                            </div>
 
                             <div className="flex gap-2 items-center">
                                 <input
@@ -501,7 +511,9 @@ const EditButton: React.FC<PropsType> = props => {
                                     props.submitHandler(
                                         props.leadData,
                                         editedData,
+                                        isTest,
                                         setEditedData,
+                                        setIsTest,
                                     );
                                     setIsOpen(false);
                                 }}

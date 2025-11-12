@@ -284,7 +284,6 @@ const Table: React.FC<{
         if (searchVersion > 0 && page === 1) {
             fetchUsers();
         }
-         
     }, [searchVersion, page]);
 
     const handleSearch = useCallback(() => {

@@ -42,7 +42,7 @@ export class CreateReportBodyDto {
     category: string;
 
     @IsString()
-    company: string;
+    companyName: string;
 
     @IsString()
     contactPerson: string;
@@ -54,11 +54,11 @@ export class CreateReportBodyDto {
     @IsOptional()
     @Transform(transformEmailList)
     @Validate(MultiEmailStringConstraint)
-    email?: string;
+    emailAddress?: string;
 
     @IsOptional()
     @IsString()
-    status?: string;
+    callingStatus?: string;
 
     @IsOptional()
     @IsString()

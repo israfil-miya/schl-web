@@ -251,7 +251,6 @@ const Table = () => {
 
     useEffect(() => {
         fetchEmployees();
-         
     }, []);
 
     return (

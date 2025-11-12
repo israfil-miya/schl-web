@@ -14,12 +14,20 @@ interface PropsType {
     submitHandler: (
         editedReportData: Partial<ReportDocument>,
         isRecall: boolean,
+        isTest: boolean,
         previousReportData: ReportDocument,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) => Promise<void>;
+    page:
+        | 'call-reports'
+        | 'ideal-prospects'
+        | 'pending-followups'
+        | 'stale-clients'
+        | 'trial-clients';
 }
 
 const EditButton: React.FC<PropsType> = props => {
@@ -612,9 +620,11 @@ const EditButton: React.FC<PropsType> = props => {
                                     props.submitHandler(
                                         editedData,
                                         isRecall,
+                                        isTest,
                                         props.reportData,
                                         setEditedData,
                                         setIsRecall,
+                                        setIsTest,
                                     );
                                     setIsOpen(false);
                                 }}

@@ -7,7 +7,10 @@ import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
 import { ReportDocument } from '@repo/common/models/report.schema';
 import { getObjectChanges } from '@repo/common/utils/changes-generate';
-import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
+import {
+    YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY,
+    getTodayDate,
+} from '@repo/common/utils/date-helpers';
 import { countPassedDaysSinceADate as countDaysSinceLastCall } from '@repo/common/utils/general-utils';
 import { hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
@@ -206,11 +209,13 @@ const Table = () => {
     async function editReport(
         editedReportData: Partial<ReportDocument>,
         isRecall: boolean,
+        isTest: boolean,
         previousReportData: ReportDocument,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) {
         try {
             // setIsLoading(true);
@@ -303,6 +308,9 @@ const Table = () => {
                                     },
                                     {
                                         method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
                                         body: JSON.stringify({
                                             ...editedReportData,
                                             updated_by: session?.user.real_name,
@@ -322,14 +330,35 @@ const Table = () => {
                                     toastFetchError(response);
                                 }
                             } else {
+                                const today = getTodayDate();
+                                const modifiedEdited = { ...editedReportData };
+                                if (isRecall) {
+                                    modifiedEdited.calling_date_history = [
+                                        ...(previousReportData.calling_date_history ||
+                                            []),
+                                        today,
+                                    ];
+                                }
+
+                                const changes = getObjectChanges(
+                                    previousReportData,
+                                    modifiedEdited,
+                                );
+
+                                if (!changes.length) {
+                                    toast.error(
+                                        'No changes detected for approval',
+                                    );
+                                    setEditedData({});
+                                    setIsRecall(false);
+                                    return;
+                                }
+
                                 const submitData = {
                                     target_model: 'Report',
                                     action: 'update',
                                     object_id: previousReportData._id,
-                                    changes: getObjectChanges(
-                                        previousReportData,
-                                        editedReportData,
-                                    ),
+                                    changes,
                                     // req_by: session?.user.db_id,
                                 };
 
@@ -375,7 +404,12 @@ const Table = () => {
                     },
                     {
                         method: 'PUT',
-                        body: JSON.stringify(editedReportData),
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...editedReportData,
+                            recall: isRecall,
+                            testJob: isTest,
+                        }),
                     },
                 );
 
@@ -396,6 +430,8 @@ const Table = () => {
                 updated_by: session?.user.real_name || '',
             });
             setIsLoading(false);
+            setIsRecall(false);
+            setIsTest(false);
         }
     }
 
@@ -667,6 +703,7 @@ const Table = () => {
                                                                         reportData={
                                                                             item
                                                                         }
+                                                                        page="pending-followups"
                                                                     />
                                                                     <FollowupDoneButton
                                                                         submitHandler={

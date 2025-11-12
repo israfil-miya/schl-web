@@ -159,25 +159,24 @@ export class ReportController {
 
     @Put('update-report/:id')
     updateReport(
-        @Param() { id }: IdParamDto,
+        @Param('id') id: IdParamDto['id'],
         @Body() reportData: Partial<CreateReportBodyDto>,
         @Req() req: Request & { user: UserSession },
     ) {
         return this.reportService.updateReport(id, reportData, req.user);
     }
 
-    @Post('withdraw-lead/:id/:name')
+    @Post('withdraw-lead/:id')
     withdrawLead(
-        @Param() { id }: IdParamDto,
+        @Param('id') id: IdParamDto['id'],
         @Req() req: Request & { user: UserSession },
-        @Param('name') name: string, // marketer's real name, who is requesting the withdrawal
     ): Promise<any> {
-        return this.reportService.withdrawLead(id, req.user, name);
+        return this.reportService.withdrawLead(id, req.user);
     }
 
     @Post('done-followup/:id/:name')
     doneFollowup(
-        @Param() { id }: IdParamDto,
+        @Param('id') id: IdParamDto['id'],
         @Req() req: Request & { user: UserSession },
         @Param('name') name: string, // marketer's company given name
     ): Promise<any> {
@@ -186,7 +185,7 @@ export class ReportController {
 
     @Get('get-report/:id')
     getReport(
-        @Param() { id }: IdParamDto,
+        @Param('id') id: IdParamDto['id'],
         @Req() req: Request & { user: UserSession },
     ): Promise<any> {
         return this.reportService.getReport(id, req.user);
@@ -194,7 +193,7 @@ export class ReportController {
 
     @Post('remove-client-from-report/:id/:name')
     removeClientFromReport(
-        @Param() { id }: IdParamDto,
+        @Param('id') id: IdParamDto['id'],
         @Req() req: Request & { user: UserSession },
         @Param('name') name: string, // marketer's company given name
     ): Promise<any> {

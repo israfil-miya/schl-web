@@ -32,12 +32,12 @@ const Form: React.FC<propsType> = props => {
         country: '',
         website: '',
         category: '',
-        company: '',
+        companyName: '',
         contactPerson: '',
         contactNumber: '',
         designation: '',
-        email: '',
-        status: '',
+        emailAddress: '',
+        callingStatus: '',
         linkedin: '',
         testJob: false,
         prospecting: false,
@@ -59,7 +59,7 @@ const Form: React.FC<propsType> = props => {
             reportData.country === '' ||
             reportData.website === '' ||
             reportData.category === '' ||
-            reportData.company === '' ||
+            reportData.companyName === '' ||
             reportData.contactPerson === '' ||
             reportData.designation === ''
         ) {
@@ -84,7 +84,7 @@ const Form: React.FC<propsType> = props => {
             return false;
         }
 
-        if (containsUrl(reportData.company)) {
+        if (containsUrl(reportData.companyName)) {
             toast.error('Company name cannot be a URL');
             return false;
         }
@@ -105,7 +105,7 @@ const Form: React.FC<propsType> = props => {
         }
 
         // check if email is valid
-        if (reportData.email && !isValidMails(reportData.email)) {
+        if (reportData.emailAddress && !isValidMails(reportData.emailAddress)) {
             toast.error('Invalid email address');
             return false;
         }
@@ -167,12 +167,12 @@ const Form: React.FC<propsType> = props => {
                 country: '',
                 website: '',
                 category: '',
-                company: '',
+                companyName: '',
                 contactPerson: '',
                 contactNumber: '',
                 designation: '',
-                email: '',
-                status: '',
+                emailAddress: '',
+                callingStatus: '',
                 linkedin: '',
                 testJob: false,
                 prospecting: false,
@@ -334,8 +334,8 @@ const Form: React.FC<propsType> = props => {
                     </label>
                     <input
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                        name="company"
-                        value={reportData.company}
+                        name="companyName"
+                        value={reportData.companyName}
                         onChange={handleChange}
                         type="text"
                         required
@@ -407,8 +407,8 @@ const Form: React.FC<propsType> = props => {
                     </label>
                     <input
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                        name="email"
-                        value={reportData.email}
+                        name="emailAddress"
+                        value={reportData.emailAddress}
                         onChange={handleChange}
                         type="text"
                         required
@@ -425,8 +425,8 @@ const Form: React.FC<propsType> = props => {
                     <textarea
                         rows={5}
                         className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                        name="status"
-                        value={reportData.status}
+                        name="callingStatus"
+                        value={reportData.callingStatus}
                         onChange={handleChange}
                         placeholder="Calling status/feedback/update"
                     />

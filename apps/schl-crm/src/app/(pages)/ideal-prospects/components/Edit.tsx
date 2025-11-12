@@ -19,6 +19,12 @@ interface PropsType {
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
         setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) => Promise<void>;
+    page:
+        | 'call-reports'
+        | 'ideal-prospects'
+        | 'pending-followups'
+        | 'stale-clients'
+        | 'trial-clients';
 }
 
 const EditButton: React.FC<PropsType> = props => {

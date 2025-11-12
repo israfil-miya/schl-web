@@ -7,7 +7,10 @@ import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
 import { ReportDocument } from '@repo/common/models/report.schema';
 import { getObjectChanges } from '@repo/common/utils/changes-generate';
-import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@repo/common/utils/date-helpers';
+import {
+    YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY,
+    getTodayDate,
+} from '@repo/common/utils/date-helpers';
 import { countPassedDaysSinceADate as countDaysSinceLastCall } from '@repo/common/utils/general-utils';
 import { hasPerm } from '@repo/common/utils/permission-check';
 import { CirclePlus } from 'lucide-react';
@@ -231,16 +234,28 @@ const Table = () => {
             const recallLimit = Infinity;
             const lastCallDaysCap = 0; // allow recall to be made after given days
 
+            const history = editedReportData.calling_date_history;
             const lastCallDate =
-                editedReportData.calling_date_history?.[
-                    editedReportData.calling_date_history.length - 2
-                ];
+                history && history.length > 1
+                    ? history[history.length - 2]
+                    : null;
 
-            const daysPassedSinceLastCall = countDaysSinceLastCall(
-                new Date(lastCallDate || ''),
+            const daysPassedSinceLastCall = lastCallDate
+                ? countDaysSinceLastCall(new Date(lastCallDate))
+                : Infinity;
+
+            console.log(
+                'Days passed since last call: ',
+                daysPassedSinceLastCall,
+                lastCallDate,
             );
 
             const isRecallAllowed = daysPassedSinceLastCall >= lastCallDaysCap;
+
+            console.log(
+                'Days passed since last call: ',
+                daysPassedSinceLastCall,
+            );
 
             if (
                 session?.user.permissions &&
@@ -352,14 +367,43 @@ const Table = () => {
                                     toastFetchError(response);
                                 }
                             } else {
+                                const today = getTodayDate();
+                                const modifiedEdited = { ...editedReportData };
+                                if (isRecall) {
+                                    modifiedEdited.calling_date_history = [
+                                        ...(previousReportData.calling_date_history ||
+                                            []),
+                                        today,
+                                    ];
+                                }
+                                if (isTest) {
+                                    modifiedEdited.test_given_date_history = [
+                                        ...(previousReportData.test_given_date_history ||
+                                            []),
+                                        today,
+                                    ];
+                                }
+
+                                const changes = getObjectChanges(
+                                    previousReportData,
+                                    modifiedEdited,
+                                );
+
+                                if (!changes.length) {
+                                    toast.error(
+                                        'No changes detected for approval',
+                                    );
+                                    setEditedData({});
+                                    setIsRecall(false);
+                                    setIsTest(false);
+                                    return;
+                                }
+
                                 const submitData = {
                                     target_model: 'Report',
                                     action: 'update',
                                     object_id: previousReportData._id,
-                                    changes: getObjectChanges(
-                                        previousReportData,
-                                        editedReportData,
-                                    ),
+                                    changes,
                                     // req_by: session?.user.db_id,
                                 };
 
@@ -378,6 +422,7 @@ const Table = () => {
 
                                 setEditedData({});
                                 setIsRecall(false);
+                                setIsTest(false);
 
                                 if (response.ok) {
                                     toast.success(

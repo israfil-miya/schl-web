@@ -19,11 +19,11 @@ export class ReportFactory {
             designation: dto.designation.trim(),
             website: dto.website.trim(),
             category: dto.category.trim(),
-            company_name: dto.company.trim(),
+            company_name: dto.companyName.trim(),
             contact_person: dto.contactPerson.trim(),
             contact_number: (dto.contactNumber ?? '').trim(),
-            email_address: normalizeEmailListForStorage(dto.email ?? ''),
-            calling_status: (dto.status ?? '').trim(),
+            email_address: normalizeEmailListForStorage(dto.emailAddress ?? ''),
+            calling_status: (dto.callingStatus ?? '').trim(),
             linkedin: (dto.linkedin ?? '').trim(),
             calling_date_history: [callingDate],
             updated_by: null,
@@ -47,31 +47,39 @@ export class ReportFactory {
         $set: Record<string, any>;
         $addToSet?: Record<string, any>;
     } {
-        const $set: Record<string, any> = { updated_by: session.real_name };
+        const $set: Record<string, any> = {
+            updated_by: session.real_name ?? null,
+        };
         const $addToSet: Record<string, any> = {};
 
-        if (dto.callingDate !== undefined) {
+        if (dto.callingDate !== undefined && dto.callingDate !== null) {
             $set.calling_date = dto.callingDate;
         }
-        if (dto.recall !== undefined) {
-            $addToSet.calling_date_history = dto.recall ? today : undefined;
+        if (dto.recall) {
+            $addToSet.calling_date_history = today;
         }
         if (dto.followupDate !== undefined)
             $set.followup_date = dto.followupDate ?? '';
-        if (dto.country !== undefined) $set.country = dto.country.trim();
-        if (dto.designation !== undefined)
+        if (dto.country !== undefined && dto.country !== null)
+            $set.country = dto.country.trim();
+        if (dto.designation !== undefined && dto.designation !== null)
             $set.designation = dto.designation.trim();
-        if (dto.website !== undefined) $set.website = dto.website.trim();
-        if (dto.category !== undefined) $set.category = dto.category.trim();
-        if (dto.company !== undefined) $set.company_name = dto.company.trim();
-        if (dto.contactPerson !== undefined)
+        if (dto.website !== undefined && dto.website !== null)
+            $set.website = dto.website.trim();
+        if (dto.category !== undefined && dto.category !== null)
+            $set.category = dto.category.trim();
+        if (dto.companyName !== undefined && dto.companyName !== null)
+            $set.company_name = dto.companyName.trim();
+        if (dto.contactPerson !== undefined && dto.contactPerson !== null)
             $set.contact_person = dto.contactPerson.trim();
         if (dto.contactNumber !== undefined)
             $set.contact_number = (dto.contactNumber ?? '').trim();
-        if (dto.email !== undefined)
-            $set.email_address = normalizeEmailListForStorage(dto.email ?? '');
-        if (dto.status !== undefined)
-            $set.calling_status = (dto.status ?? '').trim();
+        if (dto.emailAddress !== undefined)
+            $set.email_address = normalizeEmailListForStorage(
+                dto.emailAddress ?? '',
+            );
+        if (dto.callingStatus !== undefined)
+            $set.calling_status = (dto.callingStatus ?? '').trim();
         if (dto.linkedin !== undefined)
             $set.linkedin = (dto.linkedin ?? '').trim();
         if (dto.followupDone !== undefined)
@@ -82,10 +90,10 @@ export class ReportFactory {
         if (dto.newLead !== undefined) $set.is_lead = dto.newLead;
         if (dto.leadOrigin !== undefined)
             $set.lead_origin = dto.leadOrigin ?? null;
-        if (dto.testJob !== undefined) {
+        if (dto.testJob) {
             $addToSet.test_given_date_history = today;
         }
-        if (dto.clientStatus !== undefined) {
+        if (dto.clientStatus !== undefined && dto.clientStatus !== null) {
             $set.client_status = dto.clientStatus;
         }
 

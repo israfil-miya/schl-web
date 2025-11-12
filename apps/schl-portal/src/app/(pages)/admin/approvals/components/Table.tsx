@@ -301,7 +301,6 @@ const Table: React.FC = props => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchApprovals();
         }
-         
     }, [searchVersion, isFiltered, page]);
 
     const handleSearch = useCallback(() => {

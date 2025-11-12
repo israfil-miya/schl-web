@@ -253,9 +253,11 @@ const Table: React.FC = props => {
     async function editLead(
         previousLeadData: ReportDocument,
         editedLeadData: Partial<ReportDocument>,
+        isTest: boolean,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) {
         try {
             if (
@@ -349,7 +351,11 @@ const Table: React.FC = props => {
                 { path: `/v1/report/update-report/${editedLeadData._id}` },
                 {
                     method: 'PUT',
-                    body: JSON.stringify(editedLeadData),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...editedLeadData,
+                        testJob: isTest,
+                    }),
                 },
             );
 
@@ -369,6 +375,7 @@ const Table: React.FC = props => {
                 updated_by: session?.user.real_name || '',
             });
             setIsLoading(false);
+            setIsTest(false);
         }
     }
 
@@ -395,7 +402,7 @@ const Table: React.FC = props => {
             }
 
             const response = await authedFetchApi(
-                { path: `/v1/report/withdraw-lead/${leadId}/${reqBy}` },
+                { path: `/v1/report/withdraw-lead/${leadId}` },
                 {
                     method: 'POST',
                     body: JSON.stringify({}),

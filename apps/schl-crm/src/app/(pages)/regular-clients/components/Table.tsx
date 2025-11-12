@@ -169,6 +169,7 @@ const Table = () => {
                 { path: '/v1/approval/new-request' },
                 {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         target_model: 'Report',
                         action: 'delete',
@@ -231,6 +232,7 @@ const Table = () => {
                 { path: `/v1/report/update-report/${editedData._id}` },
                 {
                     method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(editedData),
                 },
             );

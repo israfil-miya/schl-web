@@ -13,12 +13,20 @@ interface PropsType {
     submitHandler: (
         editedReportData: Partial<ReportDocument>,
         isRecall: boolean,
+        isTest: boolean,
         previousReportData: ReportDocument,
         setEditedData: React.Dispatch<
             React.SetStateAction<Partial<ReportDocument>>
         >,
         setIsRecall: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsTest: React.Dispatch<React.SetStateAction<boolean>>,
     ) => Promise<void>;
+    page:
+        | 'call-reports'
+        | 'ideal-prospects'
+        | 'pending-followups'
+        | 'stale-clients'
+        | 'trial-clients';
 }
 
 const EditButton: React.FC<PropsType> = props => {
@@ -27,7 +35,7 @@ const EditButton: React.FC<PropsType> = props => {
     const [editedBy, setEditedBy] = useState<string>('');
     const [isRecall, setIsRecall] = useState<boolean>(false);
     const popupRef = useRef<HTMLElement>(null);
-    const [is_test, setIsTest] = useState<boolean>(false);
+    const [isTest, setIsTest] = useState<boolean>(false);
 
     const [editedData, setEditedData] = useState<Partial<ReportDocument>>({
         ...props.reportData,
@@ -465,7 +473,7 @@ const EditButton: React.FC<PropsType> = props => {
                             <div className="flex gap-2 items-center">
                                 <input
                                     name="is_test"
-                                    checked={is_test}
+                                    checked={isTest}
                                     onChange={handleChange}
                                     id="test-job-checkbox"
                                     type="checkbox"
@@ -557,9 +565,11 @@ const EditButton: React.FC<PropsType> = props => {
                                     props.submitHandler(
                                         editedData,
                                         isRecall,
+                                        isTest,
                                         props.reportData,
                                         setEditedData,
                                         setIsRecall,
+                                        setIsTest,
                                     );
                                     setIsOpen(false);
                                 }}

@@ -251,7 +251,6 @@ const Table = () => {
         if (searchVersion > 0 && isFiltered && page === 1) {
             fetchReports();
         }
-         
     }, [searchVersion, isFiltered, page]);
 
     const handleSearch = useCallback(() => {

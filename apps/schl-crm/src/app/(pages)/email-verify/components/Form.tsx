@@ -12,12 +12,15 @@ import { useValidation } from '../context/ValidationContext';
 import { ValidationInputType, validationSchema } from '../schema';
 
 type ValidationEntry = {
+    address?: string;
     email?: string;
     status?: string;
+    sub_status?: string;
     [key: string]: unknown;
 };
 
 type ValidationResponse =
+    | ValidationEntry
     | ValidationEntry[]
     | {
           validations?: ValidationEntry[];
@@ -96,13 +99,24 @@ const Form: React.FC = () => {
 
             const normalizeResult = (value: ValidationResponse) => {
                 if (Array.isArray(value)) return value;
-                if (value?.validations && Array.isArray(value.validations)) {
-                    return value.validations;
+                if (!value || typeof value !== 'object') return [];
+
+                if (
+                    Array.isArray(
+                        (value as { validations?: unknown }).validations,
+                    )
+                ) {
+                    return (value as { validations: ValidationEntry[] })
+                        .validations;
                 }
-                if (value?.validation) {
-                    return [value.validation];
+
+                const single = (value as { validation?: ValidationEntry })
+                    .validation;
+                if (single) {
+                    return [single];
                 }
-                return [];
+
+                return [value as ValidationEntry];
             };
 
             const validation_data = normalizeResult(result);

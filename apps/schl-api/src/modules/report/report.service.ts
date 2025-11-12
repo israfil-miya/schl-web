@@ -24,6 +24,7 @@ import {
 import { hasAnyPerm, hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
 import { FilterQuery, Model } from 'mongoose';
+import { ClientFactory } from '../client/factories/client.factory';
 import { ConvertToClientBodyDto } from './dto/convert-to-client.dto';
 import { CreateReportBodyDto } from './dto/create-report.dto';
 import {
@@ -840,9 +841,9 @@ export class ReportService {
             const isLead = body.newLead === true;
 
             // If creating a lead, check duplicate by flexible company name
-            if (isLead && body.company) {
+            if (isLead && body.companyName) {
                 const dup = await this.reportModel.findOne({
-                    company_name: createRegexQuery(body.company, {
+                    company_name: createRegexQuery(body.companyName, {
                         exact: false,
                         flexible: true,
                     }),
@@ -890,11 +891,15 @@ export class ReportService {
         }
 
         try {
+            console.log('Update body:', body);
+
             const update = ReportFactory.fromUpdateDto(
                 body,
                 getTodayDate(),
                 userSession,
             );
+
+            console.log('Update data:', update);
 
             const updated = await this.reportModel
                 .findByIdAndUpdate(id, update, { new: true })
@@ -938,7 +943,10 @@ export class ReportService {
             }
 
             // 2) Create client
-            const created = await this.clientModel.create([body], { session });
+            const clientData = ClientFactory.fromCreateDto(body, userSession);
+            const created = await this.clientModel.create([clientData], {
+                session,
+            });
             if (!created || created.length === 0) {
                 await session.abortTransaction();
                 await session.endSession();
@@ -946,6 +954,8 @@ export class ReportService {
                     'Unable to create new client',
                 );
             }
+
+            console.log('Created client:', created);
 
             // 3) Update corresponding report: find one non-lead with company_name == client_name
             const updatedReport = await this.reportModel.findOneAndUpdate(
@@ -1162,11 +1172,7 @@ export class ReportService {
         }
     }
 
-    async withdrawLead(
-        reportId: string,
-        userSession: UserSession,
-        marketerRealName: string,
-    ) {
+    async withdrawLead(reportId: string, userSession: UserSession) {
         // Permission: withdrawing a lead modifies reports
         if (!hasPerm('crm:edit_lead', userSession.permissions)) {
             throw new ForbiddenException(
@@ -1175,6 +1181,7 @@ export class ReportService {
         }
 
         try {
+            const marketerRealName = userSession.real_name;
             // Step 1: mark the source report as a withdrawn lead
             const leadData = (await this.reportModel
                 .findByIdAndUpdate(
