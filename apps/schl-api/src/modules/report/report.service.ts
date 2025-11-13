@@ -570,8 +570,10 @@ export class ReportService {
 
         // Booleans
         addBooleanField(query, 'is_prospected', prospect);
-        query.is_lead = onlyLead || false;
-        addIfDefined(query, 'followup_done', followupDone);
+        addBooleanField(query, 'is_lead', onlyLead || false);
+        addBooleanField(query, 'followup_done', followupDone);
+
+        console.log('QUERY => ', query, filters);
 
         if (regularClient === true && clientApprovalWaiting === true) {
             throw new BadRequestException(
@@ -1034,7 +1036,7 @@ export class ReportService {
             const updated = await this.reportModel
                 .findByIdAndUpdate(
                     reportId,
-                    { client_status: 'approved' },
+                    { client_status: 'approved', onboard_date: getTodayDate() },
                     { new: true },
                 )
                 .exec();
@@ -1287,7 +1289,7 @@ export class ReportService {
             }
 
             // Check if the report belongs to the marketer
-            if (report.marketer_id !== userSession.db_id) {
+            if (report.marketer_name !== marketerCompanyName) {
                 throw new ForbiddenException(
                     'You do not have permission to modify this report',
                 );
@@ -1299,7 +1301,7 @@ export class ReportService {
 
             // Mark the follow-up as done
             report.followup_done = true;
-            report.updated_by = marketerCompanyName;
+            report.updated_by = userSession.real_name;
             await this.reportModel.findByIdAndUpdate(reportId, report).exec();
 
             return { message: 'Follow-up marked as done' };
@@ -1365,7 +1367,7 @@ export class ReportService {
             }
 
             // Check if the report belongs to the marketer
-            if (report.marketer_id !== userSession.db_id) {
+            if (report.marketer_name !== marketerCompanyName) {
                 throw new ForbiddenException(
                     'You do not have permission to modify this report',
                 );
@@ -1374,7 +1376,7 @@ export class ReportService {
             // Remove the client from the report
             report.client_status = 'none';
             // report.onboard_date = ''; // keep onboard date intact for record/graph purposes
-            report.updated_by = marketerCompanyName;
+            report.updated_by = userSession.real_name;
             await this.reportModel.findByIdAndUpdate(reportId, report).exec();
 
             return { message: 'Client removed from report' };

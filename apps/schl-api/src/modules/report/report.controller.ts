@@ -80,6 +80,8 @@ export class ReportController {
         @Body() body: SearchReportsBodyDto,
         @Req() req: Request & { user: UserSession },
     ) {
+        console.log('body', body);
+
         const pagination = {
             page: query.page,
             itemsPerPage: query.itemsPerPage,

@@ -111,8 +111,22 @@ export const addPlusSeparatedContainsAllField = <
 };
 
 /**
- * Convenience to add a boolean field only if true.
+ * Convenience to add a boolean field if defined (true or false).
  */
+export const addBooleanField = <
+    T extends Record<string, unknown>,
+    K extends keyof T,
+>(
+    query: T,
+    key: K,
+    value?: boolean,
+) => {
+    if (value !== undefined && value !== null) query[key] = value as T[K];
+};
+
+/*
+
+
 export const addBooleanField = <
     T extends Record<string, unknown>,
     K extends keyof T,
@@ -123,3 +137,6 @@ export const addBooleanField = <
 ) => {
     if (value === true) query[key] = value as T[K];
 };
+
+
+*/
