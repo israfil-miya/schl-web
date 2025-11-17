@@ -231,8 +231,8 @@ const Table = () => {
         try {
             // setIsLoading(true);
 
-            const recallLimit = Infinity;
-            const lastCallDaysCap = 0; // allow recall to be made after given days
+            const recallLimit = 30;
+            const lastCallDaysCap = 15; // allow recall to be made after given days
 
             const history = editedReportData.calling_date_history;
             const lastCallDate =

@@ -244,8 +244,8 @@ const Table = () => {
         try {
             // setIsLoading(true);
 
-            const recallLimit = Infinity;
-            const lastCallDaysCap = 0;
+            const recallLimit = 30;
+            const lastCallDaysCap = 15;
 
             const lastCallDate =
                 editedReportData.calling_date_history?.[

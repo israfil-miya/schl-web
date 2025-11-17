@@ -34,7 +34,7 @@ const countDays = (startDate: string, endDate: string): number => {
 
 const DailyStatusTable = () => {
     const authedFetchApi = useAuthedFetchApi();
-    const callsTargetConst = 50;
+    const callsTargetConst = 60;
     const leadsTargetConst = 20;
 
     const [reportsStatus, setReportsStatus] = useState<ReportsStatusState>({
@@ -115,7 +115,7 @@ const DailyStatusTable = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-1 mb-2 sm:gap-4 sm:mb-0 items-center px-2">
                 <p className="font-mono inline-block text-destructive font-extrabold text-md sm:text-lg md:text-xl text-center uppercase">
                     <span className="underline">DAILY TARGET:</span>{' '}
-                    {callsTargetConst} CALLS (20 NORMAL, 30 RECALL),{' '}
+                    {callsTargetConst} CALLS (30 NORMAL, 30 RECALL),{' '}
                     {leadsTargetConst} LEADS, 10 TESTS/MONTH
                 </p>
                 <FilterButton
