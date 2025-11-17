@@ -84,6 +84,7 @@ const FilterButton: React.FC<PropsType> = ({
                 );
 
                 if (response.ok) {
+                    console.log('Reports Status Data:', response.data);
                     setReportsStatus(response.data as ReportsStatusState);
                     setCallsTarget(
                         callsTargetConst *

@@ -49,4 +49,21 @@ export class SearchUsersBodyDto {
     @IsOptional()
     @IsString()
     role?: string;
+
+    @Transform(emptyStringToUndefined)
+    @IsOptional()
+    @IsString()
+    department?: string;
+
+    @IsOptional()
+    @Type(() => String)
+    @Transform(({ value }) => toBoolean(value, false))
+    @IsBoolean()
+    roleExpanded: boolean = false;
+
+    @IsOptional()
+    @Type(() => String)
+    @Transform(({ value }) => toBoolean(value, false))
+    @IsBoolean()
+    employeeExpanded: boolean = false;
 }

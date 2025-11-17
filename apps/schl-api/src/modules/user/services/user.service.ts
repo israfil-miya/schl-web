@@ -8,15 +8,21 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Employee } from '@repo/common/models/employee.schema';
 import { Role } from '@repo/common/models/role.schema';
 import { User } from '@repo/common/models/user.schema';
 import type { Permissions } from '@repo/common/types/permission.type';
 import { PopulatedByRoleUser } from '@repo/common/types/populated-user.type';
 import { UserSession } from '@repo/common/types/user-session.type';
-import { buildOrRegex } from '@repo/common/utils/filter-helpers';
+import {
+    buildOrRegex,
+    createRegexQuery,
+} from '@repo/common/utils/filter-helpers';
 import { hasPerm, toPermissions } from '@repo/common/utils/permission-check';
+import type { PopulateOptions } from 'mongoose';
 import { Model } from 'mongoose';
 import { CreateUserBodyDto } from '../dto/create-user.dto';
+import { SearchUsersBodyDto } from '../dto/search-users.dto';
 import { UserFactory } from '../factories/user.factory';
 
 @Injectable()
@@ -24,6 +30,8 @@ export class UserService {
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(Role.name) private roleModel: Model<Role>,
+        @InjectModel(Employee.name)
+        private employeeModel: Model<Employee>,
     ) {}
 
     /**
@@ -226,7 +234,7 @@ export class UserService {
     }
 
     async searchUsers(
-        filters: { generalSearchString?: string; role?: string },
+        filters: SearchUsersBodyDto,
         pagination: {
             page: number;
             itemsPerPage: number;
@@ -249,18 +257,24 @@ export class UserService {
             // filtered,
             paginated,
         } = pagination;
-        const { generalSearchString, role } = filters;
+        const {
+            generalSearchString,
+            role,
+            department,
+            roleExpanded,
+            employeeExpanded,
+        } = filters;
+        const roleExpandedFlag = !!roleExpanded;
+        const employeeExpandedFlag = !!employeeExpanded;
+        const departmentRegex = createRegexQuery(department, { exact: true });
 
-        interface SearchQuery {
+        interface QueryShape extends Record<string, any> {
             role?: any; // mongoose ObjectId or value convertible
-            $or?: { [key: string]: { $regex: string; $options: string } }[];
+            employee?: { department?: ReturnType<typeof createRegexQuery> };
+            $or?: Record<string, unknown>[];
         }
 
-        const searchQuery: SearchQuery = {};
-
-        const sortQuery: Record<string, 1 | -1> = {
-            createdAt: -1,
-        };
+        const query: QueryShape = {};
 
         // if (filtered && !generalSearchString && !role) {
         //     throw new BadRequestException('No filter applied');
@@ -270,7 +284,7 @@ export class UserService {
         if (role) {
             // Accept both raw ObjectId string or role name; if it's not a 24-char hex, attempt match by role name via subquery
             if (/^[a-fA-F0-9]{24}$/.test(role)) {
-                searchQuery.role = role as any;
+                query.role = role as any;
             } else {
                 // Lookup role by name once
                 const matchedRole = await this.roleModel
@@ -279,7 +293,7 @@ export class UserService {
                     .lean()
                     .exec();
                 if (matchedRole) {
-                    searchQuery.role = matchedRole._id;
+                    query.role = matchedRole._id;
                 } else {
                     // If role name doesn't exist, return empty result quickly
                     return {
@@ -290,11 +304,55 @@ export class UserService {
             }
         }
 
+        // Department filtering happens after joining employee documents so we can
+        // match against the actual employee records.
+
+        const searchQuery: QueryShape = { ...query };
+
+        const sortQuery: Record<string, 1 | -1> = {
+            createdAt: -1,
+        };
+
         const skip = (page - 1) * itemsPerPage;
 
         if (generalSearchString) {
-            searchQuery.$or = buildOrRegex(generalSearchString, ['username']);
+            const orClauses: Record<string, unknown>[] = buildOrRegex(
+                generalSearchString,
+                ['username'],
+            ) as Record<string, unknown>[];
+
+            const generalRegex = createRegexQuery(generalSearchString);
+            if (generalRegex) {
+                const [matchingRoles, matchingEmployees] = await Promise.all([
+                    this.roleModel
+                        .find({ name: generalRegex })
+                        .select('_id')
+                        .lean()
+                        .exec(),
+                    this.employeeModel
+                        .find({ real_name: generalRegex })
+                        .select('_id')
+                        .lean()
+                        .exec(),
+                ]);
+
+                const roleIds = matchingRoles.map(r => r._id);
+                if (roleIds.length > 0) {
+                    orClauses.push({ role: { $in: roleIds } });
+                }
+
+                const employeeIds = matchingEmployees.map(e => e._id);
+                if (employeeIds.length > 0) {
+                    orClauses.push({ employee: { $in: employeeIds } });
+                }
+            }
+
+            if (orClauses.length > 0) {
+                searchQuery.$or = orClauses;
+            }
         }
+
+        console.log('searchQuery:', JSON.stringify(searchQuery, null, 2));
 
         // Build aggregate-based count if we need to filter super-admin users
         let count: number;
@@ -312,6 +370,24 @@ export class UserService {
                     },
                     { $unwind: '$role' },
                 ];
+                if (departmentRegex) {
+                    countPipeline.push(
+                        {
+                            $lookup: {
+                                from: 'employees',
+                                localField: 'employee',
+                                foreignField: '_id',
+                                as: 'employee',
+                            },
+                        },
+                        { $unwind: '$employee' },
+                        {
+                            $match: {
+                                'employee.department': departmentRegex,
+                            },
+                        },
+                    );
+                }
                 if (!viewerIsSuper) {
                     countPipeline.push({
                         $match: {
@@ -360,6 +436,13 @@ export class UserService {
                     },
                     { $unwind: '$employee' },
                 ];
+                if (departmentRegex) {
+                    pipeline.push({
+                        $match: {
+                            'employee.department': departmentRegex,
+                        },
+                    });
+                }
                 if (!viewerIsSuper) {
                     pipeline.push({
                         $match: {
@@ -369,32 +452,65 @@ export class UserService {
                         },
                     });
                 }
-                pipeline.push({
-                    $project: {
-                        username: 1,
-                        password: 1,
-                        createdAt: 1,
-                        updatedAt: 1,
+                const baseProjection: Record<string, any> = {
+                    _id: 1,
+                    username: 1,
+                    password: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                };
+
+                if (roleExpandedFlag) {
+                    baseProjection.role = '$role';
+                } else {
+                    Object.assign(baseProjection, {
                         'role._id': 1,
                         'role.name': 1,
                         'role.permissions': 1,
+                    });
+                }
+
+                if (employeeExpandedFlag) {
+                    baseProjection.employee = '$employee';
+                } else {
+                    Object.assign(baseProjection, {
                         'employee._id': 1,
                         'employee.e_id': 1,
                         'employee.real_name': 1,
                         'employee.company_provided_name': 1,
-                    },
+                    });
+                }
+
+                pipeline.push({
+                    $project: baseProjection,
                 });
                 users = await this.userModel.aggregate(pipeline);
             } else {
+                const roleSelect = roleExpandedFlag
+                    ? undefined
+                    : '_id name permissions';
+                const employeeSelect = employeeExpandedFlag
+                    ? undefined
+                    : '_id e_id real_name company_provided_name';
+                const employeePopulateOptions: PopulateOptions = {
+                    path: 'employee',
+                    select: employeeSelect,
+                };
+                if (departmentRegex) {
+                    employeePopulateOptions.match = {
+                        department: departmentRegex,
+                    };
+                }
+
                 users = await this.userModel
                     .find(searchQuery)
-                    .populate('role', 'name permissions')
-                    .populate(
-                        'employee',
-                        'e_id real_name company_provided_name',
-                    )
+                    .populate('role', roleSelect)
+                    .populate(employeePopulateOptions)
                     .lean()
                     .exec();
+                if (departmentRegex) {
+                    users = users.filter((u: any) => !!u.employee);
+                }
                 if (!viewerIsSuper) {
                     users = users.filter(
                         (u: any) =>

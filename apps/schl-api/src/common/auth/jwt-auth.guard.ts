@@ -34,12 +34,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
                     const [scheme, token] = authHeader.split(' ');
                     authPreview = `${scheme || 'Unknown'} ${token ? token.slice(0, 10) + '...' : ''}`;
                 }
-                this.logger.debug(
-                    `Incoming ${req.method} ${req.url} | Auth: ${authPreview}`,
-                );
+                // this.logger.debug(
+                //     `Incoming ${req.method} ${req.url} | Auth: ${authPreview}`,
+                // );
             }
         } catch (e) {
-            this.logger.warn(`Header logging failed: ${(e as Error).message}`);
+            // this.logger.warn(`Header logging failed: ${(e as Error).message}`);
         }
 
         return super.canActivate(context);

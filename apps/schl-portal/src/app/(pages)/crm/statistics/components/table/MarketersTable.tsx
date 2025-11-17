@@ -1,6 +1,7 @@
 'use client';
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
 import { EmployeeDocument } from '@repo/common/models/employee.schema';
+import { PopulatedByRoleUser } from '@repo/common/types/populated-user.type';
 import { formatDate } from '@repo/common/utils/date-helpers';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -19,7 +20,7 @@ const DailyStatusTable = () => {
 
             const response = await authedFetchApi(
                 {
-                    path: '/v1/employee/search-employees',
+                    path: '/v1/user/search-users',
                     query: {
                         paginated: false,
                         // filtered: true
@@ -30,12 +31,28 @@ const DailyStatusTable = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ department: 'Marketing' }),
+                    body: JSON.stringify({
+                        department: 'Marketing',
+                        employee_expanded: true,
+                    }),
                 },
             );
 
             if (response.ok) {
-                setMarketers(response.data as EmployeeDocument[]);
+                const userData = response.data as PopulatedByRoleUser[];
+
+                // Reduce user results to an array of employee documents
+                const onlyEmployeeData = Array.isArray(userData)
+                    ? userData.reduce<EmployeeDocument[]>((acc, item) => {
+                          const employee = (item as PopulatedByRoleUser)
+                              .employee;
+                          if (employee)
+                              acc.push(employee as unknown as EmployeeDocument);
+                          return acc;
+                      }, [])
+                    : [];
+
+                setMarketers(onlyEmployeeData);
             } else {
                 toastFetchError(response);
             }
@@ -57,7 +74,7 @@ const DailyStatusTable = () => {
 
     return (
         <div className="table-responsive text-lg px-2">
-            {marketers.length !== 0 ? (
+            {marketers?.length !== 0 ? (
                 <table className="table table-hover border table-bordered">
                     <thead>
                         <tr className="bg-gray-50">
@@ -70,7 +87,7 @@ const DailyStatusTable = () => {
                         </tr>
                     </thead>
                     <tbody className="text-base">
-                        {marketers.map((marketer, index) => (
+                        {marketers?.map((marketer, index) => (
                             <tr key={marketer.e_id}>
                                 <td>{index + 1}</td>
                                 <td>{marketer.company_provided_name}</td>

@@ -364,12 +364,38 @@ export class ReportService {
                 const single = (onlyMarketerName || '').trim();
                 marketerNames = single ? [single] : [];
             } else {
-                const marketerNamesRaw = (await this.userModel
-                    .distinct('provided_name', { provided_name: { $ne: null } })
-                    .exec()) as (string | null | undefined)[];
+                const marketersAgg = await this.userModel
+                    .aggregate([
+                        { $match: { employee: { $exists: true, $ne: null } } },
+                        {
+                            $lookup: {
+                                from: 'employees',
+                                localField: 'employee',
+                                foreignField: '_id',
+                                as: 'employee',
+                            },
+                        },
+                        { $unwind: '$employee' },
+                        {
+                            $group: {
+                                _id: null,
+                                names: {
+                                    $addToSet:
+                                        '$employee.company_provided_name',
+                                },
+                            },
+                        },
+                        { $project: { _id: 0, names: 1 } },
+                    ])
+                    .exec();
+
+                const marketerNamesRaw = (marketersAgg?.[0]?.names || []) as
+                    | Array<string | null | undefined>
+                    | string[];
+
                 marketerNames = marketerNamesRaw
                     .filter((n): n is string => typeof n === 'string')
-                    .map(n => n.trim())
+                    .map(n => (n || '').trim())
                     .filter(n => n.length > 0);
             }
 
@@ -493,7 +519,26 @@ export class ReportService {
                     totalProspects: number;
                 }
             > = {};
-            for (const name of marketerNames) {
+            // Ensure we include marketers that appear in the aggregated stats
+            // (users may not have provided_name, or report.marketer_name may
+            // differ), so take the union of `marketerNames` and any keys
+            // present in the aggregation facet results.
+            const allNamesSet = new Set<string>(marketerNames);
+            for (const map of [
+                callsMap,
+                testsMap,
+                leadsMap,
+                prospectsMap,
+                clientsMap,
+            ]) {
+                for (const k of map.keys()) {
+                    if (k && k.trim().length > 0) allNamesSet.add(k.trim());
+                }
+            }
+
+            const allNames = Array.from(allNamesSet).sort();
+
+            for (const name of allNames) {
                 data[name] = {
                     totalCalls: callsMap.get(name) || 0,
                     totalLeads: leadsMap.get(name) || 0,
@@ -643,7 +688,6 @@ export class ReportService {
         }
 
         // Additional marketer scoping: show 'mine' or 'others'
-        console.log('Show filter:', show);
         if (show) {
             const userDoc = await this.userModel
                 .findById(userSession.db_id)
@@ -687,8 +731,6 @@ export class ReportService {
             }
         }
 
-        console.log('Final search query:', query);
-
         // Lead origin scoping: only for lead records endpoints
         if (leadOrigin) {
             if (leadOrigin === 'generated') {
@@ -699,6 +741,8 @@ export class ReportService {
         }
 
         const searchQuery: QueryShape = { ...query };
+
+        console.log('Final search query:', searchQuery);
 
         // Sorting defaults
         let sortQuery: Record<string, 1 | -1> = { createdAt: -1 };

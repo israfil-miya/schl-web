@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Employee, EmployeeSchema } from '@repo/common/models/employee.schema';
 import { Role, RoleSchema } from '@repo/common/models/role.schema';
 import { User, UserSchema } from '@repo/common/models/user.schema';
 import { AuthService } from './services/auth.service';
@@ -11,6 +12,7 @@ import { UserController } from './user.controller';
         MongooseModule.forFeature([
             { name: User.name, schema: UserSchema },
             { name: Role.name, schema: RoleSchema },
+            { name: Employee.name, schema: EmployeeSchema },
         ]),
     ],
     controllers: [UserController],

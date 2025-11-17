@@ -82,7 +82,7 @@ export class ClientService {
         // }
 
         if (generalSearchString) {
-            searchQuery.$or = buildOrRegex(generalSearchString, [
+            const or = buildOrRegex(generalSearchString, [
                 'client_code',
                 'country',
                 'marketer',
@@ -91,6 +91,7 @@ export class ClientService {
                 'contact_person',
                 'email',
             ]);
+            if (or.length > 0) searchQuery.$or = or;
         }
 
         const skip = (page - 1) * itemsPerPage;

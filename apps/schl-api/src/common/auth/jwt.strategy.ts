@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 done: (err: any, secret?: string | Buffer) => void,
             ) => {
                 const origin = request.headers.origin || request.headers.host;
-                this.logger.debug(`[Auth] Request origin: ${origin}`);
+                // this.logger.debug(`[Auth] Request origin: ${origin}`);
 
                 let secret: string | undefined;
                 let secretSource: string;
@@ -27,9 +27,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 const portalUrl = this.config.get<string>('PORTAL_URL');
                 const crmUrl = this.config.get<string>('CRM_URL');
 
-                this.logger.debug(
-                    `[Auth] Configured URLs - PORTAL_URL: ${portalUrl}, CRM_URL: ${crmUrl}`,
-                );
+                // this.logger.debug(
+                //     `[Auth] Configured URLs - PORTAL_URL: ${portalUrl}, CRM_URL: ${crmUrl}`,
+                // );
 
                 if (portalUrl && origin?.includes(portalUrl)) {
                     secret = this.config.get<string>('PORTAL_AUTH_SECRET');
@@ -43,9 +43,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 }
 
                 if (!secret) {
-                    this.logger.error(
-                        `[Auth] JWT secret not found for origin: ${origin}. Tried source: ${secretSource}`,
-                    );
+                    // this.logger.error(
+                    //     `[Auth] JWT secret not found for origin: ${origin}. Tried source: ${secretSource}`,
+                    // );
                     return done(
                         new UnauthorizedException(
                             'Could not find secret for origin.',
@@ -54,16 +54,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                     );
                 }
 
-                this.logger.debug(`[Auth] Using secret from: ${secretSource}`);
+                // this.logger.debug(`[Auth] Using secret from: ${secretSource}`);
                 return done(null, secret);
             },
         });
     }
 
     validate(request: Request, payload: any): UserSession {
-        this.logger.debug(
-            `[Auth] Decoded JWT payload: ${JSON.stringify(payload)}`,
-        );
+        // this.logger.debug(
+        //     `[Auth] Decoded JWT payload: ${JSON.stringify(payload)}`,
+        // );
         // `payload` is what we signed in the JWT token
         // Here, we can extract and return the user information we need
         return {

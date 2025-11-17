@@ -15,6 +15,7 @@ import { applyDateRange, getDateRange } from '@repo/common/utils/date-helpers';
 import {
     addIfDefined,
     addPlusSeparatedContainsAllField,
+    buildOrRegex,
     createRegexQuery,
 } from '@repo/common/utils/filter-helpers';
 import { calculateTimeDifference } from '@repo/common/utils/general-utils';
@@ -153,15 +154,14 @@ export class OrderService {
 
         // General search across selected fields
         if (generalSearchString) {
-            const searchPattern = createRegexQuery(generalSearchString);
-            if (searchPattern) {
-                searchQuery.$or = [
-                    { client_code: searchPattern },
-                    { client_name: searchPattern },
-                    { folder: searchPattern },
-                    { task: searchPattern },
-                ];
-            }
+            const or = buildOrRegex(generalSearchString, [
+                'client_code',
+                'client_name',
+                'folder',
+                'task',
+            ]);
+
+            if (or.length > 0) searchQuery.$or = or;
         }
 
         if (paginated) {
