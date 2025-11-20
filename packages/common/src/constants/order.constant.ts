@@ -20,6 +20,7 @@ export const statusOptions = [
     { value: 'uploaded', label: 'Uploaded' },
     { value: 'paused', label: 'Paused' },
     { value: 'client-hold', label: 'Client hold' },
+    { value: 'correction', label: 'Correction' },
     { value: 'finished', label: 'Finished' },
 ];
 export const taskOptions = [
