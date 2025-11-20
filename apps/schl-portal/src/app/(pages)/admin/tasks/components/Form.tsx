@@ -70,7 +70,8 @@ const Form: React.FC<PropsType> = props => {
             type: 'general',
             status: 'running',
             folder_path: '',
-            priority: '',
+            priority: 'medium',
+            progress: [],
             updated_by: session?.user.real_name || '',
         },
     });
