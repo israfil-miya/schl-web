@@ -21,7 +21,6 @@ import { QnapService } from './qnap.service';
 export class QnapController {
     constructor(private readonly qnapService: QnapService) {}
 
-    @Public()
     @Get('list')
     async listFiles(@Query() query: ListFilesDto) {
         return this.qnapService.listFolderContents(query);
