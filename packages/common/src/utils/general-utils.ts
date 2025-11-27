@@ -486,19 +486,24 @@ export const constructFileName = (
     return new_file_name;
 };
 
-export function removeDuplicates<T>(
+/**
+ * Remove duplicate items from an iterable preserving the first-seen order.
+ * Default behavior is case-sensitive (identity) -- i.e. strings are treated
+ * as-is unless a `keySelector` is supplied to normalize (eg. toLowerCase).
+ */
+export function removeDuplicates<T, K = T>(
     items: Iterable<T> | null | undefined,
-    keySelector?: (item: T) => unknown,
+    keySelector?: (item: T) => K,
 ): T[] {
     if (!items) {
         return [];
     }
 
-    const seen = new Set<unknown>();
+    const seen = new Set<K>();
     const output: T[] = [];
 
     for (const item of items) {
-        const key = keySelector ? keySelector(item) : item;
+        const key = keySelector ? keySelector(item) : (item as unknown as K);
         if (seen.has(key)) {
             continue;
         }

@@ -974,4 +974,56 @@ export class OrderService {
 
         return order;
     }
+
+    availableOrders() {
+        // orderType?: 'general' | 'test' | 'qc', // clientCode?: string, // userSession: UserSession,
+        // if (
+        //     !hasAnyPerm(
+        //         ['job:get_jobs', 'browse:view_page'],
+        //         userSession.permissions,
+        //     )
+        // ) {
+        //     throw new ForbiddenException(
+        //         "You don't have permission to view orders",
+        //     );
+        // }
+
+        // const query: Record<string, any> = {};
+        // addIfDefined(
+        //     query,
+        //     'client_code',
+        //     createRegexQuery(clientCode, { exact: true }),
+        // );
+        // if (orderType === 'qc') {
+        //     query.status = { $nin: ['finished', 'correction'] };
+        //     query.type = { $ne: 'test' };
+        //     query.$expr = { $eq: ['$production', '$quantity'] };
+        // } else {
+        //     addIfDefined(
+        //         query,
+        //         'type', // OrderType => 'general' | 'test'
+        //         createRegexQuery(orderType, { exact: true }),
+        //     );
+        // }
+
+        // const projection = {
+        //     type: 1,
+        //     status: 1,
+        //     folder_path: 1,
+        //     folder: 1,
+        //     client_code: 1,
+        // };
+
+        // const items = (await this.orderModel
+        //     .find(query, projection)
+        //     .lean()
+        //     .exec()) as Array<
+        //     Pick<
+        //         Order,
+        //         'type' | 'status' | 'folder_path' | 'folder' | 'client_code'
+        //     >
+        // >;
+
+        return [];
+    }
 }

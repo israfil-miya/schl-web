@@ -136,7 +136,6 @@ const Table: React.FC = props => {
                     marketers
                         .map(marketer => marketer.company_provided_name?.trim())
                         .filter((name): name is string => Boolean(name)),
-                    name => name.toLowerCase(),
                 );
 
                 setMarketerNames(marketerNames);

@@ -15,6 +15,10 @@ import {
     ClientCodeRequiredParamDto,
 } from '../../common/dto/client-code-param.dto';
 import { IdParamDto } from '../../common/dto/id-param.dto';
+import {
+    ClientCodeQueryDto,
+    OrderTypeQueryDto,
+} from './dto/available-orders.dto';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
 import {
     OrdersByCountryParamDto,
@@ -150,6 +154,16 @@ export class OrderController {
     @Get('rework-orders')
     reworkOrders(@Req() req: Request & { user: UserSession }) {
         return this.orderService.reworkOrders(req.user);
+    }
+
+    @Get('available-orders')
+    availableOrders(
+        @Req() req: Request & { user: UserSession },
+        @Query() { code }: ClientCodeQueryDto,
+        @Query() { orderType }: OrderTypeQueryDto,
+    ) {
+        // return this.orderService.availableOrders(req.user, code, orderType);
+        return;
     }
 
     @Get(':id')

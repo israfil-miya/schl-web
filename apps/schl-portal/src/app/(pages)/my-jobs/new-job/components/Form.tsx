@@ -6,6 +6,7 @@ import {
     taskOptions,
     typeOptions,
 } from '@repo/common/constants/order.constant';
+import { removeDuplicates } from '@repo/common/utils/general-utils';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { jobShiftOptions } from '@repo/common/constants/order.constant';
@@ -157,10 +158,10 @@ const Form: React.FC<PropsType> = props => {
                 },
             );
             if (response.ok) {
-                const data = response.data;
-                const folders = data
-                    .map(order => order.folder)
-                    .filter((v, i, a) => a.indexOf(v) === i);
+                const data = response.data as OrderDocument[];
+                const folders = removeDuplicates(
+                    data.map(o => o.folder).filter(Boolean) as string[],
+                );
 
                 setFolders(folders);
             } else {
@@ -322,20 +323,7 @@ const Form: React.FC<PropsType> = props => {
                     />
                 </div>
             </div>
-            <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                    <span className="uppercase">Comment</span>
-                    <span className="text-red-700 text-wrap block text-xs">
-                        {errors.comment && errors.comment?.message}
-                    </span>
-                </label>
-                <textarea
-                    {...register('comment')}
-                    rows={5}
-                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    placeholder="Write any instructions or note about the task"
-                />
-            </div>
+            <div></div>
 
             <button
                 disabled={loading}
