@@ -491,58 +491,93 @@ export class OrderService {
             .format('YYYY-MM-DD');
         const clientCodes = clients.map(c => c.client_code);
 
-        // Fetch relevant orders and invoices in parallel
-        const [orders, invoices] = await Promise.all([
-            this.orderModel
-                .find({
-                    client_code: { $in: clientCodes },
-                    download_date: { $gte: startDate, $lte: endDate },
-                })
-                .lean()
-                .exec(),
-            this.invoiceModel
-                .find({
-                    client_code: { $in: clientCodes },
-                    'time_period.fromDate': { $gte: startDate },
-                    'time_period.toDate': { $lte: endDate },
-                })
-                .lean()
-                .exec(),
-        ]);
-
+        // Build last 12 month identifiers (YYYY-MM)
         const last12Months: string[] = [];
         for (let i = 11; i >= 0; i--) {
             last12Months.push(moment().subtract(i, 'months').format('YYYY-MM'));
         }
+        const last12MonthsSet = new Set(last12Months);
 
-        // Group orders by client and month
+        // Use aggregation to compute per-client, per-month order counts and file totals
+        const ordersAggPipeline: any[] = [
+            {
+                $match: {
+                    client_code: { $in: clientCodes },
+                    download_date: { $gte: startDate, $lte: endDate },
+                },
+            },
+            {
+                $project: {
+                    client_code: 1,
+                    quantity: 1,
+                    month: { $substrBytes: ['$download_date', 0, 7] },
+                },
+            },
+            {
+                $group: {
+                    _id: { client_code: '$client_code', month: '$month' },
+                    count: { $sum: 1 },
+                    totalFiles: { $sum: '$quantity' },
+                },
+            },
+        ];
+
+        const invoicesAggPipeline: any[] = [
+            {
+                $match: {
+                    client_code: { $in: clientCodes },
+                    'time_period.fromDate': { $gte: startDate },
+                    'time_period.toDate': { $lte: endDate },
+                },
+            },
+            {
+                $project: {
+                    client_code: 1,
+                    startMonth: {
+                        $substrBytes: ['$time_period.fromDate', 0, 7],
+                    },
+                    endMonth: {
+                        $substrBytes: ['$time_period.toDate', 0, 7],
+                    },
+                },
+            },
+            // Only keep invoices that are contained fully inside a single month
+            {
+                $match: {
+                    $expr: { $eq: ['$startMonth', '$endMonth'] },
+                },
+            },
+            {
+                $group: {
+                    _id: { client_code: '$client_code', month: '$startMonth' },
+                },
+            },
+        ];
+
+        const [ordersAgg, invoicesAgg] = await Promise.all([
+            this.orderModel.aggregate(ordersAggPipeline).exec(),
+            this.invoiceModel.aggregate(invoicesAggPipeline).exec(),
+        ]);
+
+        // Build maps for fast lookup
         type MonthAgg = { count: number; totalFiles: number };
         const ordersByClient: Record<string, Record<string, MonthAgg>> = {};
-        for (const order of orders as any[]) {
-            const monthYear = moment(String(order.download_date)).format(
-                'YYYY-MM',
-            );
-            const code = String(order.client_code);
+        for (const row of ordersAgg) {
+            const code = String(row._id.client_code);
+            const month = String(row._id.month);
             if (!ordersByClient[code]) ordersByClient[code] = {};
-            if (!ordersByClient[code][monthYear])
-                ordersByClient[code][monthYear] = { count: 0, totalFiles: 0 };
-            ordersByClient[code][monthYear].count += 1;
-            ordersByClient[code][monthYear].totalFiles +=
-                Number(order.quantity) || 0;
+            ordersByClient[code][month] = {
+                count: Number(row.count) || 0,
+                totalFiles: Number(row.totalFiles) || 0,
+            };
         }
 
-        // Group invoices by client and month
         const invoiceMap = new Set<string>();
-        for (const inv of invoices) {
-            const startMonth = moment(inv.time_period.fromDate).format(
-                'YYYY-MM',
-            );
-            const endMonth = moment(inv.time_period.toDate).format('YYYY-MM');
-            // Only consider invoices that are fully contained within a single month
-            // to match the original logic
-            if (startMonth === endMonth) {
-                invoiceMap.add(`${inv.client_code}_${startMonth}`);
-            }
+        for (const row of invoicesAgg) {
+            const code = String(row._id.client_code);
+            const month = String(row._id.month);
+            if (!last12MonthsSet.has(month)) continue; // skip months outside our range
+            invoiceMap.add(`${code}_${month}`);
         }
 
         // Build final response per client with invoiced flag per month
