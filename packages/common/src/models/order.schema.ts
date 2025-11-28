@@ -81,3 +81,9 @@ export class Order {
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
+
+// Add indexes commonly used in queries to improve performance for search and pagination
+OrderSchema.index({ client_code: 1 });
+OrderSchema.index({ download_date: 1 });
+OrderSchema.index({ status: 1, type: 1 });
+OrderSchema.index({ client_code: 1, download_date: 1 });

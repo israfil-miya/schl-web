@@ -165,9 +165,9 @@ export class OrderService {
         }
 
         if (paginated) {
-            const count = await this.orderModel.countDocuments(
-                searchQuery as Record<string, unknown>,
-            );
+            // Use a single aggregation pipeline with $facet to get both count and items
+            // in one round-trip to MongoDB. This avoids running two queries (count + aggregate)
+            // which is expensive for large datasets.
             const pipeline: any[] = [
                 { $match: searchQuery },
                 {
@@ -234,12 +234,21 @@ export class OrderService {
                     },
                 },
                 { $sort: sortQuery },
-                { $skip: skip },
-                { $limit: itemsPerPage },
-                { $project: { customSortField: 0 } },
+                {
+                    $facet: {
+                        items: [
+                            { $skip: skip },
+                            { $limit: itemsPerPage },
+                            { $project: { customSortField: 0 } },
+                        ],
+                        count: [{ $count: 'total' }],
+                    },
+                },
             ];
 
-            const items = await this.orderModel.aggregate(pipeline).exec();
+            const aggResult = await this.orderModel.aggregate(pipeline).exec();
+            const items = aggResult?.[0]?.items || [];
+            const count = aggResult?.[0]?.count?.[0]?.total || 0;
             if (!items) {
                 throw new InternalServerErrorException(
                     'Unable to retrieve orders',
@@ -457,6 +466,7 @@ export class OrderService {
         const [clients, totalClients] = await Promise.all([
             this.clientModel
                 .find(clientQuery, { client_code: 1 })
+                .sort({ client_code: 1 })
                 .skip(skip)
                 .limit(itemsPerPage)
                 .lean(),
@@ -481,14 +491,24 @@ export class OrderService {
             .format('YYYY-MM-DD');
         const clientCodes = clients.map(c => c.client_code);
 
-        // Fetch relevant orders
-        const orders = await this.orderModel
-            .find({
-                client_code: { $in: clientCodes },
-                download_date: { $gte: startDate, $lte: endDate },
-            })
-            .lean()
-            .exec();
+        // Fetch relevant orders and invoices in parallel
+        const [orders, invoices] = await Promise.all([
+            this.orderModel
+                .find({
+                    client_code: { $in: clientCodes },
+                    download_date: { $gte: startDate, $lte: endDate },
+                })
+                .lean()
+                .exec(),
+            this.invoiceModel
+                .find({
+                    client_code: { $in: clientCodes },
+                    'time_period.fromDate': { $gte: startDate },
+                    'time_period.toDate': { $lte: endDate },
+                })
+                .lean()
+                .exec(),
+        ]);
 
         const last12Months: string[] = [];
         for (let i = 11; i >= 0; i--) {
@@ -511,57 +531,50 @@ export class OrderService {
                 Number(order.quantity) || 0;
         }
 
+        // Group invoices by client and month
+        const invoiceMap = new Set<string>();
+        for (const inv of invoices) {
+            const startMonth = moment(inv.time_period.fromDate).format(
+                'YYYY-MM',
+            );
+            const endMonth = moment(inv.time_period.toDate).format('YYYY-MM');
+            // Only consider invoices that are fully contained within a single month
+            // to match the original logic
+            if (startMonth === endMonth) {
+                invoiceMap.add(`${inv.client_code}_${startMonth}`);
+            }
+        }
+
         // Build final response per client with invoiced flag per month
-        const items = await Promise.all(
-            clients.map(async c => {
-                const ordersArr = await Promise.all(
-                    last12Months.map(async monthYear => {
-                        const formattedMonthYear = moment(
-                            monthYear,
-                            'YYYY-MM',
-                        ).format('MMMM YYYY');
-                        const clientMonthMap =
-                            ordersByClient[c.client_code] || {};
-                        const monthData =
-                            clientMonthMap[monthYear] ||
-                            ({ count: 0, totalFiles: 0 } as MonthAgg);
-
-                        let invoiced = false;
-                        if (monthData.count > 0) {
-                            // Compute month range
-                            const start = moment(monthYear, 'YYYY-MM')
-                                .startOf('month')
-                                .format('YYYY-MM-DD');
-                            const end = moment(monthYear, 'YYYY-MM')
-                                .endOf('month')
-                                .format('YYYY-MM-DD');
-                            const invoice = await this.invoiceModel
-                                .findOne({
-                                    client_code: c.client_code,
-                                    'time_period.fromDate': { $gte: start },
-                                    'time_period.toDate': { $lte: end },
-                                })
-                                .lean()
-                                .exec();
-                            invoiced = !!invoice;
-                        }
-
-                        return {
-                            [formattedMonthYear]: {
-                                count: monthData.count,
-                                totalFiles: monthData.totalFiles,
-                                invoiced,
-                            },
-                        };
-                    }),
+        const items = clients.map(c => {
+            const ordersArr = last12Months.map(monthYear => {
+                const formattedMonthYear = moment(monthYear, 'YYYY-MM').format(
+                    'MMMM YYYY',
                 );
+                const clientMonthMap = ordersByClient[c.client_code] || {};
+                const monthData =
+                    clientMonthMap[monthYear] ||
+                    ({ count: 0, totalFiles: 0 } as MonthAgg);
+
+                let invoiced = false;
+                if (monthData.count > 0) {
+                    invoiced = invoiceMap.has(`${c.client_code}_${monthYear}`);
+                }
 
                 return {
-                    client_code: c.client_code,
-                    orders: ordersArr,
+                    [formattedMonthYear]: {
+                        count: monthData.count,
+                        totalFiles: monthData.totalFiles,
+                        invoiced,
+                    },
                 };
-            }),
-        );
+            });
+
+            return {
+                client_code: c.client_code,
+                orders: ordersArr,
+            };
+        });
 
         return {
             pagination: {
