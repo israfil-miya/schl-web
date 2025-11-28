@@ -87,3 +87,5 @@ OrderSchema.index({ client_code: 1 });
 OrderSchema.index({ download_date: 1 });
 OrderSchema.index({ status: 1, type: 1 });
 OrderSchema.index({ client_code: 1, download_date: 1 });
+// Support descending date sorts to make queries like .sort({ download_date: -1 })
+OrderSchema.index({ client_code: 1, download_date: -1 });

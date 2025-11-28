@@ -107,11 +107,20 @@ export class OrderService {
         // Regex fields: channel (exact), notice_no (exact), title (fuzzy)
         addIfDefined(query, 'folder', createRegexQuery(folder));
 
-        addIfDefined(
-            query,
-            'client_code',
-            createRegexQuery(clientCode, { exact: invFlag ?? false }),
-        );
+        if (clientCode) {
+            // When invoice flag is set we generally want exact client matches
+            // so use equality to utilize indexes instead of a regex.
+            if (invFlag ?? false) {
+                // Force a typed assignment for the equality match to avoid assigning a regex shape
+                (query as any).client_code = clientCode.trim();
+            } else {
+                addIfDefined(
+                    query,
+                    'client_code',
+                    createRegexQuery(clientCode, { exact: false }),
+                );
+            }
+        }
         // For tasks like "A+B+C" we want to match records containing all tokens in any order, possibly with extra tokens
         if (task && task.includes('+')) {
             addPlusSeparatedContainsAllField(query, 'task', task);
@@ -263,9 +272,30 @@ export class OrderService {
             };
         }
 
-        // Unpaginated path
+        // Unpaginated path - when requesting invoice-specific orders (invFlag true),
+        // only fetch minimal fields needed for the invoice to reduce network and IO cost.
+        const projection: Record<string, 1> | undefined = invFlag
+            ? {
+                  folder: 1,
+                  quantity: 1,
+                  rate: 1,
+                  createdAt: 1,
+                  download_date: 1,
+                  delivery_date: 1,
+                  task: 1,
+                  et: 1,
+                  production: 1,
+                  qc1: 1,
+                  qc2: 1,
+                  status: 1,
+                  comment: 1,
+                  client_code: 1,
+                  client_name: 1,
+              }
+            : undefined;
+
         const items = await this.orderModel
-            .find(searchQuery as Record<string, unknown>)
+            .find(searchQuery as Record<string, unknown>, projection)
             .sort({ download_date: 1 })
             .lean()
             .exec();
@@ -458,7 +488,8 @@ export class OrderService {
         const clientQuery: Record<string, any> = {};
         if (clientCode) {
             clientQuery.client_code = createRegexQuery(clientCode, {
-                exact: true,
+                exact: false,
+                flexible: true,
             });
         }
 
