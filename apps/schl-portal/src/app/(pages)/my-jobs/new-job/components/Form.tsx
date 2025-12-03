@@ -19,7 +19,7 @@ import { setMenuPortalTarget } from '@repo/common/utils/select-helpers';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
 import { NewJobDataType, validationSchema } from '../schema';
@@ -34,30 +34,19 @@ const Form: React.FC<PropsType> = props => {
     const { data: session } = useSession();
 
     const [fetchLoading, setFetchLoading] = useState(false);
-    const [folders, setFolders] = useState<
-        {
-            name: string;
-            path: string;
-        }[]
-    >([]);
+    const [folders, setFolders] = useState<{ name: string; path: string }[]>(
+        [],
+    );
     const [fileNames, setFileNames] = useState<string[]>([]);
 
-    const clientCodes = props.clientsData?.map(client => client.client_code);
+    const clientCodes = props.clientsData?.map(c => c.client_code) || [];
 
-    const clientCodeOptions = (clientCodes || []).map(clientCode => ({
-        value: clientCode,
-        label: clientCode,
+    const clientCodeOptions = clientCodes.map(cc => ({ value: cc, label: cc }));
+    const folderOptions = folders.map(f => ({
+        value: f.path,
+        label: f.name || f.path,
     }));
-
-    const folderOptions = folders.map(folder => ({
-        value: folder.path,
-        label: folder.name || folder.path,
-    }));
-
-    const fileNameOptions = fileNames.map(fileName => ({
-        value: fileName,
-        label: fileName,
-    }));
+    const fileNameOptions = fileNames.map(fn => ({ value: fn, label: fn }));
 
     const {
         watch,
@@ -79,6 +68,196 @@ const Form: React.FC<PropsType> = props => {
         },
     });
 
+    const clientCode = useWatch({ control, name: 'client_code' });
+    const jobType = useWatch({ control, name: 'job_type' });
+    const folderPath = useWatch({ control, name: 'folder_path' });
+
+    const LOADING_SHOW_DELAY = 300; // ms
+
+    const getAvailableFoldersOfClient = useCallback(
+        async (clientCodeParam: string, jobTypeParam: string) => {
+            if (!clientCodeParam) return setFolders([]);
+            let loadingShown = false;
+            const toastTimer = setTimeout(() => {
+                toast.loading('Loading folders...', { id: 'loading-folders' });
+                loadingShown = true;
+            }, LOADING_SHOW_DELAY);
+            let success = false;
+            try {
+                setFetchLoading(true);
+                const response = await authedFetchApi<any[]>(
+                    {
+                        path: '/v1/order/available-folders',
+                        query: {
+                            clientCode: clientCodeParam,
+                            jobType: jobTypeParam,
+                        },
+                    },
+                    {
+                        method: 'GET',
+                        headers: {
+                            Accept: '*/*',
+                            'Content-Type': 'application/json',
+                        },
+                        cache: 'no-store',
+                    },
+                );
+                if (!response.ok) {
+                    console.error('Unable to fetch orders of the client');
+                    setFolders([]);
+                    return;
+                }
+                const data = (response.data || []) as Array<{
+                    folder_path: string;
+                    folder_name?: string;
+                    display_path?: string;
+                    folder_key?: string;
+                }>;
+                const items = (data || [])
+                    .filter(f => f && f.folder_path)
+                    .map(f => ({
+                        name: f.folder_name || f.display_path || f.folder_path,
+                        path: f.folder_path,
+                        key: f.folder_key,
+                    }));
+                const foldersUnique = removeDuplicates(items, f => f.path);
+                setFolders(
+                    foldersUnique.map(x => ({ name: x.name, path: x.path })),
+                );
+                success = true;
+            } catch (e) {
+                console.error(e);
+                setFolders([]);
+            } finally {
+                setFetchLoading(false);
+                clearTimeout(toastTimer);
+                if (loadingShown) {
+                    if (!success)
+                        toast.error('Failed to load', {
+                            id: 'loading-folders',
+                        });
+                    else toast.dismiss('loading-folders');
+                } else if (!success) toast.error('Failed to load');
+            }
+        },
+        [authedFetchApi],
+    );
+
+    const getFilesForFolder = useCallback(
+        async (folderPathParam: string, jobTypeParam: string) => {
+            if (!folderPathParam) {
+                setFileNames([]);
+                return;
+            }
+            let loadingShown = false;
+            const toastTimer = setTimeout(() => {
+                toast.loading('Loading files...', { id: 'loading-files' });
+                loadingShown = true;
+            }, LOADING_SHOW_DELAY);
+            let success = false;
+            try {
+                setFetchLoading(true);
+                const resp = await authedFetchApi<string[]>(
+                    {
+                        path: '/v1/order/available-files',
+                        query: {
+                            folderPath: folderPathParam,
+                            jobType: jobTypeParam,
+                        },
+                    },
+                    {
+                        method: 'GET',
+                        headers: {
+                            Accept: '*/*',
+                            'Content-Type': 'application/json',
+                        },
+                        cache: 'no-store',
+                    },
+                );
+                if (resp.ok) {
+                    setFileNames(resp.data || []);
+                    success = true;
+                } else setFileNames([]);
+            } catch (e) {
+                console.error(e);
+                setFileNames([]);
+            } finally {
+                setFetchLoading(false);
+                clearTimeout(toastTimer);
+                if (loadingShown) {
+                    if (!success) {
+                        toast.error('Failed to load', {
+                            id: 'loading-files',
+                        });
+                    } else {
+                        toast.dismiss('loading-files');
+                    }
+                } else if (!success) toast.error('Failed to load');
+            }
+        },
+        [authedFetchApi],
+    );
+
+    const customStyles = {
+        control: (provided: any) => ({
+            ...provided,
+            borderTopRightRadius: 0,
+            borderBottomRightRadius: 0,
+            borderRight: 'none',
+            width: '200px',
+            paddingTop: '0.25rem' /* 12px */,
+            paddingBottom: '0.25rem' /* 12px */,
+            cursor: 'pointer',
+            backgroundColor: '#f3f4f6',
+            '&:hover': { borderColor: '#e5e7eb' },
+        }),
+        menu: (provided: any) => ({ ...provided, width: '200px' }),
+    };
+
+    // Effects
+
+    // 1) When client_code changes:
+    // - reset folder options, file options, their form values
+    // - reset job_type to default (you said "reset selected options for Job Type")
+    useEffect(() => {
+        // clear options and selected values
+        setFolders([]);
+        setFileNames([]);
+        setValue('folder_path', '');
+        setValue('file_names', []);
+        // reset job_type to default
+        setValue('job_type', 'general');
+        // fetch fresh folders for the new client and current job_type
+        if (clientCode)
+            getAvailableFoldersOfClient(clientCode, jobType || 'general');
+    }, [clientCode]); // intentionally only reacts to clientCode changes
+
+    // 2) When job_type changes:
+    // - reset folder and file options and selected values
+    // - fetch folders for current client (if present)
+    useEffect(() => {
+        setFolders([]);
+        setFileNames([]);
+        setValue('folder_path', '');
+        setValue('file_names', []);
+        if (clientCode)
+            getAvailableFoldersOfClient(clientCode, jobType || 'general');
+    }, [jobType]);
+
+    // 3) When folder_path changes:
+    // - reset file names and selected file_names
+    // - fetch files for this folder
+    useEffect(() => {
+        setFileNames([]);
+        setValue('file_names', []);
+        if (folderPath) getFilesForFolder(folderPath, jobType || 'general');
+    }, [folderPath]);
+
+    // submit unchanged
+    const onSubmit = async (data: NewJobDataType) => {
+        toast.info('Form submission is disabled currently');
+        return;
+    };
     // async function createOrder(orderData: OrderDataType) {
     //     try {
     //         setLoading(true);
@@ -117,141 +296,6 @@ const Form: React.FC<PropsType> = props => {
     //         setLoading(false);
     //     }
     // }
-
-    const onSubmit = async (data: NewJobDataType) => {
-        // await createOrder(data);
-        toast.info('Form submission is disabled currently');
-        return;
-    };
-
-    const customStyles = {
-        control: (provided: any) => ({
-            ...provided,
-            borderTopRightRadius: 0,
-            borderBottomRightRadius: 0,
-            borderRight: 'none',
-            width: '200px',
-            paddingTop: '0.25rem' /* 12px */,
-            paddingBottom: '0.25rem' /* 12px */,
-            cursor: 'pointer',
-            backgroundColor: '#f3f4f6',
-            '&:hover': {
-                borderColor: '#e5e7eb',
-            },
-        }),
-        menu: (provided: any) => ({
-            ...provided,
-            width: '200px',
-        }),
-    };
-
-    const getAvailableFoldersOfClient = useCallback(async () => {
-        try {
-            const response = await authedFetchApi<any[]>(
-                {
-                    path: '/v1/order/available-folders',
-                    query: {
-                        clientCode: watch('client_code'),
-                        jobType: watch('job_type'),
-                    },
-                },
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: '*/*',
-                        'Content-Type': 'application/json',
-                    },
-                    cache: 'no-store',
-                },
-            );
-            if (response.ok) {
-                const data = response.data as Array<{
-                    folder_path: string;
-                    folder_name?: string;
-                    display_path?: string;
-                    folder_key?: string;
-                }>;
-                const items = (data || [])
-                    .filter(f => f && f.folder_path)
-                    .map(f => ({
-                        name: f.folder_name || f.display_path || f.folder_path,
-                        path: f.folder_path,
-                        key: f.folder_key,
-                    }));
-                const foldersUnique = removeDuplicates(items, f => f.path);
-                setFolders(
-                    foldersUnique.map(x => ({ name: x.name, path: x.path })),
-                );
-            } else {
-                console.error('Unable to fetch orders of the client');
-            }
-        } catch (e) {
-            console.error(e);
-            console.log(
-                'An error occurred while fetching orders of the client',
-            );
-        }
-    }, [authedFetchApi, watch]);
-    // Build unique folder objects: { name, path }
-    // Guard against null values
-    const getFilesForFolder = useCallback(async () => {
-        try {
-            setFetchLoading(true);
-            const folderPath = watch('folder_path');
-            if (!folderPath) return setFileNames([]);
-            const resp = await authedFetchApi<string[]>(
-                {
-                    path: '/v1/order/available-files',
-                    query: {
-                        folderPath,
-                        jobType: watch('job_type'),
-                    },
-                },
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: '*/*',
-                        'Content-Type': 'application/json',
-                    },
-                    cache: 'no-store',
-                },
-            );
-            if (resp.ok) setFileNames(resp.data || []);
-            else setFileNames([]);
-        } catch (e) {
-            console.error(e);
-            setFileNames([]);
-        } finally {
-            setFetchLoading(false);
-        }
-    }, [authedFetchApi, watch]);
-
-    useEffect(() => {
-        if (watch('client_code') && watch('job_type')) {
-            getAvailableFoldersOfClient();
-        }
-        if (watch('folder_path') && watch('job_type')) {
-            getFilesForFolder();
-        }
-    }, [
-        getAvailableFoldersOfClient,
-        getFilesForFolder,
-        watch('client_code'),
-        watch('job_type'),
-        watch('folder_path'),
-    ]);
-
-    useEffect(() => {
-        setFileNames([]);
-        setValue('file_names', []);
-        setValue('folder_path', '');
-    }, [watch('client_code'), watch('job_type')]);
-
-    // Reset file names when folder changes to avoid stale selections
-    useEffect(() => {
-        setFileNames([]);
-        setValue('file_names', []);
-    }, [watch('folder_path'), watch('job_type')]);
 
     // console.log('Fetched available orders of the client', folders);
 
