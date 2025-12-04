@@ -18,7 +18,6 @@ import {
 } from '../../common/dto/client-code-param.dto';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { AvailableFoldersQueryDto } from './dto/available-folders.dto';
-import { AvailableOrdersQueryDto } from './dto/available-orders.dto';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
 import { ListFilesQueryDto } from './dto/list-files.dto';
 import {
@@ -172,14 +171,18 @@ export class OrderController {
     @Get('available-files')
     availableFiles(
         @Req() req: Request & { user: UserSession },
-        @Query() { folderPath, jobType }: ListFilesQueryDto,
+        @Query() { folderPath, jobType, fileCondition }: ListFilesQueryDto,
     ) {
         if (!hasPerm('job:get_jobs', req.user.permissions)) {
             throw new ForbiddenException(
                 "You don't have permission to view available jobs",
             );
         }
-        return this.orderService.getAvailableFiles(folderPath, jobType || '');
+        return this.orderService.getAvailableFiles(
+            folderPath,
+            jobType,
+            fileCondition,
+        );
     }
 
     @Get(':id')

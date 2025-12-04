@@ -1,4 +1,5 @@
 import {
+    FILE_CONDITIONS,
     JOB_SELECTION_TYPES,
     JOB_SHIFTS,
 } from '@repo/common/constants/order.constant';
@@ -18,6 +19,9 @@ export const validationSchema = z.object({
     }),
     shift: z.enum(JOB_SHIFTS, {
         required_error: 'Shift is required',
+    }),
+    file_condition: z.enum(FILE_CONDITIONS, {
+        required_error: 'File condition is required',
     }),
 });
 export type NewJobDataType = z.infer<typeof validationSchema>;

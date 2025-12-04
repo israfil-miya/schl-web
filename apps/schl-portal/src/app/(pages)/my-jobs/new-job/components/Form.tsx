@@ -1,6 +1,7 @@
 'use client';
 import { toastFetchError, useAuthedFetchApi } from '@/lib/api-client';
 import {
+    fileConditionOptions,
     jobSelectionOptions,
     priorityOptions,
     statusOptions,
@@ -33,7 +34,6 @@ const Form: React.FC<PropsType> = props => {
     const [loading, setLoading] = useState(false);
     const { data: session } = useSession();
 
-    const [fetchLoading, setFetchLoading] = useState(false);
     const [folders, setFolders] = useState<{ name: string; path: string }[]>(
         [],
     );
@@ -62,6 +62,7 @@ const Form: React.FC<PropsType> = props => {
             client_code: '',
             folder_path: '',
             file_names: [],
+            file_condition: 'fresh',
             is_active: true,
             job_type: 'general',
             shift: 'morning',
@@ -71,6 +72,7 @@ const Form: React.FC<PropsType> = props => {
     const clientCode = useWatch({ control, name: 'client_code' });
     const jobType = useWatch({ control, name: 'job_type' });
     const folderPath = useWatch({ control, name: 'folder_path' });
+    const fileCondition = useWatch({ control, name: 'file_condition' });
 
     const LOADING_SHOW_DELAY = 300; // ms
 
@@ -84,7 +86,6 @@ const Form: React.FC<PropsType> = props => {
             }, LOADING_SHOW_DELAY);
             let success = false;
             try {
-                setFetchLoading(true);
                 const response = await authedFetchApi<any[]>(
                     {
                         path: '/v1/order/available-folders',
@@ -129,7 +130,6 @@ const Form: React.FC<PropsType> = props => {
                 console.error(e);
                 setFolders([]);
             } finally {
-                setFetchLoading(false);
                 clearTimeout(toastTimer);
                 if (loadingShown) {
                     if (!success)
@@ -144,7 +144,11 @@ const Form: React.FC<PropsType> = props => {
     );
 
     const getFilesForFolder = useCallback(
-        async (folderPathParam: string, jobTypeParam: string) => {
+        async (
+            folderPathParam: string,
+            jobTypeParam: string,
+            fileConditionParam: string,
+        ) => {
             if (!folderPathParam) {
                 setFileNames([]);
                 return;
@@ -156,13 +160,13 @@ const Form: React.FC<PropsType> = props => {
             }, LOADING_SHOW_DELAY);
             let success = false;
             try {
-                setFetchLoading(true);
                 const resp = await authedFetchApi<string[]>(
                     {
                         path: '/v1/order/available-files',
                         query: {
                             folderPath: folderPathParam,
                             jobType: jobTypeParam,
+                            fileCondition: fileConditionParam,
                         },
                     },
                     {
@@ -182,7 +186,6 @@ const Form: React.FC<PropsType> = props => {
                 console.error(e);
                 setFileNames([]);
             } finally {
-                setFetchLoading(false);
                 clearTimeout(toastTimer);
                 if (loadingShown) {
                     if (!success) {
@@ -228,8 +231,8 @@ const Form: React.FC<PropsType> = props => {
         // reset job_type to default
         setValue('job_type', 'general');
         // fetch fresh folders for the new client and current job_type
-        if (clientCode)
-            getAvailableFoldersOfClient(clientCode, jobType || 'general');
+        setValue('file_condition', 'fresh');
+        if (clientCode) getAvailableFoldersOfClient(clientCode, jobType);
     }, [clientCode]); // intentionally only reacts to clientCode changes
 
     // 2) When job_type changes:
@@ -240,8 +243,7 @@ const Form: React.FC<PropsType> = props => {
         setFileNames([]);
         setValue('folder_path', '');
         setValue('file_names', []);
-        if (clientCode)
-            getAvailableFoldersOfClient(clientCode, jobType || 'general');
+        if (clientCode) getAvailableFoldersOfClient(clientCode, jobType);
     }, [jobType]);
 
     // 3) When folder_path changes:
@@ -250,8 +252,8 @@ const Form: React.FC<PropsType> = props => {
     useEffect(() => {
         setFileNames([]);
         setValue('file_names', []);
-        if (folderPath) getFilesForFolder(folderPath, jobType || 'general');
-    }, [folderPath]);
+        if (folderPath) getFilesForFolder(folderPath, jobType, fileCondition);
+    }, [folderPath, jobType, fileCondition]);
 
     // submit unchanged
     const onSubmit = async (data: NewJobDataType) => {
@@ -425,6 +427,37 @@ const Form: React.FC<PropsType> = props => {
                                 menuPortalTarget={setMenuPortalTarget}
                                 value={
                                     folderOptions.find(
+                                        option => option.value === field.value,
+                                    ) || null
+                                }
+                                onChange={option =>
+                                    field.onChange(option ? option.value : '')
+                                }
+                            />
+                        )}
+                    />
+                </div>
+
+                <div>
+                    <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                        <span className="uppercase">File Condition*</span>
+                        <span className="text-red-700 text-wrap block text-xs">
+                            {errors.file_condition &&
+                                (errors.file_condition as any)?.message}
+                        </span>
+                    </label>
+                    <Controller
+                        name="file_condition"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                options={fileConditionOptions}
+                                closeMenuOnSelect={true}
+                                placeholder="Select file condition"
+                                classNamePrefix="react-select"
+                                menuPortalTarget={setMenuPortalTarget}
+                                value={
+                                    fileConditionOptions.find(
                                         option => option.value === field.value,
                                     ) || null
                                 }

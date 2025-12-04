@@ -120,3 +120,10 @@ export const jobSelectionOptions = [
     { value: 'correction_general', label: 'Correction - General' },
     { value: 'correction_test', label: 'Correction - Test' },
 ];
+
+export const FILE_CONDITIONS = ['fresh', 'incomplete'] as const;
+export type FileCondition = (typeof FILE_CONDITIONS)[number];
+export const fileConditionOptions = [
+    { value: 'fresh', label: 'Fresh' },
+    { value: 'incomplete', label: 'Incomplete' },
+];

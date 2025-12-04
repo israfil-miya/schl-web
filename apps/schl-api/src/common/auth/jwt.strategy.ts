@@ -43,9 +43,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 }
 
                 if (!secret) {
-                    // this.logger.error(
-                    //     `[Auth] JWT secret not found for origin: ${origin}. Tried source: ${secretSource}`,
-                    // );
+                    this.logger.error(
+                        `[Auth] JWT secret not found for origin: ${origin}. Tried source: ${secretSource}`,
+                    );
                     return done(
                         new UnauthorizedException(
                             'Could not find secret for origin.',
