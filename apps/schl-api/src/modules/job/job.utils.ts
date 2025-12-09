@@ -2,6 +2,8 @@
 
 import type { Logger } from '@nestjs/common';
 
+import type { JobSelectionType } from '@repo/common/constants/order.constant';
+
 import type { QnapService } from '../qnap/qnap.service';
 
 import { QnapApiError } from '../qnap/qnap.types';
@@ -477,3 +479,43 @@ export async function moveFilesForNewJob(params: {
         logger: params.logger,
     });
 }
+
+type JobTypeFilter = { orderType?: string; category?: string; isQc?: boolean };
+
+export const mapJobTypeFilters = (
+    jobType?: JobSelectionType,
+): JobTypeFilter => {
+    switch (jobType) {
+        case 'general':
+            return { orderType: 'general', category: 'production' };
+        case 'test':
+            return { orderType: 'test', category: 'production' };
+        case 'qc_general':
+            return { orderType: 'general', category: 'qc', isQc: true };
+        case 'qc_test':
+            return { orderType: 'test', category: 'qc', isQc: true };
+        case 'correction_general':
+            return {
+                orderType: 'general',
+                category: 'correction',
+                isQc: false,
+            };
+        case 'correction_test':
+            return { orderType: 'test', category: 'correction', isQc: false };
+        default:
+            return {};
+    }
+};
+
+export const deriveJobType = (
+    orderType: string,
+    category: string,
+): JobSelectionType => {
+    if (category === 'qc') {
+        return orderType === 'test' ? 'qc_test' : 'qc_general';
+    }
+    if (category === 'correction') {
+        return orderType === 'test' ? 'correction_test' : 'correction_general';
+    }
+    return orderType === 'test' ? 'test' : 'general';
+};

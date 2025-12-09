@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import {
     FileCondition,
+    FileStatus,
     JobSelectionType,
 } from '@repo/common/constants/order.constant';
 import { Client } from '@repo/common/models/client.schema';
@@ -27,12 +28,49 @@ import mongoose, { Model } from 'mongoose';
 import { NewJobBodyDto } from '../order/dto/new-job.dto';
 import { QnapService } from '../qnap/qnap.service';
 import {
+    ACTIVE_FILE_STATUSES,
+    type ActiveFileStatus,
+    type SearchJobsQueryDto,
+} from './dto/search-jobs.dto';
+import {
+    deriveJobType,
     escapeRegex,
     getCandidateSuffix,
     joinPath,
     mapFolderPathToQnapPath,
+    mapJobTypeFilters,
     moveFilesForNewJob,
 } from './job.utils';
+
+type SearchJobAggregateItem = {
+    orderId: mongoose.Types.ObjectId;
+    client_code?: string;
+    client_name?: string;
+    folder?: string;
+    folder_path?: string;
+    order_type?: string;
+    order_status?: string;
+    progress_category?: string;
+    progress_is_qc?: boolean;
+    progress_qc_step?: number | null;
+    progress_shift?: string;
+    file_name?: string;
+    file_status?: ActiveFileStatus | FileStatus;
+    start_timestamp?: Date;
+    end_timestamp?: Date | null;
+    pause_start_timestamp?: Date | null;
+    total_pause_duration?: number;
+    transferred_from?: mongoose.Types.ObjectId | null;
+};
+
+type SearchJobFacetResult = {
+    items: SearchJobAggregateItem[];
+    count: { total: number }[];
+};
+
+type SearchJobResponseItem = SearchJobAggregateItem & {
+    job_type: JobSelectionType;
+};
 
 @Injectable()
 export class JobService {
@@ -550,5 +588,142 @@ export class JobService {
             this.logger.error('getAvailableFiles failed', err as any);
             return [];
         }
+    }
+
+    async searchJobs(query: SearchJobsQueryDto, userSession: UserSession) {
+        if (!hasPerm('job:get_jobs', userSession.permissions)) {
+            throw new ForbiddenException(
+                "You don't have permission to view available jobs",
+            );
+        }
+
+        const {
+            page = 1,
+            itemsPerPage = 30,
+            paginated = true,
+            folder,
+            folderPath,
+            fileStatus,
+            jobType,
+        } = query;
+
+        const statusFilter: ActiveFileStatus[] = (
+            fileStatus ? [fileStatus] : ACTIVE_FILE_STATUSES
+        ) as ActiveFileStatus[];
+
+        const orderMatch: Record<string, any> = {};
+        addIfDefined(orderMatch, 'folder', createRegexQuery(folder));
+        addIfDefined(orderMatch, 'folder_path', createRegexQuery(folderPath));
+
+        const progressMatch: Record<string, any> = {
+            'progress.employee': new mongoose.Types.ObjectId(
+                String(userSession.db_id),
+            ),
+        };
+
+        const mappedJobType = mapJobTypeFilters(jobType);
+        const { orderType, category, isQc } = mappedJobType;
+        if (orderType) {
+            const normalizedOrderType = String(orderType);
+            orderMatch.type = createRegexQuery(normalizedOrderType, {
+                exact: true,
+            });
+        }
+        if (category) {
+            progressMatch['progress.category'] = category;
+        }
+        if (isQc !== undefined) {
+            progressMatch['progress.is_qc'] = isQc;
+        }
+
+        const skip = (page - 1) * itemsPerPage;
+
+        const basePipeline: mongoose.PipelineStage[] = [
+            { $match: orderMatch },
+            { $unwind: '$progress' },
+            { $match: progressMatch },
+            { $unwind: '$progress.files_tracking' },
+            {
+                $match: {
+                    'progress.files_tracking.status': { $in: statusFilter },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    orderId: '$_id',
+                    client_code: 1,
+                    client_name: 1,
+                    folder: 1,
+                    folder_path: 1,
+                    order_type: '$type',
+                    order_status: '$status',
+                    progress_category: '$progress.category',
+                    progress_is_qc: '$progress.is_qc',
+                    progress_qc_step: '$progress.qc_step',
+                    progress_shift: '$progress.shift',
+                    file_name: '$progress.files_tracking.file_name',
+                    file_status: '$progress.files_tracking.status',
+                    start_timestamp: '$progress.files_tracking.start_timestamp',
+                    end_timestamp: '$progress.files_tracking.end_timestamp',
+                    pause_start_timestamp:
+                        '$progress.files_tracking.pause_start_timestamp',
+                    total_pause_duration:
+                        '$progress.files_tracking.total_pause_duration',
+                    transferred_from:
+                        '$progress.files_tracking.transferred_from',
+                },
+            },
+            { $sort: { start_timestamp: -1, orderId: 1 } },
+        ];
+
+        if (paginated) {
+            const pipeline: mongoose.PipelineStage[] = [
+                ...basePipeline,
+                {
+                    $facet: {
+                        items: [{ $skip: skip }, { $limit: itemsPerPage }],
+                        count: [{ $count: 'total' }],
+                    },
+                },
+            ];
+
+            const agg = await this.orderModel
+                .aggregate<SearchJobFacetResult>(pipeline)
+                .exec();
+            const facet = agg?.[0] ?? { items: [], count: [] };
+            const count = facet.count?.[0]?.total ?? 0;
+            const decorated: SearchJobResponseItem[] = (facet.items || []).map(
+                item => ({
+                    ...item,
+                    job_type: deriveJobType(
+                        String(item.order_type || ''),
+                        String(item.progress_category || ''),
+                    ),
+                }),
+            );
+
+            return {
+                pagination: {
+                    count,
+                    pageCount: Math.ceil(count / itemsPerPage) || 0,
+                    page,
+                    itemsPerPage,
+                },
+                items: decorated,
+            };
+        }
+
+        const items = await this.orderModel
+            .aggregate<SearchJobAggregateItem>(basePipeline)
+            .exec();
+        const decorated: SearchJobResponseItem[] = (items || []).map(item => ({
+            ...item,
+            job_type: deriveJobType(
+                String(item.order_type || ''),
+                String(item.progress_category || ''),
+            ),
+        }));
+        return decorated;
     }
 }

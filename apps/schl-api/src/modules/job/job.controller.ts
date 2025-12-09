@@ -13,6 +13,7 @@ import { NewJobBodyDto } from '../order/dto/new-job.dto';
 import { AvailableFoldersQueryDto } from './dto/available-folders.dto';
 import { AvailableOrdersQueryDto } from './dto/available-orders.dto';
 import { ListFilesQueryDto } from './dto/list-files.dto';
+import { SearchJobsQueryDto } from './dto/search-jobs.dto';
 import { JobService } from './job.service';
 
 @Controller('job')
@@ -60,5 +61,13 @@ export class JobController {
             fileCondition,
             qcStep != null ? Number(qcStep) : 1,
         );
+    }
+
+    @Get('search-jobs')
+    searchJobs(
+        @Req() req: Request & { user: UserSession },
+        @Query() query: SearchJobsQueryDto,
+    ) {
+        return this.jobService.searchJobs(query, req.user);
     }
 }

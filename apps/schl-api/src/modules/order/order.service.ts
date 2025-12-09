@@ -23,7 +23,7 @@ import {
 import { calculateTimeDifference } from '@repo/common/utils/general-utils';
 import { hasAnyPerm, hasPerm } from '@repo/common/utils/permission-check';
 import moment from 'moment-timezone';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { QnapService } from '../qnap/qnap.service';
 import { CreateOrderBodyDto } from './dto/create-order.dto';
 import { OrdersByCountryQueryDto } from './dto/orders-by-country.dto';
