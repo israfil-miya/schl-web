@@ -138,6 +138,44 @@ export function getCandidateSuffix(
         : 'RAW';
 }
 
+export const computeTotalPauseDuration = (file: any, now: Date) => {
+    const accumulated = Number(file?.total_pause_duration || 0);
+    const isPaused = file?.status === 'paused';
+    const pauseStart = file?.pause_start_timestamp
+        ? new Date(file.pause_start_timestamp as string | number | Date)
+        : null;
+    if (isPaused && pauseStart) {
+        return accumulated + Math.max(0, now.getTime() - pauseStart.getTime());
+    }
+    return accumulated;
+};
+
+export function getDoneSuffix(
+    normalizedType: string,
+
+    qcStep?: number,
+): string {
+    if (normalizedType === 'general' || normalizedType === 'test') {
+        return 'PRODUCTION/DONE';
+    }
+
+    if (normalizedType.startsWith('qc')) {
+        const step = Number(qcStep) || 1;
+
+        if (step === 1) return 'QC/QC1/DONE';
+
+        if (step === 2) return 'QC/QC2/DONE';
+
+        return 'QC/QC1/DONE';
+    }
+
+    if (normalizedType.startsWith('correction')) {
+        return 'FEEDBACK/DONE';
+    }
+
+    return 'PRODUCTION/DONE';
+}
+
 export const sanitizePathSegment = (input: string): string => {
     const cleaned = String(input || '')
         .trim()
@@ -345,7 +383,7 @@ export async function ensureFolderExists(
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function moveWithRetry(options: {
+async function transferWithRetry(options: {
     qnapService: QnapService;
 
     sourcePath: string;
@@ -361,24 +399,40 @@ async function moveWithRetry(options: {
     retries?: number;
 
     delayMs?: number;
+
+    operation?: 'move' | 'copy';
 }): Promise<void> {
     const retries = options.retries ?? 2;
 
     const delayMs = options.delayMs ?? 300;
 
+    const op = options.operation ?? 'move';
+
     let attempt = 0;
 
     for (;;) {
         try {
-            await options.qnapService.move(
-                options.sourcePath,
+            if (op === 'copy') {
+                await options.qnapService.copy(
+                    options.sourcePath,
 
-                options.items,
+                    options.items,
 
-                options.destPath,
+                    options.destPath,
 
-                options.mode ?? 1,
-            );
+                    { mode: options.mode ?? 1 },
+                );
+            } else {
+                await options.qnapService.move(
+                    options.sourcePath,
+
+                    options.items,
+
+                    options.destPath,
+
+                    options.mode ?? 1,
+                );
+            }
 
             return;
         } catch (err) {
@@ -394,7 +448,7 @@ async function moveWithRetry(options: {
                         err instanceof Error ? err.message : String(err);
 
                     options.logger.warn(
-                        `move retry ${attempt}/${retries} (status=${status ?? 'n/a'}): ${msg}`,
+                        `${op} retry ${attempt}/${retries} (status=${status ?? 'n/a'}): ${msg}`,
                     );
                 }
 
@@ -453,6 +507,11 @@ export async function moveFilesForNewJob(params: {
 
     if (!plan) return;
 
+    const shouldCopyFromRaw =
+        params.normalizedCondition === 'fresh' &&
+        (params.normalizedType === 'general' ||
+            params.normalizedType === 'test');
+
     const ensureCache = new Set<string>();
 
     await ensureFolderExists(
@@ -465,7 +524,7 @@ export async function moveFilesForNewJob(params: {
         ensureCache,
     );
 
-    await moveWithRetry({
+    await transferWithRetry({
         qnapService: params.qnapService,
 
         sourcePath: plan.sourcePath,
@@ -477,6 +536,8 @@ export async function moveFilesForNewJob(params: {
         mode: 1,
 
         logger: params.logger,
+
+        operation: shouldCopyFromRaw ? 'copy' : 'move',
     });
 }
 

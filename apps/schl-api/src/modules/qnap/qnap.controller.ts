@@ -8,6 +8,7 @@ import {
     UseFilters,
 } from '@nestjs/common';
 import { Public } from 'src/common/auth/public.decorator';
+import { CopyFileDto } from './dto/copy-file.dto';
 import { CreateFolderDto } from './dto/create-folder.dto';
 import { DeleteFileDto } from './dto/delete-file.dto';
 import { ListFilesDto } from './dto/list-files.dto';
@@ -15,6 +16,7 @@ import { MoveFileDto } from './dto/move-file.dto';
 import { RenameFileDto } from './dto/rename-file.dto';
 import { QnapExceptionFilter } from './qnap-exception.filter';
 import { QnapService } from './qnap.service';
+import type { ApiResponse } from './qnap.types';
 
 @Controller('qnap')
 @UseFilters(QnapExceptionFilter)
@@ -45,6 +47,26 @@ export class QnapController {
             body.destPath,
             body.mode,
         );
+    }
+
+    @Post('copy')
+    async copyFiles(@Body() body: CopyFileDto): Promise<ApiResponse> {
+        const result = await this.qnapService.copy(
+            body.sourcePath,
+            body.items,
+            body.destPath,
+            {
+                mode: body.mode,
+                dup: body.dup,
+                checksum: body.checksum,
+                sourcePort: body.sourcePort,
+                destPort: body.destPort,
+                waitSec: body.waitSec,
+                restoreLog: body.restoreLog,
+            },
+        );
+
+        return result;
     }
 
     @Delete('delete')

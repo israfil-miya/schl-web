@@ -368,6 +368,49 @@ export class QnapService implements OnModuleDestroy {
         return data;
     }
 
+    async copy(
+        sourcePath: string,
+        items: string[],
+        destPath: string,
+        options: {
+            mode?: 0 | 1 | 2;
+            dup?: string;
+            checksum?: 0 | 1;
+            sourcePort?: number;
+            destPort?: number;
+            waitSec?: number;
+            restoreLog?: 0 | 1;
+        } = {},
+    ): Promise<ApiResponse> {
+        // Copy mirrors move semantics but leaves the source intact.
+        const base: QnapRequestParams = {
+            func: 'copy',
+            source_path: sourcePath,
+            dest_path: destPath,
+            source_total: items.length,
+            mode: options.mode ?? 1,
+        };
+
+        if (options.dup !== undefined) base.dup = options.dup;
+        if (options.checksum !== undefined) base.checksum = options.checksum;
+        if (options.sourcePort !== undefined)
+            base.source_port = options.sourcePort;
+        if (options.destPort !== undefined) base.dest_port = options.destPort;
+        if (options.waitSec !== undefined) base.wait_sec = options.waitSec;
+        if (options.restoreLog !== undefined)
+            base.restore_log = options.restoreLog;
+
+        const data = await this.requestWithAuth(
+            '/cgi-bin/filemanager/utilRequest.cgi',
+            {
+                ...base,
+                source_file: items,
+            },
+        );
+
+        return data;
+    }
+
     async delete(
         path: string,
         items: string[],

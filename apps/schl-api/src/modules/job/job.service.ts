@@ -15,7 +15,6 @@ import {
     FileStatus,
     JobSelectionType,
 } from '@repo/common/constants/order.constant';
-import { Client } from '@repo/common/models/client.schema';
 import { Order } from '@repo/common/models/order.schema';
 import { User } from '@repo/common/models/user.schema';
 import { UserSession } from '@repo/common/types/user-session.type';
@@ -36,11 +35,14 @@ import {
     type ActiveFileStatus,
     type SearchJobsQueryDto,
 } from './dto/search-jobs.dto';
+import { TransferFileDto } from './dto/transfer-file.dto';
 import {
+    computeTotalPauseDuration,
     deriveJobType,
     ensureFolderExists,
     escapeRegex,
     getCandidateSuffix,
+    getDoneSuffix,
     joinPath,
     mapFolderPathToQnapPath,
     mapJobTypeFilters,
@@ -79,11 +81,23 @@ export class JobService {
     private readonly logger = new Logger(JobService.name);
     constructor(
         @InjectModel(Order.name) private readonly orderModel: Model<Order>,
-        @InjectModel(Client.name) private readonly clientModel: Model<Client>,
         @InjectModel(User.name) private readonly userModel: Model<User>,
         private readonly configService: ConfigService,
         private readonly qnapService: QnapService,
     ) {}
+
+    private async resolveEmployeeName(
+        employeeId: mongoose.Types.ObjectId,
+    ): Promise<string> {
+        const user = await this.userModel
+            .findOne({ employee: employeeId })
+            .select('real_name')
+            .lean<{ real_name?: string }>()
+            .exec();
+
+        const name = user?.real_name ? String(user.real_name).trim() : '';
+        return name || 'employee';
+    }
 
     // Resolve the employee ObjectId for the current user session
     private async resolveEmployeeId(userSession: UserSession) {
@@ -101,20 +115,6 @@ export class JobService {
         }
 
         return new mongoose.Types.ObjectId(String(user.employee));
-    }
-
-    private computeTotalPauseDuration(file: any, now: Date) {
-        const accumulated = Number(file?.total_pause_duration || 0);
-        const isPaused = file?.status === 'paused';
-        const pauseStart = file?.pause_start_timestamp
-            ? new Date(file.pause_start_timestamp as string | number | Date)
-            : null;
-        if (isPaused && pauseStart) {
-            return (
-                accumulated + Math.max(0, now.getTime() - pauseStart.getTime())
-            );
-        }
-        return accumulated;
     }
 
     private async loadFileForEmployee(
@@ -181,7 +181,7 @@ export class JobService {
         ];
 
         if (file.status === 'paused') {
-            const totalPause = this.computeTotalPauseDuration(file, now);
+            const totalPause = computeTotalPauseDuration(file, now);
             update['progress.$[p].files_tracking.$[f].status'] = 'working';
             update['progress.$[p].files_tracking.$[f].pause_start_timestamp'] =
                 null;
@@ -189,6 +189,7 @@ export class JobService {
                 totalPause;
         } else if (file.status === 'transferred') {
             update['progress.$[p].files_tracking.$[f].status'] = 'working';
+            // For transferred files, we start the clock only when the receiver actually resumes/starts.
             update['progress.$[p].files_tracking.$[f].start_timestamp'] = now;
             update['progress.$[p].files_tracking.$[f].end_timestamp'] = null;
             update['progress.$[p].files_tracking.$[f].pause_start_timestamp'] =
@@ -237,6 +238,11 @@ export class JobService {
             'progress.$[p].files_tracking.$[f].status': 'paused',
             'progress.$[p].files_tracking.$[f].pause_start_timestamp': now,
         };
+
+        // If the file was just transferred, set start_timestamp when the receiver takes first action (pause/resume).
+        if (file.status === 'transferred' && !file.start_timestamp) {
+            update['progress.$[p].files_tracking.$[f].start_timestamp'] = now;
+        }
         const arrayFilters = [
             { 'p.employee': employeeId },
             { 'f.file_name': payload.fileName },
@@ -270,7 +276,8 @@ export class JobService {
         }
 
         const now: Date = getCurrentUtc();
-        const totalPause = this.computeTotalPauseDuration(file, now);
+        // Include any active pause window so cancel/finish while paused captures elapsed paused time.
+        const totalPause = computeTotalPauseDuration(file, now);
 
         // If cancelling, move the file to PARTIALLY DONE root (no employee subfolder)
         if (finalStatus === 'cancelled') {
@@ -284,6 +291,7 @@ export class JobService {
                     String(order.type || ''),
                     String(progress?.category || ''),
                 );
+                // File condition here is only a path selector (PARTIALLY DONE), not a DB status check.
                 const destSuffix = getCandidateSuffix(
                     normalizedType,
                     'incomplete',
@@ -301,6 +309,68 @@ export class JobService {
                         destPath,
                         this.logger,
                     );
+                    await this.qnapService.move(
+                        sourcePath,
+                        [payload.fileName],
+                        destPath,
+                        1,
+                    );
+                } catch (err) {
+                    const msg =
+                        err instanceof Error ? err.message : String(err);
+                    throw new InternalServerErrorException(
+                        `File move failed: ${msg}`,
+                    );
+                }
+            }
+        }
+
+        // If finishing, move the file from PARTIALLY DONE/<employee> to DONE/<employee>
+        if (finalStatus === 'completed') {
+            const baseQnapPath = mapFolderPathToQnapPath(
+                order.folder_path,
+                this.configService.get<string>('QNAP_DRIVE_MAP'),
+            );
+
+            if (baseQnapPath) {
+                const normalizedType = deriveJobType(
+                    String(order.type || ''),
+                    String(progress?.category || ''),
+                );
+
+                const employeeFolder = sanitizePathSegment(
+                    userSession.real_name || 'employee',
+                );
+
+                // Use “incomplete” to point to the PARTIALLY DONE stage where in-progress files live.
+                const partialRoot = getCandidateSuffix(
+                    normalizedType,
+                    'incomplete',
+                    Number(progress?.qc_step),
+                );
+
+                const doneRoot = getDoneSuffix(
+                    normalizedType,
+                    Number(progress?.qc_step),
+                );
+
+                const sourcePath = joinPath(
+                    baseQnapPath,
+                    joinPath(partialRoot, employeeFolder),
+                );
+
+                const destPath = joinPath(
+                    baseQnapPath,
+                    joinPath(doneRoot, employeeFolder),
+                );
+
+                try {
+                    await ensureFolderExists(
+                        this.qnapService,
+                        destPath,
+                        this.logger,
+                    );
+
                     await this.qnapService.move(
                         sourcePath,
                         [payload.fileName],
@@ -348,6 +418,185 @@ export class JobService {
         return this.closeFile(payload, userSession, 'cancelled');
     }
 
+    async transferFile(payload: TransferFileDto, userSession: UserSession) {
+        const employeeId = await this.resolveEmployeeId(userSession);
+
+        const targetEmployeeId = new mongoose.Types.ObjectId(
+            String(payload.targetEmployeeId),
+        );
+
+        if (String(targetEmployeeId) === String(employeeId)) {
+            throw new ConflictException('Cannot transfer to yourself');
+        }
+
+        const { order, file, progress, progressIndex, fileIndex } =
+            await this.loadFileForEmployee(
+                payload.orderId,
+                payload.fileName,
+                employeeId,
+            );
+
+        if (file.status === 'completed' || file.status === 'cancelled') {
+            throw new ConflictException('File is already closed');
+        }
+
+        const now: Date = getCurrentUtc();
+        // Pull forward any ongoing pause time so transferred/cancelled/finished while paused keeps that duration.
+        const totalPause = computeTotalPauseDuration(file, now);
+
+        // Move file from current employee folder to target employee folder under the same stage
+        const baseQnapPath = mapFolderPathToQnapPath(
+            order.folder_path,
+            this.configService.get<string>('QNAP_DRIVE_MAP'),
+        );
+
+        if (baseQnapPath) {
+            const normalizedType = deriveJobType(
+                String(order.type || ''),
+                String(progress?.category || ''),
+            );
+
+            // Path picker: “incomplete” maps to the PARTIALLY DONE stage, independent of DB status.
+            const stageSuffix = getCandidateSuffix(
+                normalizedType,
+                'incomplete',
+                Number(progress?.qc_step),
+            );
+
+            const sourceFolder = sanitizePathSegment(
+                userSession.real_name || 'employee',
+            );
+
+            const targetName = await this.resolveEmployeeName(targetEmployeeId);
+
+            const targetFolder = sanitizePathSegment(targetName);
+
+            const sourcePath = joinPath(
+                baseQnapPath,
+                joinPath(stageSuffix, sourceFolder),
+            );
+
+            const destPath = joinPath(
+                baseQnapPath,
+                joinPath(stageSuffix, targetFolder),
+            );
+
+            try {
+                await ensureFolderExists(
+                    this.qnapService,
+                    destPath,
+                    this.logger,
+                );
+
+                await this.qnapService.move(
+                    sourcePath,
+                    [payload.fileName],
+                    destPath,
+                    1,
+                );
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                throw new InternalServerErrorException(
+                    `File move failed: ${msg}`,
+                );
+            }
+        }
+
+        // Update DB: mark current file as transferred and assign to target employee
+        const progressList = Array.isArray(order.progress)
+            ? [...order.progress]
+            : [];
+
+        const sourceProgress = {
+            ...progress,
+            files_tracking: Array.isArray(progress.files_tracking)
+                ? [...progress.files_tracking]
+                : [],
+        } as any;
+
+        sourceProgress.files_tracking[fileIndex] = {
+            ...file,
+            status: 'transferred',
+            end_timestamp: now,
+            pause_start_timestamp: null,
+            total_pause_duration: totalPause,
+        };
+
+        let targetProgressIndex = progressList.findIndex(
+            (p: any) => p && String(p.employee) === String(targetEmployeeId),
+        );
+
+        if (targetProgressIndex === -1) {
+            progressList.push({
+                employee: targetEmployeeId,
+                shift: sourceProgress.shift ?? null,
+                category: sourceProgress.category,
+                is_qc: sourceProgress.is_qc,
+                qc_step: sourceProgress.qc_step ?? null,
+                files_tracking: [],
+            });
+            targetProgressIndex = progressList.length - 1;
+        }
+
+        const baseTargetProgress =
+            (progressList[targetProgressIndex] as any) ?? {};
+        const targetFiles = Array.isArray(baseTargetProgress.files_tracking)
+            ? [...baseTargetProgress.files_tracking]
+            : [];
+
+        const targetProgress = {
+            ...baseTargetProgress,
+            files_tracking: targetFiles,
+        };
+
+        const existingTargetFile = targetFiles.find((f: any) => {
+            return (
+                f &&
+                String(f.file_name) === String(payload.fileName) &&
+                f.status !== 'completed' &&
+                f.status !== 'cancelled'
+            );
+        });
+
+        if (existingTargetFile) {
+            throw new ConflictException(
+                'File already assigned to target employee',
+            );
+        }
+
+        targetProgress.files_tracking.push({
+            file_name: payload.fileName,
+            // Start time is intentionally deferred until the receiver acts (resume/pause).
+            start_timestamp: null,
+            end_timestamp: null,
+            status: 'transferred',
+            total_pause_duration: 0,
+            pause_start_timestamp: null,
+            transferred_from: employeeId,
+        });
+
+        progressList[progressIndex] = sourceProgress;
+        progressList[targetProgressIndex] = targetProgress;
+
+        const updateResult = await this.orderModel
+            .updateOne(
+                { _id: order._id },
+                {
+                    $set: {
+                        progress: progressList,
+                        updated_by: userSession.real_name ?? null,
+                    },
+                },
+            )
+            .exec();
+
+        if (!updateResult?.modifiedCount) {
+            throw new InternalServerErrorException('Unable to transfer file');
+        }
+
+        return { message: 'Transferred successfully' };
+    }
+
     // Portal: Add a new progress entry to existing order (identified by clientCode + folderPath)
     async newJob(payload: NewJobBodyDto, userSession: UserSession) {
         if (!hasPerm('job:get_jobs', userSession.permissions)) {
@@ -378,6 +627,7 @@ export class JobService {
         const normalizedType = String(payload.jobType || '')
             .trim()
             .toLowerCase();
+        // File condition is a UI hint for source folder selection (RAW vs PARTIALLY DONE), not a DB status filter.
         const normalizedCondition = String(payload.fileCondition || '')
             .trim()
             .toLowerCase();
@@ -715,7 +965,7 @@ export class JobService {
 
         const occupiedStatuses = ['working', 'paused', 'transferred'];
 
-        // Candidate suffix for the selected jobType and condition
+        // Candidate suffix for the selected jobType and condition (path selection only, not DB status)
         const candidateSuffix = getCandidateSuffix(
             String(normalizedType),
             String(normalizedCondition),
@@ -880,10 +1130,6 @@ export class JobService {
         addIfDefined(orderFilters, 'folder', createRegexQuery(folder));
         addIfDefined(orderFilters, 'folder_path', createRegexQuery(folderPath));
 
-        const progressFilters: Record<string, any> = {
-            'progress.employee': employeeId,
-        };
-
         const mappedJobType = mapJobTypeFilters(jobType);
         const { orderType, category, isQc } = mappedJobType;
         if (orderType) {
@@ -892,28 +1138,78 @@ export class JobService {
                 exact: true,
             });
         }
+
+        const progressFilterConditions: Array<Record<string, any>> = [
+            { $eq: ['$$p.employee', employeeId] },
+        ];
         if (category) {
-            progressFilters['progress.category'] = category;
+            progressFilterConditions.push({ $eq: ['$$p.category', category] });
         }
         if (isQc !== undefined) {
-            progressFilters['progress.is_qc'] = isQc;
+            progressFilterConditions.push({ $eq: ['$$p.is_qc', isQc] });
         }
 
         const skipCount = (page - 1) * itemsPerPage;
 
-        const sharedMatchStages: mongoose.PipelineStage[] = [
-            { $match: orderFilters },
-            { $unwind: '$progress' },
-            { $match: progressFilters },
-            { $unwind: '$progress.files_tracking' },
-            {
-                $match: {
-                    'progress.files_tracking.status': { $in: fileStatusFilter },
+        // Pre-filter progress entries to the current employee before unwinding to reduce fan-out.
+        const filterProgressStage: mongoose.PipelineStage = {
+            $project: {
+                _id: 1,
+                client_code: 1,
+                client_name: 1,
+                folder: 1,
+                folder_path: 1,
+                type: 1,
+                task: 1,
+                et: 1,
+                status: 1,
+                progress: {
+                    $filter: {
+                        input: '$progress',
+                        as: 'p',
+                        cond:
+                            progressFilterConditions.length === 1
+                                ? progressFilterConditions[0]
+                                : { $and: progressFilterConditions },
+                    },
                 },
             },
-        ];
+        };
 
-        const projectionStage: mongoose.PipelineStage = {
+        const filterFilesStage: mongoose.PipelineStage = {
+            $project: {
+                _id: 1,
+                client_code: 1,
+                client_name: 1,
+                folder: 1,
+                folder_path: 1,
+                type: 1,
+                task: 1,
+                et: 1,
+                status: 1,
+                progress: {
+                    category: '$progress.category',
+                    is_qc: '$progress.is_qc',
+                    qc_step: '$progress.qc_step',
+                    shift: '$progress.shift',
+                    files_tracking: {
+                        $filter: {
+                            input: '$progress.files_tracking',
+                            as: 'f',
+                            cond: {
+                                $in: ['$$f.status', fileStatusFilter],
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        const sortStage: mongoose.PipelineStage = {
+            $sort: { 'progress.files_tracking.start_timestamp': -1, _id: 1 },
+        };
+
+        const heavyProjectionStage: mongoose.PipelineStage = {
             $project: {
                 _id: 0,
                 order_id: '$_id',
@@ -1006,20 +1302,22 @@ export class JobService {
             },
         };
 
-        const sortStage: mongoose.PipelineStage = {
-            $sort: { start_timestamp: -1, order_id: 1 },
-        };
-
         const basePipeline: mongoose.PipelineStage[] = [
-            ...sharedMatchStages,
-            projectionStage,
+            { $match: orderFilters },
+            filterProgressStage,
+            { $unwind: '$progress' },
+            filterFilesStage,
+            { $unwind: '$progress.files_tracking' },
             sortStage,
         ];
 
         try {
             if (!paginated) {
                 const jobs = await this.orderModel
-                    .aggregate<SearchJobAggregateItem>(basePipeline)
+                    .aggregate<SearchJobAggregateItem>([
+                        ...basePipeline,
+                        heavyProjectionStage,
+                    ])
                     .exec();
 
                 return (jobs || []).map(job => ({
@@ -1035,7 +1333,11 @@ export class JobService {
                 ...basePipeline,
                 {
                     $facet: {
-                        items: [{ $skip: skipCount }, { $limit: itemsPerPage }],
+                        items: [
+                            { $skip: skipCount },
+                            { $limit: itemsPerPage },
+                            heavyProjectionStage,
+                        ],
                         count: [{ $count: 'total' }],
                     },
                 },

@@ -14,7 +14,8 @@ import { AvailableFoldersQueryDto } from './dto/available-folders.dto';
 import { AvailableOrdersQueryDto } from './dto/available-orders.dto';
 import { FileActionDto } from './dto/file-action.dto';
 import { ListFilesQueryDto } from './dto/list-files.dto';
-import { SearchJobsQueryDto } from './dto/search-jobs.dto';
+import { SearchJobsBodyDto, SearchJobsQueryDto } from './dto/search-jobs.dto';
+import { TransferFileDto } from './dto/transfer-file.dto';
 import { JobService } from './job.service';
 
 @Controller('job')
@@ -68,8 +69,16 @@ export class JobController {
     searchJobs(
         @Req() req: Request & { user: UserSession },
         @Query() query: SearchJobsQueryDto,
+        @Body() body: SearchJobsBodyDto,
     ) {
-        return this.jobService.searchJobs(query, req.user);
+        const pagination = {
+            page: query.page,
+            itemsPerPage: query.itemsPerPage,
+            // filtered: query.filtered,
+            paginated: query.paginated,
+        };
+
+        return this.jobService.searchJobs(body, pagination, req.user);
     }
 
     @Post('resume')
@@ -102,5 +111,13 @@ export class JobController {
         @Body() body: FileActionDto,
     ) {
         return this.jobService.cancelFile(body, req.user);
+    }
+
+    @Post('transfer')
+    transferFile(
+        @Req() req: Request & { user: UserSession },
+        @Body() body: TransferFileDto,
+    ) {
+        return this.jobService.transferFile(body, req.user);
     }
 }
